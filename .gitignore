@@ -19,9 +19,6 @@ temp_compile/
 
 # Local workspace scratch
 codexcontext.txt
-kagglesubmission/
-kagglesubmission.py
-pyrightconfig.json
 
 # Iteration artifacts / backups (keep canonical datasets only)
 Finetune/trainingdata/math_aimo/
