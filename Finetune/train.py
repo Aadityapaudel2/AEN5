@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Lean SFT trainer for conversation JSONL produced by prepare_data.py.
 
@@ -21,18 +21,12 @@ ROLE_USER = "<|user|>"
 ROLE_ASSISTANT = "<|assistant|>"
 ROLE_SYSTEM = "<|system|>"
 
-BASE_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = BASE_DIR.parent
-DEFAULT_MODEL = str(PROJECT_ROOT / "models" / "Qwen3-1.7B")
-DEFAULT_TRAIN_FILE = str(BASE_DIR / "trainingdata" / "bhagavadgita" / "bhagavaggitatrainingdata_train.jsonl")
-DEFAULT_OUTPUT = str(PROJECT_ROOT / "models" / "tuned")
-
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--model_name_or_path", default=DEFAULT_MODEL)
-    p.add_argument("--train_file", default=DEFAULT_TRAIN_FILE)
-    p.add_argument("--output_dir", default=DEFAULT_OUTPUT)
+    p.add_argument("--model_name_or_path", required=True)
+    p.add_argument("--train_file", required=True)
+    p.add_argument("--output_dir", required=True)
 
     p.add_argument("--max_seq_length", type=int, default=2048)
     p.add_argument("--per_device_train_batch_size", type=int, default=1)
@@ -40,9 +34,15 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--learning_rate", type=float, default=2e-5)
     p.add_argument("--num_train_epochs", type=float, default=3.0)
     p.add_argument("--warmup_ratio", type=float, default=0.03)
+    p.add_argument("--lr_scheduler_type", type=str, default="linear")
+    p.add_argument("--weight_decay", type=float, default=0.0)
+    p.add_argument("--max_grad_norm", type=float, default=1.0)
     p.add_argument("--logging_steps", type=int, default=10)
     p.add_argument("--save_steps", type=int, default=200)
+    p.add_argument("--save_total_limit", type=int, default=2)
     p.add_argument("--save_only_model", action="store_true")
+    p.add_argument("--strict_no_truncation", action="store_true")
+    p.add_argument("--expected_samples", type=int, default=0)
 
     p.add_argument("--bf16", action="store_true")
     p.add_argument("--fp16", action="store_true")
@@ -180,6 +180,10 @@ def main() -> None:
 
     train_ds = JsonlChatDataset(args.train_file)
     print(f"Loaded samples: {len(train_ds)}")
+    if args.expected_samples > 0 and len(train_ds) != args.expected_samples:
+        raise ValueError(
+            f"Expected {args.expected_samples} samples, but loaded {len(train_ds)} from train_file."
+        )
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, use_fast=True)
     added_special_tokens = False
@@ -203,6 +207,27 @@ def main() -> None:
 
     collator = DataCollatorForCausalChat(tokenizer=tokenizer, max_length=args.max_seq_length)
 
+    # Preflight sequence-length stats so truncation behavior is explicit.
+    lengths: list[int] = []
+    for sample in train_ds.samples:
+        text = render_chat(tokenizer, sample, add_generation_prompt=False)
+        token_count = len(tokenizer(text, add_special_tokens=False)["input_ids"])
+        lengths.append(token_count)
+
+    max_len = max(lengths)
+    over_limit = sum(1 for n in lengths if n > args.max_seq_length)
+    sorted_lens = sorted(lengths)
+    p95 = sorted_lens[int(0.95 * (len(sorted_lens) - 1))]
+    print(
+        f"Token length stats: min={sorted_lens[0]} p95={p95} max={max_len} "
+        f"over_limit({args.max_seq_length})={over_limit}"
+    )
+    if args.strict_no_truncation and over_limit > 0:
+        raise ValueError(
+            f"strict_no_truncation is enabled, but {over_limit} samples exceed "
+            f"max_seq_length={args.max_seq_length}. Increase max_seq_length to at least {max_len}."
+        )
+
     train_args = TrainingArguments(
         output_dir=args.output_dir,
         per_device_train_batch_size=args.per_device_train_batch_size,
@@ -210,9 +235,12 @@ def main() -> None:
         learning_rate=args.learning_rate,
         num_train_epochs=args.num_train_epochs,
         warmup_ratio=args.warmup_ratio,
+        lr_scheduler_type=args.lr_scheduler_type,
+        weight_decay=args.weight_decay,
+        max_grad_norm=args.max_grad_norm,
         logging_steps=args.logging_steps,
         save_steps=args.save_steps,
-        save_total_limit=2,
+        save_total_limit=args.save_total_limit,
         save_only_model=args.save_only_model,
         bf16=args.bf16,
         fp16=args.fp16,
@@ -221,13 +249,21 @@ def main() -> None:
         seed=args.seed,
     )
 
-    trainer = Trainer(
-        model=model,
-        args=train_args,
-        train_dataset=train_ds,
-        tokenizer=tokenizer,
-        data_collator=collator,
-    )
+    trainer_kwargs: dict[str, Any] = {
+        "model": model,
+        "args": train_args,
+        "train_dataset": train_ds,
+        "data_collator": collator,
+        # Newer transformers prefers processing_class over tokenizer.
+        "processing_class": tokenizer,
+    }
+    try:
+        trainer = Trainer(**trainer_kwargs)
+    except TypeError:
+        # Compatibility fallback for older transformers builds.
+        trainer_kwargs.pop("processing_class", None)
+        trainer_kwargs["tokenizer"] = tokenizer
+        trainer = Trainer(**trainer_kwargs)
 
     trainer.train()
     trainer.save_model(args.output_dir)

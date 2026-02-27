@@ -18,19 +18,14 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 # Optional file users can create/edit to customize the system prompt without
 # touching Python files.
 SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent / "system_prompt.txt"
-PRIMER_PATH = Path(__file__).resolve().parent / "primer_25.json"
 
 DEFAULT_SYSTEM_PROMPT = (
-    "You are Athena, a helpful assistant. "
-    "Follow the user's instructions. "
-    "Be concise unless asked for depth. "
-    "If you are unsure or missing information, say so and ask a clarifying question. "
-    "Do not invent facts, sources, or citations." 
+    "Answer in exactly one clear sentence."
 )
 
 
@@ -43,62 +38,15 @@ def load_system_prompt(path: Path = SYSTEM_PROMPT_PATH) -> str:
         return DEFAULT_SYSTEM_PROMPT
 
 
-def load_primer_messages(path: Path = PRIMER_PATH) -> List[Dict[str, str]]:
-    """Load a few-shot primer from disk.
-
-    File format (JSON): a list of objects like:
-      {"role": "user", "content": "..."}
-      {"role": "assistant", "content": "..."}
-
-    Any malformed entries are ignored.
-    """
-    try:
-        raw = path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return []
-    except Exception:
-        return []
-
-    try:
-        data = __import__("json").loads(raw)
-    except Exception:
-        return []
-
-    if not isinstance(data, list):
-        return []
-
-    out: List[Dict[str, str]] = []
-    for item in data:
-        if not isinstance(item, dict):
-            continue
-        role = str(item.get("role", "")).strip()
-        content = str(item.get("content", "")).strip()
-        if role not in {"system", "user", "assistant"}:
-            continue
-        if not content:
-            continue
-        out.append({"role": role, "content": content})
-    return out
-
-
 def build_messages_from_history(
     history: Sequence[Tuple[str, str]],
     user_text: str,
     *,
     system_prompt: str,
-    primer_messages: Optional[Sequence[Dict[str, str]]] = None,
     max_turns: int = 6,
 ) -> List[Dict[str, str]]:
     """Convert a simple (user, assistant) history into chat messages."""
     messages: List[Dict[str, str]] = [{"role": "system", "content": system_prompt}]
-
-    # Optional few-shot primer (inserted after the system message, before history).
-    if primer_messages:
-        for msg in primer_messages:
-            role = (msg.get("role") or "").strip()
-            content = (msg.get("content") or "").strip()
-            if role in {"system", "user", "assistant"} and content:
-                messages.append({"role": role, "content": content})
 
     # Keep only the last N turns (a turn = user+assistant)
     for u, a in list(history)[-max_turns:]:
@@ -171,7 +119,6 @@ def build_prompt(
     user_text: str,
     *,
     system_prompt: str,
-    primer_messages: Optional[Sequence[Dict[str, str]]] = None,
     max_turns: int = 6,
     enable_thinking: Optional[bool] = None,
 ) -> str:
@@ -180,7 +127,6 @@ def build_prompt(
         history,
         user_text,
         system_prompt=system_prompt,
-        primer_messages=primer_messages,
         max_turns=max_turns,
     )
     return render_prompt(

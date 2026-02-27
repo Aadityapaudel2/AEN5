@@ -11,6 +11,39 @@ logs/
 models/
 Finetune/output/
 Finetune/trainingdata/output/
+Finetune/math_finetune_workspace/
 temp
+temp_compile/
 *.zip
 *.tmp
+
+# Local workspace scratch
+codexcontext.txt
+kagglesubmission/
+kagglesubmission.py
+pyrightconfig.json
+
+# Iteration artifacts / backups (keep canonical datasets only)
+Finetune/trainingdata/math_aimo/
+Finetune/trainingdata/math_canon_v2_1/
+Finetune/trainingdata/**/*_report.txt
+Finetune/trainingdata/**/excluded_rows.json
+Finetune/trainingdata/**/athena_history_verbatim_manifest.json
+Finetune/trainingdata/**/athena_history_verbatim_*.jsonl
+Finetune/trainingdata/**/athena_history_verbatim_*.txt
+Finetune/trainingdata/**/athena_identity_myth_puzzles_train*.jsonl
+Finetune/trainingdata/**/athenachat.json
+Finetune/trainingdata/**/athena_conditioning_train.before_*.jsonl
+Finetune/trainingdata/**/athena_conditioning_train.pre_*.jsonl
+Finetune/trainingdata/**/bhagavadgitatrainingdatafaithful*.txt
+Finetune/trainingdata/**/bhagavaggitatrainingdata_sft_clean*.jsonl
+Finetune/trainingdata/**/bhagavaggitatrainingdata_clean.jsonl
+Finetune/trainingdata/**/bhagavaggitatrainingdata_train_clean.jsonl
+Finetune/trainingdata/**/athena_identity_myth_puzzles_sft_best.jsonl
+Finetune/trainingdata/**/dataset_math_distillator_v21.jsonl
+Finetune/trainingdata/**/dataset_math_metadata.jsonl
+Finetune/trainingdata/**/dataset_persona_chat.jsonl
+
+# Downloaded UI assets (bootstrap script can rehydrate)
+assets/mathjax/
+system_prompt_math.txt

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import threading
 from dataclasses import dataclass
@@ -9,6 +10,7 @@ from typing import Callable, Optional
 import torch
 from accelerate import Accelerator
 from transformers import (
+    AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
     GenerationConfig,
@@ -35,17 +37,18 @@ class GuiSettings:
     enable_thinking: bool = False
     # UI preference: hide <think>...</think> in the chat window.
     hide_thoughts: bool = True
-
-    # Few-shot style primer (prepended to every prompt, after the system message).
-    # This is optional and can be disabled.
-    use_primer: bool = True
-    # Path is resolved relative to the UI folder.
-    primer_path: str = "primer_25.json"
+    # Preferred renderer mode for modern UI variants.
+    renderer_mode: str = "qt_web"
+    # UI live re-render cadence for streaming updates.
+    render_throttle_ms: int = 75
 
     @staticmethod
     def load(path: Path) -> "GuiSettings":
         if path.exists():
-            data = json.loads(path.read_text(encoding="utf-8"))
+            try:
+                data = json.loads(path.read_text(encoding="utf-8-sig"))
+            except json.JSONDecodeError:
+                data = {}
         else:
             data = {}
         return GuiSettings(
@@ -60,8 +63,8 @@ class GuiSettings:
             repetition_penalty=float(data.get("repetition_penalty", 1.05)),
             enable_thinking=bool(data.get("enable_thinking", False)),
             hide_thoughts=bool(data.get("hide_thoughts", True)),
-            use_primer=bool(data.get("use_primer", True)),
-            primer_path=str(data.get("primer_path", "primer_25.json")),
+            renderer_mode=str(data.get("renderer_mode", "qt_web")),
+            render_throttle_ms=int(data.get("render_throttle_ms", 75)),
         )
 
     def to_dict(self) -> dict:
@@ -73,8 +76,8 @@ class GuiSettings:
             "repetition_penalty": self.repetition_penalty,
             "enable_thinking": self.enable_thinking,
             "hide_thoughts": self.hide_thoughts,
-            "use_primer": self.use_primer,
-            "primer_path": self.primer_path,
+            "renderer_mode": self.renderer_mode,
+            "render_throttle_ms": self.render_throttle_ms,
         }
 
     def save(self, path: Path) -> None:
@@ -107,6 +110,7 @@ class LocalStreamer:
 
         self.model_dir = resolved_model_dir
         self.model_label = self.model_dir.name
+        self.model_proof = self._build_model_proof()
 
         self.tokenizer = AutoTokenizer.from_pretrained(str(self.model_dir), trust_remote_code=False)
         # Many Qwen checkpoints do not define a pad token; make generation happy.
@@ -122,6 +126,51 @@ class LocalStreamer:
 
         self.active_streamer: Optional[TextIteratorStreamer] = None
         self.stop_event = threading.Event()
+
+    def _build_model_proof(self) -> dict:
+        proof: dict = {
+            "model_dir": str(self.model_dir),
+            "model_label": self.model_label,
+            "config_path": "",
+            "config_sha256": "",
+            "name_or_path": "",
+            "model_type": "",
+            "architectures": [],
+            "hidden_size": None,
+            "num_hidden_layers": None,
+            "num_attention_heads": None,
+            "vocab_size": None,
+            "max_position_embeddings": None,
+        }
+        config_path = self.model_dir / "config.json"
+        proof["config_path"] = str(config_path)
+        if config_path.exists():
+            try:
+                raw_bytes = config_path.read_bytes()
+                proof["config_sha256"] = hashlib.sha256(raw_bytes).hexdigest()
+                config_json = json.loads(raw_bytes.decode("utf-8"))
+                if isinstance(config_json, dict):
+                    name_or_path = config_json.get("_name_or_path")
+                    if isinstance(name_or_path, str):
+                        proof["name_or_path"] = name_or_path
+            except Exception:
+                pass
+        try:
+            cfg = AutoConfig.from_pretrained(str(self.model_dir), trust_remote_code=False)
+            proof["model_type"] = str(getattr(cfg, "model_type", "") or "")
+            arch = getattr(cfg, "architectures", None)
+            if isinstance(arch, (list, tuple)):
+                proof["architectures"] = [str(x) for x in arch]
+            proof["hidden_size"] = getattr(cfg, "hidden_size", None)
+            proof["num_hidden_layers"] = getattr(cfg, "num_hidden_layers", None)
+            proof["num_attention_heads"] = getattr(cfg, "num_attention_heads", None)
+            proof["vocab_size"] = getattr(cfg, "vocab_size", None)
+            proof["max_position_embeddings"] = getattr(cfg, "max_position_embeddings", None)
+            if not proof["name_or_path"]:
+                proof["name_or_path"] = str(getattr(cfg, "_name_or_path", "") or "")
+        except Exception:
+            pass
+        return proof
 
     def _eos_token_ids(self) -> Optional[list[int] | int]:
         """Return a robust EOS token id/list.
@@ -150,6 +199,27 @@ class LocalStreamer:
         if not eos_ids:
             return None
         return eos_ids[0] if len(eos_ids) == 1 else eos_ids
+
+    def runtime_config(self) -> dict:
+        """Return effective runtime configuration used for generation."""
+        return {
+            "model_dir": str(self.model_dir),
+            "model_label": self.model_label,
+            "device": str(self.device),
+            "dtype": "float16",
+            "temperature": float(self.settings.temperature),
+            "max_new_tokens": int(self.settings.max_new_tokens),
+            "top_p": float(self.settings.top_p),
+            "top_k": int(self.settings.top_k),
+            "repetition_penalty": float(self.settings.repetition_penalty),
+            "do_sample": True,
+            "enable_thinking": bool(self.settings.enable_thinking),
+            "hide_thoughts": bool(self.settings.hide_thoughts),
+            "renderer_mode": str(self.settings.renderer_mode),
+            "render_throttle_ms": int(self.settings.render_throttle_ms),
+            "eos_token_id": self._eos_token_ids(),
+            "pad_token_id": self.tokenizer.pad_token_id,
+        }
 
     def stream(self, prompt: str, callback: Callable[[str], None]) -> None:
         """Stream model output for a *fully-rendered* prompt string."""

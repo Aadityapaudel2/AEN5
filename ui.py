@@ -16,19 +16,39 @@ from tkinter.scrolledtext import ScrolledText
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT
-VENV_PYTHON = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
+
+
+def _candidate_venv_pythons() -> list[Path]:
+    # Prefer repo-local venv, then workspace-level venv used in this project.
+    candidates = [
+        PROJECT_ROOT / ".venv" / "Scripts" / "python.exe",
+        PROJECT_ROOT.parent / ".venv" / "Scripts" / "python.exe",
+    ]
+    existing: list[Path] = []
+    for p in candidates:
+        if p.exists():
+            existing.append(p)
+    return existing
 
 
 def ensure_project_venv() -> None:
     """Re-launch with the workspace venv Python when available."""
     if os.environ.get("ATHENA_UI_VENV_BOOTSTRAPPED") == "1":
         return
-    if not VENV_PYTHON.exists():
+
+    candidates = _candidate_venv_pythons()
+    if not candidates:
         return
 
     current = Path(sys.executable).resolve()
-    target = VENV_PYTHON.resolve()
-    if current == target:
+    target: Path | None = None
+    for p in candidates:
+        resolved = p.resolve()
+        if resolved == current:
+            return
+        if target is None:
+            target = resolved
+    if target is None:
         return
 
     os.environ["ATHENA_UI_VENV_BOOTSTRAPPED"] = "1"
@@ -39,9 +59,9 @@ ensure_project_venv()
 
 sys.path.append(str(ROOT))
 
-from athena_paths import get_default_chat_model_dir
-from tk_chat import GuiSettings, LocalStreamer, CONFIG_PATH
-import wrap
+from athena_paths import get_default_chat_model_dir  # noqa: E402
+from tk_chat import GuiSettings, LocalStreamer, CONFIG_PATH  # noqa: E402
+import wrap  # noqa: E402
 
 BG = "#0d1117"
 FG = "#f5f5f5"
@@ -49,22 +69,73 @@ ENTRY_BG = "#1a1f2b"
 ENTRY_FG = "#e0e6ff"
 PANEL_BORDER = 1
 
-LOG_DIR = ROOT / "logs"
+LOG_DIR = Path(os.environ.get("ATHENA_LOG_DIR", str(Path.home() / ".athena_v5" / "logs"))).expanduser()
 RAW_LOG = LOG_DIR / "raw.log"
 CLEAN_LOG = LOG_DIR / "clean.log"
+LOGGING_ENABLED = True
 
 
 def ensure_logs() -> None:
-    LOG_DIR.mkdir(exist_ok=True)
-    RAW_LOG.touch(exist_ok=True)
-    CLEAN_LOG.touch(exist_ok=True)
+    global LOGGING_ENABLED
+    try:
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+        RAW_LOG.touch(exist_ok=True)
+        CLEAN_LOG.touch(exist_ok=True)
+        LOGGING_ENABLED = True
+    except Exception:
+        # Logging must never block chat startup.
+        LOGGING_ENABLED = False
 
 
 def append_log(path: Path, label: str, text: str) -> None:
+    if not LOGGING_ENABLED:
+        return
     # Preserve multi-line content, but keep a single timestamp/label prefix.
     safe = (text or "").replace("\r\n", "\n")
     with open(path, "a", encoding="utf-8", errors="replace") as fh:
         fh.write(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] {label}: {safe}\n")
+
+
+def format_model_proof_text(model_proof: dict) -> str:
+    sha256 = str(model_proof.get("config_sha256") or "")
+    arch = model_proof.get("architectures") or []
+    if isinstance(arch, (list, tuple)):
+        arch_text = ", ".join(str(x) for x in arch) if arch else "n/a"
+    else:
+        arch_text = str(arch)
+    model_dir = str(model_proof.get("model_dir") or "")
+    name_or_path = str(model_proof.get("name_or_path") or "n/a")
+    model_type = str(model_proof.get("model_type") or "n/a")
+    hidden_size = model_proof.get("hidden_size")
+    num_layers = model_proof.get("num_hidden_layers")
+    num_heads = model_proof.get("num_attention_heads")
+    vocab_size = model_proof.get("vocab_size")
+    max_pos = model_proof.get("max_position_embeddings")
+    target_hit = ("qwen3-4b" in model_dir.lower()) or ("qwen3-4b" in name_or_path.lower())
+    return (
+        "Model proof:\n"
+        f"target=qwen3-4b match={'YES' if target_hit else 'NO'}\n"
+        f"path={model_dir}\n"
+        f"name_or_path={name_or_path}\n"
+        f"model_type={model_type}\n"
+        f"architectures={arch_text}\n"
+        f"layers={num_layers} hidden={hidden_size} heads={num_heads} vocab={vocab_size} max_pos={max_pos}\n"
+        f"config_sha256={sha256 if sha256 else 'n/a'}"
+    )
+
+
+def format_runtime_config_text(runtime_cfg: dict) -> str:
+    return (
+        "Loaded runtime config:\n"
+        f"model_dir={runtime_cfg.get('model_dir')}\n"
+        f"model_label={runtime_cfg.get('model_label')}\n"
+        f"device={runtime_cfg.get('device')} dtype={runtime_cfg.get('dtype')}\n"
+        f"temperature={runtime_cfg.get('temperature')} max_new_tokens={runtime_cfg.get('max_new_tokens')}\n"
+        f"top_p={runtime_cfg.get('top_p')} top_k={runtime_cfg.get('top_k')} repetition_penalty={runtime_cfg.get('repetition_penalty')}\n"
+        f"do_sample={runtime_cfg.get('do_sample')} eos_token_id={runtime_cfg.get('eos_token_id')} pad_token_id={runtime_cfg.get('pad_token_id')}\n"
+        f"enable_thinking={runtime_cfg.get('enable_thinking')} hide_thoughts={runtime_cfg.get('hide_thoughts')}\n"
+        f"renderer_mode={runtime_cfg.get('renderer_mode')} render_throttle_ms={runtime_cfg.get('render_throttle_ms')}"
+    )
 
 
 class AthenaUI:
@@ -74,11 +145,9 @@ class AthenaUI:
         self.settings = GuiSettings.load(CONFIG_PATH)
         resolved_model_dir = model_dir if model_dir is not None else get_default_chat_model_dir()
         self.streamer = LocalStreamer(self.settings, model_dir=resolved_model_dir)
+        self._loaded_runtime_cfg = self.streamer.runtime_config()
 
         self.system_prompt = wrap.load_system_prompt()
-        # Optional few-shot primer messages (25 examples by default).
-        primer_path = (ROOT / getattr(self.settings, "primer_path", "primer_25.json")).resolve()
-        self.primer_messages = wrap.load_primer_messages(primer_path)
         self.history: List[Tuple[str, str]] = []
 
         self.is_streaming = False
@@ -96,7 +165,6 @@ class AthenaUI:
         # Tk variables must be created after the root window exists.
         self.var_thinking = tk.BooleanVar(value=bool(self.settings.enable_thinking))
         self.var_show_thoughts = tk.BooleanVar(value=not bool(self.settings.hide_thoughts))
-        self.var_use_primer = tk.BooleanVar(value=bool(getattr(self.settings, "use_primer", True)))
 
         self.output: ScrolledText
         self.entry: tk.Text
@@ -106,10 +174,11 @@ class AthenaUI:
         self.btn_clear: ttk.Button
         self.chk_thinking: ttk.Checkbutton
         self.chk_show_thoughts: ttk.Checkbutton
-        self.chk_primer: ttk.Checkbutton
 
         self._build_ui()
         self._append_output(f"Loaded model: {self.streamer.model_dir}\n")
+        self._append_output(format_model_proof_text(self.streamer.model_proof) + "\n")
+        self._append_output(format_runtime_config_text(self._loaded_runtime_cfg) + "\n")
 
     def _build_ui(self) -> None:
         self.output = ScrolledText(
@@ -169,14 +238,6 @@ class AthenaUI:
         )
         self.chk_show_thoughts.pack(fill=tk.X, pady=(4, 0))
 
-        self.chk_primer = ttk.Checkbutton(
-            btns,
-            text="Style primer",
-            variable=self.var_use_primer,
-            command=self._toggle_primer,
-        )
-        self.chk_primer.pack(fill=tk.X, pady=(4, 0))
-
         self.btn_stop = ttk.Button(btns, text="Stop", command=self.stop)
         self.btn_stop.pack(fill=tk.X, pady=(6, 0))
         self.btn_clear = ttk.Button(btns, text="Clear", command=self.clear)
@@ -198,9 +259,8 @@ class AthenaUI:
     def _status_text(self, state: str) -> str:
         thinking = "on" if self.var_thinking.get() else "off"
         show_thoughts = "on" if self.var_show_thoughts.get() else "off"
-        primer = "on" if self.var_use_primer.get() else "off"
         return (
-            f"{state}  |  thinking={thinking}  show_thoughts={show_thoughts}  primer={primer}  |  "
+            f"{state}  |  thinking={thinking}  show_thoughts={show_thoughts}  |  "
             f"model={self.streamer.model_dir}  temp={self.settings.temperature}  top_p={self.settings.top_p}  "
             f"top_k={self.settings.top_k}  max_new_tokens={self.settings.max_new_tokens}"
         )
@@ -225,16 +285,19 @@ class AthenaUI:
         # Allow newline insertion.
         return None
 
-    def build_prompt(self, user_text: str) -> str:
-        return wrap.build_prompt(
+    def build_prompt(self, user_text: str) -> tuple[str, str]:
+        # Single-prompt mode: no math/default routing. Keep behavior predictable.
+        cleaned_user_text = (user_text or "").strip()
+        system_prompt = self.system_prompt
+        prompt = wrap.build_prompt(
             self.streamer.tokenizer,
             self.history,
-            user_text,
-            system_prompt=self.system_prompt,
-            primer_messages=(self.primer_messages if self.var_use_primer.get() else None),
+            cleaned_user_text,
+            system_prompt=system_prompt,
             max_turns=6,
             enable_thinking=self.var_thinking.get(),
         )
+        return prompt, cleaned_user_text
 
     def _toggle_thinking(self) -> None:
         # Persist in gui_config.json so the toggle survives restarts.
@@ -249,15 +312,6 @@ class AthenaUI:
     def _toggle_show_thoughts(self) -> None:
         # Persist in gui_config.json.
         self.settings.hide_thoughts = not bool(self.var_show_thoughts.get())
-        try:
-            self.settings.save(CONFIG_PATH)
-        except Exception:
-            pass
-        self.set_status("Ready")
-
-    def _toggle_primer(self) -> None:
-        # Persist in gui_config.json.
-        self.settings.use_primer = bool(self.var_use_primer.get())
         try:
             self.settings.save(CONFIG_PATH)
         except Exception:
@@ -307,7 +361,6 @@ class AthenaUI:
         self.btn_send.config(state=tk.DISABLED)
         self.chk_thinking.config(state=tk.DISABLED)
         self.chk_show_thoughts.config(state=tk.DISABLED)
-        self.chk_primer.config(state=tk.DISABLED)
 
         hide_thoughts = not bool(self.var_show_thoughts.get())
         if self.var_thinking.get() and hide_thoughts:
@@ -334,8 +387,9 @@ class AthenaUI:
             self.root.after(0, ui_update)
 
         def worker() -> None:
+            cleaned_user_text = (user_text or "").strip()
             try:
-                prompt = self.build_prompt(user_text)
+                prompt, cleaned_user_text = self.build_prompt(user_text)
                 self.streamer.stream(prompt, on_chunk)
             finally:
                 tail = think_stripper.flush()
@@ -346,7 +400,7 @@ class AthenaUI:
                 assistant_text = wrap.clean_assistant_text("".join(assistant_chunks))
 
                 if assistant_text:
-                    self.history.append((user_text, assistant_text))
+                    self.history.append((cleaned_user_text, assistant_text))
                     # Keep a small rolling window.
                     if len(self.history) > 12:
                         self.history = self.history[-12:]
@@ -366,7 +420,6 @@ class AthenaUI:
         self.btn_send.config(state=tk.NORMAL)
         self.chk_thinking.config(state=tk.NORMAL)
         self.chk_show_thoughts.config(state=tk.NORMAL)
-        self.chk_primer.config(state=tk.NORMAL)
         self.set_status("Ready")
 
     def stop(self) -> None:
@@ -384,6 +437,9 @@ class AthenaUI:
         self._clear_thinking_placeholder()
         self.output.config(state=tk.NORMAL)
         self.output.delete("1.0", tk.END)
+        self.output.insert(tk.END, f"Loaded model: {self.streamer.model_dir}\n")
+        self.output.insert(tk.END, format_model_proof_text(self.streamer.model_proof) + "\n")
+        self.output.insert(tk.END, format_runtime_config_text(self._loaded_runtime_cfg) + "\n")
         self.output.config(state=tk.DISABLED)
         self.set_status("Ready")
 

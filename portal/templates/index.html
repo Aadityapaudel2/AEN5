@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ request.url_for('portal-static', path='portal.css') }}" />
+    <script>
+      window.ATHENA_PORTAL = {
+        pathPrefix: "{{ path_prefix }}",
+      };
+    </script>
+    <script defer src="{{ request.url_for('portal-static', path='portal.js') }}"></script>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="title-wrap">
+          <h1>Athena V5 Portal</h1>
+          <div id="runtime-line" class="runtime-line">Initializing...</div>
+        </div>
+      </header>
+
+      <main class="main-grid">
+        <section class="transcript-panel">
+          <div id="transcript-scroll" class="transcript-scroll">
+            <section id="transcript" class="transcript">{{ initial_transcript_html | safe }}</section>
+          </div>
+        </section>
+
+        <aside class="control-panel">
+          <label class="label" for="prompt-input">Message</label>
+          <textarea id="prompt-input" rows="8" placeholder="Type your prompt here..."></textarea>
+
+          <div class="check-row">
+            <label><input id="thinking-toggle" type="checkbox" /> Thinking</label>
+            <label><input id="show-thoughts-toggle" type="checkbox" /> Show thoughts</label>
+          </div>
+
+          <div class="btn-row">
+            <button id="send-btn" class="btn primary" type="button">Send</button>
+            <button id="clear-btn" class="btn" type="button">Clear</button>
+          </div>
+
+          <div id="status-box" class="status-box">Ready.</div>
+        </aside>
+      </main>
+    </div>
+  </body>
+</html>
