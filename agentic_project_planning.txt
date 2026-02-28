@@ -1,0 +1,55 @@
+Drawing:
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+[Athena Agent System]
+  [Core Runtime]                                  [NOW]
+    [Athena 1.7B local model via LocalStreamer]   [NOW]
+    [Prompt builder + short history window]       [NOW]
+    [Stream generation + manual stop]             [NOW]
+    [Think-mode toggle / hide-thought filter]     [NOW]
+
+  [UI Layer]                                      [NOW]
+    [Qt UI (primary)]                             [NOW]
+      [Markdown + LaTeX transcript render]        [NOW]
+      [Model proof + runtime config display]      [NOW]
+    [Tk UI fallback]                              [NOW]
+    [FastAPI Portal /AthenaV5]                    [NOW]
+      [Smoke mode (no model load)]                [NOW]
+      [Live model mode]                           [NOW]
+
+  [Agentic Layer]
+    [Tool Router]                                 [NEXT]
+      [python calculator tool]                    [NEXT]
+      [sympy solve/check tool]                    [NEXT]
+      [numpy/data helper tool]                    [NEXT]
+    [Plan -> Act -> Verify loop]                  [NEXT]
+    [Session memory (structured state)]           [NEXT]
+    [Long-term memory store + retrieval]          [LATER]
+
+  [Voice Stack]
+    [STT (mic -> text)]                           [NEXT]~at a time.
+- Every branch should have a feature flag so failures do not break core chat.
+- Tool branch should be verified (execute + check + report), not just text imitation.
+- Voice branch should be split services (LLM process separate from STT/TTS process).
+- Vision branch should start with image upload before any live camera stream.
+
+What we can do right now (real capabilities):
+- Local 1.7B text chat with streaming output.
+- Stop/cancel generation from UI.
+- Portal route with smoke mode and live model mode.
+- Conversation transcript rendering (markdown/latex style).
+- Basic multi-turn history in chat request.
+
+What is not implemented yet:
+- Native tool-calling execution loop (python/sympy/numpy router).
+- STT/TTS realtime voice pipeline.
+- Vision/camera agent.
+- Persistent memory + retrieval.
+
+Immediate next build (small, practical):
+1) Tool router v1: python calculator + sympy checker.
+2) Verification trace in response: "tool input -> output -> final answer".
+3) TTS output-only bridge from model stream.
+4) STT push-to-talk endpoint.
+5) Full duplex interrupt after stability checks.

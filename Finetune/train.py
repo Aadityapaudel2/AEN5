@@ -48,6 +48,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--fp16", action="store_true")
     p.add_argument("--gradient_checkpointing", action="store_true")
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--resume_from_checkpoint", type=str, default="")
     return p.parse_args()
 
 
@@ -265,7 +266,14 @@ def main() -> None:
         trainer_kwargs["tokenizer"] = tokenizer
         trainer = Trainer(**trainer_kwargs)
 
-    trainer.train()
+    resume_ckpt = args.resume_from_checkpoint.strip() if args.resume_from_checkpoint else ""
+    if resume_ckpt:
+        ckpt_path = Path(resume_ckpt)
+        if not ckpt_path.exists():
+            raise FileNotFoundError(f"resume_from_checkpoint path does not exist: {ckpt_path}")
+        trainer.train(resume_from_checkpoint=str(ckpt_path))
+    else:
+        trainer.train()
     trainer.save_model(args.output_dir)
     tokenizer.save_pretrained(args.output_dir)
 

@@ -3,6 +3,7 @@ param(
     [string]$ModelPath,
     [string]$TrainFile,
     [string]$OutputDir,
+    [string]$ResumeFromCheckpoint,
     [switch]$AllowCpu,
     [switch]$DryRun
 )
@@ -100,6 +101,7 @@ if (-not $Config.train) { throw "Missing 'train' section in args file: $Resolved
 $SelectedModelPath = if ($PSBoundParameters.ContainsKey("ModelPath")) { $ModelPath } else { [string]$Config.paths.model_path }
 $SelectedTrainFile = if ($PSBoundParameters.ContainsKey("TrainFile")) { $TrainFile } else { [string]$Config.paths.train_file }
 $SelectedOutputDir = if ($PSBoundParameters.ContainsKey("OutputDir")) { $OutputDir } else { [string]$Config.paths.output_dir }
+$SelectedResumeCheckpoint = if ($PSBoundParameters.ContainsKey("ResumeFromCheckpoint")) { $ResumeFromCheckpoint } else { [string]$Config.paths.resume_from_checkpoint }
 
 if ([string]::IsNullOrWhiteSpace($SelectedModelPath)) { throw "model_path is required." }
 if ([string]::IsNullOrWhiteSpace($SelectedTrainFile)) { throw "train_file is required." }
@@ -108,6 +110,10 @@ if ([string]::IsNullOrWhiteSpace($SelectedOutputDir)) { throw "output_dir is req
 $ResolvedModelPath = Resolve-ExistingPath -BaseDir $ProjectRoot -PathValue $SelectedModelPath
 $ResolvedTrainFile = Resolve-ExistingPath -BaseDir $ProjectRoot -PathValue $SelectedTrainFile
 $ResolvedOutputDir = Resolve-OutputPath -BaseDir $ProjectRoot -PathValue $SelectedOutputDir
+$ResolvedResumeCheckpoint = $null
+if (-not [string]::IsNullOrWhiteSpace($SelectedResumeCheckpoint)) {
+    $ResolvedResumeCheckpoint = Resolve-ExistingPath -BaseDir $ProjectRoot -PathValue $SelectedResumeCheckpoint
+}
 
 if ((Get-BoolValue -Value $Config.train.bf16) -and (Get-BoolValue -Value $Config.train.fp16)) {
     throw "Invalid config: both train.bf16 and train.fp16 are true. Enable only one."
@@ -145,6 +151,9 @@ $Summary = [ordered]@{
         gradient_checkpointing = $Config.train.gradient_checkpointing
         seed = $Config.train.seed
     }
+}
+if ($ResolvedResumeCheckpoint) {
+    $Summary.resume_from_checkpoint = $ResolvedResumeCheckpoint
 }
 
 Set-Location -Path $ScriptDir
@@ -207,6 +216,9 @@ $LaunchArgs.Add("--logging_steps"); $LaunchArgs.Add([string]$Config.train.loggin
 $LaunchArgs.Add("--save_steps"); $LaunchArgs.Add([string]$Config.train.save_steps)
 $LaunchArgs.Add("--save_total_limit"); $LaunchArgs.Add([string]$Config.train.save_total_limit)
 $LaunchArgs.Add("--seed"); $LaunchArgs.Add([string]$Config.train.seed)
+if ($ResolvedResumeCheckpoint) {
+    $LaunchArgs.Add("--resume_from_checkpoint"); $LaunchArgs.Add($ResolvedResumeCheckpoint)
+}
 
 Add-BoolFlag -Args $LaunchArgs -FlagName "--save_only_model" -Enabled $Config.train.save_only_model
 Add-BoolFlag -Args $LaunchArgs -FlagName "--strict_no_truncation" -Enabled $Config.train.strict_no_truncation
