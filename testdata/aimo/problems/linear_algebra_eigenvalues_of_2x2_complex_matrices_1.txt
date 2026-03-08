@@ -1,0 +1,75 @@
+Eigenvalue power ratio for an integral/series-defined 2x2 operator
+
+A linear operator T on ℂ^2 is represented (in the standard basis) by the 2×2 matrix
+            ⎡  ∫₀¹ 4x dx        -  \sum_{n=1}^∞ (1/2)^n ⎤
+  M   =      ⎢                                            ⎥ .
+            ⎣  \sum_{n=1}^∞ (1/2)^n     ∫₀¹ 4x dx           ⎦
+
+Let λ be the eigenvalue of M with Im(λ)>0. Define Ω = λ^10 and
+  Ψ = Re(Ω) / Im(Ω).
+
+Write Ψ in lowest terms as p/q with p,q \in ℤ and q>0. Compute (p+q) mod 1000, as the unique integer in {0,1,...,999} congruent to p+q modulo 1000.
+
+Solution.
+Step 1 (constant_evaluation_for_matrix_entries)
+Evaluate the constants:
+- ∫₀¹ 4x dx = [2x^2]₀¹ = 2.
+- \sum_{n=1}^∞ (1/2)^n is a geometric series with first term 1/2 and ratio 1/2, so it sums to (1/2)/(1-1/2)=1.
+
+Hence
+  M = ⎡2  -1⎤
+      ⎣1   2⎦.
+
+Step 2 (eigenvalue_from_characteristic_polynomial)
+Compute the characteristic polynomial:
+  det(M - tI) = det⎡2-t  -1 ⎤ = (2-t)^2 + 1.
+               ⎣ 1   2-t⎦
+So eigenvalues satisfy (2-t)^2 = -1, i.e.
+  t = 2 ± i.
+By the selection rule Im(λ)>0, we choose
+  λ = 2 + i.
+
+Step 3 (polar_form_power_and_ratio via exact complex powering)
+Compute Ω = (2+i)^10 by repeated squaring (exact arithmetic):
+  (2+i)^2 = 4 + 4i + i^2 = 3 + 4i.
+  (2+i)^4 = (3+4i)^2 = 9 + 24i + 16i^2 = -7 + 24i.
+  (2+i)^8 = (-7+24i)^2 = 49 - 336i + 576i^2 = -527 - 336i.
+
+Then
+  (2+i)^10 = (2+i)^8(2+i)^2
+           = (-527-336i)(3+4i)
+           = (-527 \cdot 3) + (-527 \cdot 4i) + (-336i \cdot 3) + (-336i \cdot 4i)
+           = -1581 - 2108i - 1008i - 1344i^2
+           = -1581 - 3116i + 1344
+           = -237 - 3116i.
+
+Thus
+  Re(Ω) = -237,   Im(Ω) = -3116,
+and
+  Ψ = Re(Ω)/Im(Ω) = (-237)/(-3116) = 237/3116.
+
+Step 4 (reduce_fraction_and_apply_modulus)
+Check that 237/3116 is already in lowest terms:
+  3116 = 237 \cdot 13 + 35
+  237  = 35 \cdot 6 + 27
+  35   = 27 \cdot 1 + 8
+  27   = 8 \cdot 3 + 3
+  8    = 3 \cdot 2 + 2
+  3    = 2 \cdot 1 + 1
+so gcd(237,3116)=1.
+
+Therefore p=237, q=3116, and
+  p+q = 237 + 3116 = 3353 \equiv 353 (mod 1000).
+
+So the required output is 353.
+
+Uniqueness Test
+1) The matrix entries are uniquely determined by the convergent integral and series evaluations, so M is unique.
+
+2) The characteristic polynomial has roots 2±i, a conjugate pair. Exactly one has positive imaginary part, so the selection rule Im(λ)>0 determines λ uniquely.
+
+3) With λ fixed, Ω=λ^10 and Ψ=Re(Ω)/Im(Ω) are uniquely determined (and Im(Ω)=-3116\neq0, so Ψ is well-defined).
+
+4) Writing Ψ=p/q in lowest terms is unique because dividing by gcd(p,q) gives a unique reduced fraction with q>0. Hence (p+q) mod 1000 is uniquely determined.
+
+353

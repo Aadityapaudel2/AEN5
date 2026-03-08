@@ -1,0 +1,251 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "linear_congruence__bezout__euclid_inverse",
+    "instance_id": "imocompendium:2.4.1_Def2.112_Thm2.113_2.114",
+    "short_name": "Linear congruence via Euclid/Bezout (unique modular inverse)",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "divisibility & gcd",
+      "congruences"
+    ],
+    "topic_path": [
+      "divisibility_and_congruences",
+      "linear_congruences",
+      "modular_inverse_via_bezout"
+    ],
+    "tags": [
+      "Bezout_identity",
+      "Euclidean_algorithm",
+      "ax_plus_by_equals_c",
+      "constructive_congruence_solution",
+      "coprimality",
+      "divisibility_definitions",
+      "extended_Euclidean_algorithm",
+      "gcd(a,b)=gcd(a, b_mod_a)",
+      "gcd(a,b)=gcd(a,b-ka)",
+      "gcd_condition_for_solvability",
+      "gcd_invariance_mod",
+      "gcd_invariant",
+      "gcd_lcm_definitions",
+      "gcd_lcm_relations",
+      "gcd_linear_combinations",
+      "lifting_linear_congruences_optional",
+      "linear_Diophantine_link",
+      "mod_invariant",
+      "modular_inverse",
+      "parametrization_linear_solutions",
+      "solvability_condition_gcd",
+      "solving_ax_equals_b_mod_n"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Given integers $a,b,n$ with $n\\ge 2$ and $\\gcd(a,n)=1$, determine the unique residue class $x\\pmod n$ solving $ax\\equiv b\\pmod n$, reported as the least nonnegative representative.",
+    "object(s)": [
+      {
+        "name": "a",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "b",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "x",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$n\\in\\mathbb{N},\\ n\\ge 2$",
+      "$a,b\\in\\mathbb{Z}$",
+      "$\\gcd(a,n)=1$"
+    ],
+    "ask": [
+      "Find the least $x\\in\\{0,1,\\dots,n-1\\}$ such that $ax\\equiv b\\pmod n$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "$n\\ge 2$",
+        "purpose": "varies the modulus and the ambient residue class ring"
+      },
+      {
+        "name": "a",
+        "type": "int",
+        "domain": "$a\\in\\mathbb{Z}$ with $\\gcd(a,n)=1$",
+        "purpose": "controls invertible coefficient; forces uniqueness of the residue"
+      },
+      {
+        "name": "b",
+        "type": "int",
+        "domain": "$b\\in\\mathbb{Z}$ (taken modulo $n$ implicitly)",
+        "purpose": "shifts the target residue class"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "invertibility_condition",
+        "depends_on": [
+          "a",
+          "n"
+        ],
+        "statement": "$\\gcd(a,n)=1$ implies existence of $a^{-1}\\pmod n$ and uniqueness of solutions to $ax\\equiv b\\pmod n$."
+      },
+      {
+        "name": "bezout_certificate",
+        "depends_on": [
+          "a",
+          "n"
+        ],
+        "statement": "There exist $u,v\\in\\mathbb{Z}$ with $au+nv=1$; then $x\\equiv bu\\pmod n$ solves $ax\\equiv b\\pmod n$."
+      }
+    ],
+    "operator(s)": [
+      "Euclidean_algorithm",
+      "Bezout_identity",
+      "modular_inverse",
+      "solving_ax_equals_b_mod_n",
+      "equivalence_class_manipulation",
+      "modular_reduction"
+    ],
+    "essential_assumption(s)": [
+      "The instance enforces $\\gcd(a,n)=1$ (invertibility), so the solution class is unique modulo $n$.",
+      "Output is normalized as the least nonnegative representative in $[0,n-1]$; this is a structural convention, not instance-specific."
+    ],
+    "uniqueness_certificate(s)": [
+      "If $\\gcd(a,n)=1$ then multiplication by $a$ is a bijection on $\\mathbb{Z}/n\\mathbb{Z}$, so exactly one residue class solves $ax\\equiv b\\pmod n$; choosing the least nonnegative representative makes the reported integer unique."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Euclidean_algorithm",
+        "inputs": [
+          "integers $a,n$"
+        ],
+        "purpose": "compute $\\gcd(a,n)$ and extended coefficients",
+        "outputs": [
+          "Bezout coefficients $u,v$ with $au+nv=\\gcd(a,n)$"
+        ]
+      },
+      {
+        "name": "Bezout_identity",
+        "inputs": [
+          "Bezout coefficients for $(a,n)$"
+        ],
+        "purpose": "turn $au+nv=1$ into a modular inverse statement",
+        "outputs": [
+          "explicit modular inverse $u\\equiv a^{-1}\\pmod n$"
+        ]
+      },
+      {
+        "name": "solvability_condition_gcd",
+        "inputs": [
+          "$a,b,n$"
+        ],
+        "purpose": "justify that solvability is equivalent to $\\gcd(a,n)\\mid b$; under the family assumption this always holds",
+        "outputs": [
+          "existence of a solution class mod $n$"
+        ]
+      },
+      {
+        "name": "solving_ax_equals_b_mod_n",
+        "inputs": [
+          "$a^{-1}\\pmod n$",
+          "$b$"
+        ],
+        "purpose": "construct the unique solution residue class",
+        "outputs": [
+          "$x\\equiv a^{-1}b\\pmod n$"
+        ]
+      },
+      {
+        "name": "parametrization_linear_solutions",
+        "inputs": [
+          "Diophantine form $ax+ny=b$"
+        ],
+        "purpose": "interpret congruence solutions as integer solutions to a linear Diophantine equation",
+        "outputs": [
+          "equivalence between congruence class and integer solution family"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "gcd_condition_for_solvability",
+        "role": "connects $ax\\equiv b\\pmod n$ solvability to a gcd divisibility condition"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Integers form a Euclidean domain; the Euclidean algorithm produces linear combinations realizing the gcd."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Replace the congruence $ax\\equiv b\\pmod n$ by the Diophantine equation $ax+ny=b$ and solve it using extended Euclid.",
+      "Normalize the residue class by taking the least nonnegative representative."
+    ],
+    "finish_type": "closed_form"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, lcm, modular exponentiation scaffolding."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional symbolic/number theory utilities: factorint, primerange, mod_inverse, crt; useful for verification tasks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, crt, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Validate that the produced object(s) satisfy all defining congruences/divisibility/Diophantine constraints for randomly sampled parameters within the declared domain."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Cross-check the main result via an alternative computation (e.g., brute force for small bounds, or an independent formula such as factorization vs. valuation, or CRT reconstruction vs. direct search)."
+      },
+      {
+        "name": "edge_case_sweep_small_n",
+        "reason": "Brute force all $x\\in[0,n-1]$ for small $n$ to validate uniqueness and compare to extended-Euclid output."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 954,
+      "normalized": 954
+    }
+  }
+}

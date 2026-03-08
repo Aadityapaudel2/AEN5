@@ -1,0 +1,261 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "commuting__square_zero_matrices__finite_field__centralizer_count",
+    "instance_id": "m3_f2__a2_b2_commute_count_2026_02_16",
+    "short_name": "Commuting square-zero 3x3 matrices over F2",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "linear_algebra",
+    "subdomain(s)": [
+      "matrices over finite fields",
+      "square-zero (index-2 nilpotent) similarity classes",
+      "centralizers and commuting pairs",
+      "rank-one matrix parametrization"
+    ],
+    "topic_path": [
+      "Linear Algebra",
+      "Finite Fields",
+      "Counting commuting nilpotent matrices via Jordan form"
+    ],
+    "tags": [
+      "F2",
+      "square_zero",
+      "nilpotent",
+      "Jordan_form",
+      "centralizer",
+      "conjugation_invariance",
+      "rank_one_outer_product",
+      "commuting_pairs"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Count ordered pairs (A,B) of 3x3 matrices over F2 such that A^2=B^2=0 and AB=BA.",
+    "object(s)": [
+      {
+        "name": "A",
+        "type": "matrix",
+        "role": "unknown",
+        "dependency": "independent"
+      },
+      {
+        "name": "B",
+        "type": "matrix",
+        "role": "unknown",
+        "dependency": "independent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "Work in M_3(F_2).",
+      "A^2 = 0.",
+      "B^2 = 0.",
+      "AB = BA."
+    ],
+    "ask": [
+      "Determine the number N of ordered pairs (A,B) satisfying the conditions."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "exact_integer"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "n >= 1",
+        "purpose": "matrix size (here n=3)"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "q is a prime power",
+        "purpose": "base field size (here q=2)"
+      },
+      {
+        "name": "k",
+        "type": "int",
+        "domain": "k >= 1",
+        "purpose": "nilpotency exponent constraint A^k=0, B^k=0 (here k=2)"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "square_zero_similarity_partition",
+        "depends_on": [
+          "n",
+          "k"
+        ],
+        "statement": "A^2=0 implies all Jordan blocks have size \\leq2. In n=3 this forces A to be either 0 (partition (1,1,1)) or of Jordan type (2,1) (rank 1).\n"
+      },
+      {
+        "name": "centralizer_invariance_under_conjugation",
+        "depends_on": [
+          "A"
+        ],
+        "statement": "If A and A' are similar, conjugation gives a bijection between {B : AB=BA and B^2=0} and {B' : A'B'=B'A' and (B')^2=0}. Thus the commuting square-zero count depends only on the similarity type of A.\n"
+      },
+      {
+        "name": "rank_one_outer_product_characterization_over_F2",
+        "depends_on": [
+          "A",
+          "q"
+        ],
+        "statement": "Over F2, every nonzero rank-1 matrix is uniquely u w^T with u,w \\neq 0, and (u w^T)^2=0 iff w^T u = 0.\n"
+      }
+    ],
+    "operator(s)": [
+      "conjugation_action",
+      "centralizer",
+      "Jordan_decomposition",
+      "rank_one_outer_product",
+      "linear_equation_solving_over_F2",
+      "case_split",
+      "orbit_invariance_counting"
+    ],
+    "essential_assumption(s)": [
+      "Jordan classification applies over F2 for nilpotent operators.",
+      "Over F2, scalar rescaling is trivial, making rank-1 outer-product representations unique.",
+      "Conjugation by GL_3(F2) preserves commuting relations and the equation X^2=0."
+    ],
+    "uniqueness_certificate(s)": [
+      {
+        "name": "finite_check_certificate",
+        "statement": "The set M_3(F2)^2 is finite, so the number of solutions is a uniquely defined integer.\n"
+      },
+      {
+        "name": "conjugacy_invariance_certificate",
+        "statement": "All nonzero square-zero matrices have the single Jordan type (2,1); conjugation invariance implies a constant number of commuting square-zero partners for each such matrix. Hence the total count is uniquely determined from one representative computation.\n"
+      }
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "classify_square_zero_by_Jordan_type",
+        "inputs": [
+          "constraint A^2=0 in M_3(F_2)"
+        ],
+        "purpose": "reduce possible similarity types to 0 and Jordan type (2,1)",
+        "outputs": [
+          "dichotomy A=0 or A similar to E_12"
+        ]
+      },
+      {
+        "name": "count_nonzero_square_zero_via_rank1_outer_product",
+        "inputs": [
+          "rank-1 parametrization A = u w^T"
+        ],
+        "purpose": "count nonzero A with A^2=0 by counting pairs (u,w) with w^T u = 0",
+        "outputs": [
+          "number of nonzero square-zero matrices equals 21; total square-zero equals 22"
+        ]
+      },
+      {
+        "name": "conjugacy_invariance_reduce_to_representative",
+        "inputs": [
+          "similarity class of A of type (2,1)"
+        ],
+        "purpose": "reduce counting commuting B to a single canonical representative",
+        "outputs": [
+          "a fixed representative A0 = E_12"
+        ]
+      },
+      {
+        "name": "compute_centralizer_and_square_zero_subset",
+        "inputs": [
+          "commutation equations XA0=A0X",
+          "constraint X^2=0"
+        ],
+        "purpose": "compute the centralizer Z(A0) and count square-zero elements inside it",
+        "outputs": [
+          "Z(A0) has form [[a,b,c],[0,a,0],[0,d,e]]; square-zero elements count is 6"
+        ]
+      },
+      {
+        "name": "sum_cases",
+        "inputs": [
+          "A=0 case",
+          "A\\neq0 case"
+        ],
+        "purpose": "assemble total ordered-pair count",
+        "outputs": [
+          "N = 22 + 21 \\cdot 6 = 148"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Jordan Canonical Form for nilpotent operators",
+        "role": "identifies square-zero matrices with partitions having all parts \\leq2"
+      },
+      {
+        "name": "conjugation transports centralizers",
+        "role": "justifies invariance of the commuting-square-zero count across a similarity class"
+      },
+      {
+        "name": "rank-1 outer product identity",
+        "role": "(u w^T)^2 = u (w^T u) w^T, giving the condition for square-zero"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "classification up to similarity + counting via invariants"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Reduce A^2=0 to the two similarity types 0 and (2,1).",
+      "Count nonzero square-zero matrices via rank-1 outer products u w^T with w^T u = 0.",
+      "Use conjugacy invariance to compute commuting square-zero B by analyzing one representative's centralizer."
+    ],
+    "finish_type": "finite_enumeration_by_similarity_type"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "itertools",
+        "reason": "brute-force enumeration of all 3x3 matrices over F2 for verification"
+      },
+      {
+        "name": "numpy",
+        "reason": "fast matrix multiplication mod 2 for brute-force verification"
+      }
+    ],
+    "import_hint(s)": [
+      "from itertools import product",
+      "import numpy as np"
+    ],
+    "task(s)": [
+      {
+        "name": "brute_force_verify_count",
+        "reason": "enumerate all 512 matrices A,B, filter A^2=B^2=0 and AB=BA, and confirm N=148"
+      },
+      {
+        "name": "verify_centralizer_count",
+        "reason": "for a representative A0, enumerate all B with B^2=0 and BA0=A0B to confirm the value 6"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "n": 3,
+      "q": 2,
+      "k": 2
+    },
+    "final_answer": {
+      "value": 148,
+      "normalized": 148
+    }
+  }
+}

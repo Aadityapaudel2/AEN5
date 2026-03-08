@@ -1,0 +1,65 @@
+Conditional probability a contract succeeds unless West holds both Q♠ and J♠
+
+In a bridge deal, North-South's 26 cards are known. Therefore the defenders (East and West) jointly hold exactly the following 26-card set D:
+  D = { ♠Q, ♠J, ♠2, ♠3, ♠4, ♠5, ♠6, ♠7,
+        ♥Q, ♥2, ♥3, ♥4, ♥5, ♥6, ♥7,
+        ♦2, ♦3, ♦4, ♦5, ♦6, ♦7,
+        ♣2, ♣3, ♣4, ♣5, ♣6 }.
+On trick 1, West leads the ♥Q, so you learn the ownership constraint "West has ♥Q". No other information about the defenders' hands is available.
+
+Model: conditional on the above information, all remaining deals are equally likely; i.e., among the remaining 25 unseen cards in D\{♥Q}, West receives 12 of them and East receives the other 13, uniformly over all such splits.
+
+South plays a spade-trump contract needing 12 tricks, and (given the fixed North-South holdings) the contract succeeds if and only if West does NOT hold both ♠Q and ♠J.
+
+Let X be the conditional probability the contract succeeds. Write X = A/B in lowest terms with A>0. Compute B-A.
+
+Solution.
+Step 1 (define_conditional_sample_space; hypergeometric_counting).
+The defenders' 26-card pool D is fixed. Since West is known to hold ♥Q, remove that card from uncertainty.
+There remain 25 unknown cards in D\{♥Q}. West must receive 12 of these, and East receives the other 13.
+
+Thus the conditional sample space has size
+  |Ω| = C(25,12),
+since choosing West's remaining 12 cards determines East's 13 cards automatically.
+
+Step 2 (translate_success_event_to_unfavorable_ownership; compute_probability).
+The contract fails exactly when West holds both ♠Q and ♠J. Since ♥Q is already fixed in West's hand, this failure event is equivalent to:
+  "West's chosen 12 cards from the remaining 25 include both ♠Q and ♠J."
+
+Count the number of West-choices that contain both ♠Q and ♠J:
+- Fix ♠Q and ♠J in West's 12-card selection.
+- The other 10 cards can be chosen freely from the remaining 23 cards.
+
+So the number of unfavorable deals is
+  |F| = C(23,10).
+
+Therefore the failure probability is
+  P(fail) = |F|/|Ω| = C(23,10) / C(25,12).
+
+Step 3 (fraction_reduction).
+Simplify the ratio:
+  C(23,10) / C(25,12)
+= [23!/(10!13!)] / [25!/(12!13!)]
+= (23!  \cdot  12!) / (10!  \cdot  25!)
+= (12! / 10!)  \cdot  (23! / 25!)
+= (12 \cdot 11) / (25 \cdot 24)
+= 132/600
+= 11/50.
+
+Hence
+  P(success) = X = 1 - 11/50 = 39/50.
+
+So A=39 and B=50, and
+  B-A = 50 - 39 = 11.
+
+Uniqueness Test
+(Uses the uniqueness_certificate(s): finite uniform conditional sample space \Rightarrow X uniquely determined; reduced fraction \Rightarrow B-A unique.)
+
+1) The conditional model specifies a finite uniform sample space: after fixing North-South's cards and the ownership constraint "West has ♥Q", every remaining assignment of the other 25 cards into a 12-card set for West and a 13-card set for East is equally likely. Therefore the probability X is uniquely defined as a ratio of two integers.
+
+2) The failure event ("West holds both ♠Q and ♠J") depends only on West's 12-card subset of the 25 unknown cards, so its favorable count is uniquely determined as C(23,10) and the total count is uniquely determined as C(25,12). Thus X is uniquely determined as
+   X = 1 - C(23,10)/C(25,12) = 39/50.
+
+3) Writing X=A/B in lowest terms is unique (standard uniqueness of reduced fractions), so B-A is uniquely determined. Hence the answer 11 is the only possible value consistent with the stated model.
+
+11

@@ -1,0 +1,366 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "Dirichlet_convolution__mobius_inversion__recover_arithmetic_function__buffed",
+    "instance_id": "imocompendium:3.30.2_Longlisted_TH A3_convolution_product_problem99",
+    "short_name": "Dirichlet convolution and Möbius inversion on arithmetic functions - Buffed Seed",
+    "generation": 2
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "arithmetic functions",
+      "inversion techniques",
+      "p-adic valuation",
+      "linear congruences"
+    ],
+    "topic_path": [
+      "arithmetic_functions",
+      "Dirichlet_convolution",
+      "mobius_inversion"
+    ],
+    "tags": [
+      "Dirichlet_convolution_optional",
+      "convolution_inverse",
+      "functional_equations_on_arith_functions_optional",
+      "inclusion_exclusion_on_divisors",
+      "lambda_carmichael_optional",
+      "mobius_inversion_optional",
+      "mu_mobius_optional",
+      "multiplicative_functions",
+      "parity_of_arith_functions",
+      "sterilized",
+      "buffed",
+      "gymnasium_ready",
+      "two_regime_interaction",
+      "v_p_valuation",
+      "linear_congruence"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Let $p<q$ be odd primes and $k\\ge 2$, and set $n_0:=p^k q$. Fix an integer $A$ with $2\\le A\\le pq-2$ such that $\\gcd(A+q-1,p)=1$ and $\\gcd(A-1,q)=1$. Define an arithmetic function $F$ on the divisor lattice of $n_0$ by\n\nF(n)=\\begin{cases} n + A\\,p^{v_p(n)}, & q\\mid n,\\\\ n, & q\\nmid n,\\end{cases}\\qquad (n\\mid n_0),\n\nwhere $v_p(\\cdot)$ is the $p$-adic valuation. Suppose $f$ is an arithmetic function on divisors of $n_0$ satisfying $F(n)=\\sum_{d\\mid n} f(d)$ for every $n\\mid n_0$, and write $t:=v_p(f(n_0))$. Consider the residue-class set $S:=\\{x\\ (\\bmod\\ n_0): f(n_0)x\\equiv p^t\\ (\\bmod\\ n_0)\\}$.",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "k",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "A",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n_0",
+        "type": "integer",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "F",
+        "type": "function",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "f",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "t",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "S",
+        "type": "set",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "S_sum_mod_1000",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$p$ and $q$ are distinct odd primes with $p<q$, and $k$ is an integer with $k\\ge 2$",
+      "$n_0 = p^k q$",
+      "$A$ is an integer with $2\\le A\\le pq-2$, $\\gcd(A+q-1,p)=1$, and $\\gcd(A-1,q)=1$",
+      "For every divisor $n\\mid n_0$, define $F(n)=n + A p^{v_p(n)}$ if $q\\mid n$ and $F(n)=n$ if $q\\nmid n$",
+      "There exists an arithmetic function $f$ on divisors of $n_0$ such that for every $n\\mid n_0$ we have $F(n)=\\sum_{d\\mid n} f(d)$ (equivalently, $F = f * 1$ on the divisor lattice of $n_0$)",
+      "Define $t:=v_p(f(n_0))$ and $S:=\\{x\\ (\\bmod\\ n_0): f(n_0)x\\equiv p^t\\ (\\bmod\\ n_0)\\}$"
+    ],
+    "ask": [
+      "(Stage 1 - inversion to a valuation artifact) Use Möbius inversion on the divisor lattice of $n_0$ to express $f(n_0)$ in terms of $F(n_0)$, $F(n_0/p)$, $F(n_0/q)$, $F(n_0/(pq))$, and determine $t=v_p(f(n_0))$.",
+      "(Stage 2 - linear congruence controlled by $t$) Represent $S$ by its least residues in $\\{0,1,\\dots,n_0-1\\}$ and compute $\\sum_{x\\in S} x$ modulo $1000$. The required output is this sum reduced mod $1000$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime with p\\geq5",
+        "purpose": "prime base for the prime-power factor p^k in the structured modulus n_0"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "odd prime with q>p",
+        "purpose": "second prime factor of n_0; enforces a nontrivial composite modulus of the form p^k q"
+      },
+      {
+        "name": "k",
+        "type": "int",
+        "domain": "integer k\\geq2",
+        "purpose": "exponent controlling the prime-power component p^k; forces a nontrivial p-adic valuation regime (t>0) and a multi-solution linear congruence"
+      },
+      {
+        "name": "A",
+        "type": "int",
+        "domain": "integer A with 2\\leqA\\leqpq-2, gcd(A+q-1,p)=1, and gcd(A-1,q)=1",
+        "purpose": "structural twist in F that prevents collapsing to a one-step solve and guarantees invertibility after valuation reduction"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "convolution_associativity",
+        "depends_on": [
+          "n_0"
+        ],
+        "statement": "Dirichlet convolution (restricted to arithmetic functions on divisors of $n_0$) is associative and commutative; inversion is performed inside this algebra."
+      },
+      {
+        "name": "mobius_inverse_of_1",
+        "depends_on": [
+          "n_0"
+        ],
+        "statement": "The Möbius function $\\mu$ is the Dirichlet inverse of the constant-1 function: $\\mu * 1 = \\varepsilon$ (identity at $n=1$)."
+      },
+      {
+        "name": "structured_modulus_LIN",
+        "depends_on": [
+          "p",
+          "q",
+          "k"
+        ],
+        "statement": "The modulus/evaluation point has the forced structured form $n_0=p^k q$ with $p,q$ odd primes, $q\\ne p$, and $k\\ge 2$ (so $n_0$ is composite and has a nontrivial prime-power factor)."
+      },
+      {
+        "name": "squarefree_reduction_for_f_n0",
+        "depends_on": [
+          "p",
+          "q",
+          "k",
+          "A"
+        ],
+        "statement": "Because $\\mu(d)=0$ for non-squarefree $d$, the value $f(n_0)$ is determined by the four-term inclusion-exclusion: $f(n_0)=F(n_0)-F(n_0/p)-F(n_0/q)+F(n_0/(pq))$."
+      },
+      {
+        "name": "anti_triviality_valuation_window_VP",
+        "depends_on": [
+          "p",
+          "q",
+          "k",
+          "A"
+        ],
+        "statement": "The guards $\\gcd(A+q-1,p)=1$ and $\\gcd(A-1,q)=1$ force $\\gcd((p-1)(q-1+A),pq)=1$, hence $f(n_0)=p^{k-1}(p-1)(q-1+A)$ satisfies $1\\le v_p(f(n_0))=k-1<k$ and $v_q(f(n_0))=0$."
+      },
+      {
+        "name": "anti_triviality_noninvertible_but_solvable_congruence",
+        "depends_on": [
+          "p",
+          "q",
+          "k",
+          "A"
+        ],
+        "statement": "With $t=v_p(f(n_0))=k-1$, one has $\\gcd(f(n_0),n_0)=p^t$ (neither $1$ nor $n_0$), so the congruence $f(n_0)x\\equiv p^t\\pmod{n_0}$ has multiple solutions and requires valuation-guided reduction to a coprime modulus."
+      }
+    ],
+    "operator(s)": [
+      "Dirichlet_convolution_optional",
+      "mobius_inversion_optional",
+      "mu_mobius_optional",
+      "lambda_carmichael_optional",
+      "functional_equations_on_arith_functions_optional",
+      "multiplicative_functions",
+      "parity_of_arith_functions",
+      "v_p_valuation",
+      "linear_congruence"
+    ],
+    "essential_assumption(s)": [
+      "The convolution equation is of the invertible form $F=f*1$ on the divisor lattice of $n_0$, so that convolving with $\\mu$ yields $f=F*\\mu$.",
+      "The instance supplies enough information about $F$ on the divisor lattice of $n_0$ to compute the divisor sums.",
+      "Non-template guard: the construction enforces $\\gcd(f(n_0),n_0)=p^{k-1}$ with $k\\ge 2$, so Stage 2 cannot be solved by a single modular inverse step (since $f(n_0)$ is not invertible modulo $n_0$); one must compute the exact $p$-adic valuation $t$ and reduce the linear congruence accordingly."
+    ],
+    "uniqueness_certificate(s)": [
+      "Uniqueness of $f(n_0)$ and $t$: since $\\mu*1=\\varepsilon$, the solution $f$ on $n\\mid n_0$ is unique and $f(n_0)=\\sum_{d\\mid n_0} \\mu(d)F(n_0/d)$ is uniquely determined; then $t=v_p(f(n_0))$ is uniquely determined by prime-power valuation.",
+      "Uniqueness of the reported output and mod-$1000$ normalization: the congruence $f(n_0)x\\equiv p^t\\pmod{n_0}$ reduces (by dividing by $p^t$ and using $\\gcd(f(n_0)/p^t,\\, n_0/p^t)=1$ from the invariants) to a unique residue class modulo $n_0/p^t=pq$. Hence $S$ consists of exactly $p^t$ residues $x=x_0+(pq)j$ for $j=0,\\dots,p^t-1$, making $\\sum_{x\\in S}x$ uniquely determined; the final answer is this integer reduced modulo $1000$, yielding a unique value in $\\{0,1,\\dots,999\\}$."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Dirichlet_convolution_optional",
+        "inputs": [
+          "arithmetic functions $f,g$"
+        ],
+        "purpose": "encode divisor-sum identities as algebraic products",
+        "outputs": [
+          "convolution equation such as $F=f*g$"
+        ]
+      },
+      {
+        "name": "mobius_inversion_optional",
+        "inputs": [
+          "relation $F=f*1$"
+        ],
+        "purpose": "invert the divisor-sum transform",
+        "outputs": [
+          "explicit formula $f=F*\\mu$"
+        ]
+      },
+      {
+        "name": "mu_mobius_optional",
+        "inputs": [
+          "divisor sums"
+        ],
+        "purpose": "provide the inverse weights $\\mu(d)$",
+        "outputs": [
+          "cancellation/inclusion-exclusion on the divisor poset"
+        ]
+      },
+      {
+        "name": "multiplicative_functions",
+        "inputs": [
+          "prime factorization of $n_0$"
+        ],
+        "purpose": "(optional) evaluate divisor sums efficiently by multiplicativity when $F$ is multiplicative",
+        "outputs": [
+          "product decomposition across primes"
+        ]
+      },
+      {
+        "name": "v_p_valuation",
+        "inputs": [
+          "the explicit factorization of $f(n_0)$ and the structured modulus $n_0=p^k q$"
+        ],
+        "purpose": "compute $t=v_p(f(n_0))$ and identify $\\gcd(f(n_0),n_0)=p^t$, using constraints at both primes $p$ and $q$",
+        "outputs": [
+          "a nontrivial but exact gcd/valuation profile enabling reduction of the congruence in Stage 2"
+        ]
+      },
+      {
+        "name": "linear_congruence",
+        "inputs": [
+          "congruence $f(n_0)x\\equiv p^t\\pmod{n_0}$ together with valuation-derived gcd information"
+        ],
+        "purpose": "reduce by $p^t$ to a coprime congruence modulo $pq$ and construct the full solution set $S$ as an arithmetic progression of residue classes",
+        "outputs": [
+          "explicit parametrization of $S$ and a closed formula for $\\sum_{x\\in S} x$"
+        ]
+      },
+      {
+        "name": "interaction_mobius_inversion_to_linear_congruence_via_valuation",
+        "inputs": [
+          "$f(n_0)$ obtained from Möbius inversion",
+          "prime-power structure $n_0=p^k q$",
+          "valuation constraints at $p$ and $q$"
+        ],
+        "purpose": "couple inversion (producing $f(n_0)$) with $p$-adic valuation (producing $t$ and $\\gcd(f(n_0),n_0)$) to enable the gcd-reduction step in the linear congruence",
+        "outputs": [
+          "two-stage chain: inversion $\\to$ valuation artifact $t$ $\\to$ reduced congruence modulo $pq$"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "exact_division_arguments",
+        "role": "implement divisor-sum expansions by enumerating divisors and checking $d\\mid n$"
+      },
+      {
+        "name": "linear_congruence_solvability_and_count",
+        "role": "for ax\\equivb (mod m), solvability iff gcd(a,m)∣b and the number of solutions modulo m equals gcd(a,m)"
+      },
+      {
+        "name": "bezout_modular_inverse",
+        "role": "when gcd(u,m)=1, Bezout gives an inverse u^{-1} (mod m), yielding the unique solution class to ux\\equiv1 (mod m)"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Divisor-sum transforms form a convolution algebra; Möbius inversion is inclusion-exclusion on the divisor lattice.",
+      "Linear congruences reduce by the gcd; p-adic valuation computes that gcd when the modulus has prime-power structure."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use Möbius inversion to reduce f(n_0) to a four-term inclusion-exclusion on the squarefree divisors {1,p,q,pq} of n_0.",
+      "Compute t=v_p(f(n_0)) and certify v_q(f(n_0))=0 from the parameter guards, so gcd(f(n_0),n_0)=p^t is a proper nontrivial divisor.",
+      "Divide the congruence f(n_0)x\\equivp^t (mod n_0) by p^t to obtain an invertible coefficient modulo pq, then parametrize all solutions and sum them before reducing mod 1000."
+    ],
+    "finish_type": "closed_form"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, modular reduction, and sanity checks on divisibility/valuations."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional number theory utilities: factorint for checking prime constraints; mod_inverse for the reduced congruence modulo pq; crt for cross-checking."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, mod_inverse, crt"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Verify on admissible samples that the derived f(n_0) from the four-term Möbius formula matches the closed form and that t=v_p(f(n_0)) equals k-1."
+      },
+      {
+        "name": "congruence_solution_set_check",
+        "reason": "Enumerate solutions to f(n_0)x\\equivp^t (mod n_0) for small admissible instances, confirm solution count p^t, and verify the sum formula against brute force."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Cross-check the reduced congruence modulo pq by computing the modular inverse directly and confirming equivalence with CRT-based reconstruction."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 360,
+      "normalized": 360
+    }
+  }
+}

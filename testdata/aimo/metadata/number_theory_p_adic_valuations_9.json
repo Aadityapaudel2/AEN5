@@ -1,0 +1,264 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "LTE__prime_cube_second_digit__quadratic_and_quartic_coupling",
+    "instance_id": "2026-02-25__v1_nt_08_4",
+    "short_name": "Mixed LTE count with prime-cube second digits and quadratic+quartic coupling",
+    "generation": 4
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "p-adic valuations",
+      "LTE and exponent lifting",
+      "Hensel lifting (simple root)",
+      "multiplicative orders modulo primes",
+      "higher power residues (fourth powers)",
+      "quadratic residues and Legendre symbol",
+      "Chinese remainder theorem",
+      "prime-power lifting via binomial expansion"
+    ],
+    "topic_path": [
+      "p_adic_valuations",
+      "LTE",
+      "hensel_prime_square_and_prime_cube_digits",
+      "dual_quadratic_quartic_coupling"
+    ],
+    "tags": [
+      "LTE_difference_of_powers",
+      "LTE_sum_of_powers_odd_exponent",
+      "hensel_lifting_simple_root",
+      "prime_cube_second_digit",
+      "quartic_residue_partition",
+      "dual_character_coupling",
+      "CRT_counting"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Two-prime CRT counting problem where mixed LTE constraints force exact depth-2 valuation at $p$ (difference) and $q$ (sum). Prime-cube \"second digits\" are defined at $p^3$ and $q^3$, and two interacting couplings (Legendre sign and fourth-power membership) force a 3-category match under CRT.",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "A",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "B",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "d_p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "d_q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "M",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "x",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "independent"
+      },
+      {
+        "name": "a",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "b",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "S",
+        "type": "set",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$p$ and $q$ are distinct odd primes.",
+      "$A,B\\in\\mathbb{Z}$ with $A\\ge 3$ and $B\\ge 3$.",
+      "$d_p\\mid(p-1)$ with $1<d_p$ and $p\\nmid d_p$.",
+      "$2d_q\\mid(q-1)$ with $1<d_q$ and $q\\nmid d_q$.",
+      "Parity gate: $\\operatorname{lcm}(d_p,d_q)/d_q$ is odd (equivalently $v_2(d_p)\\le v_2(d_q)$), so $n/d_q$ is odd.",
+      "Quartic regime: $4\\mid(p-1)$ and $4\\mid(q-1)$.",
+      "Define $M=p^{A+1}q^{B+1}$ and $n=\\operatorname{lcm}(d_p,d_q)p^{A-2}q^{B-2}$.",
+      "Work in the unit group $(\\mathbb{Z}/M\\mathbb{Z})^\\times$."
+    ],
+    "ask": [
+      "Let $S\\subset(\\mathbb{Z}/M\\mathbb{Z})^\\times$ be the set of classes $x\\pmod M$ with $\\operatorname{ord}_p(x)=d_p$, $\\operatorname{ord}_q(x)=2d_q$, $v_p(x^n-1)=A$, $v_q(x^n+1)=B$, and with prime-cube second digits defined by $x^{d_p}\\equiv 1+p^2a\\pmod{p^3}$ and $x^{d_q}\\equiv -1+q^2b\\pmod{q^3}$ satisfying both $\\left(\\frac{a}{p}\\right)=\\left(\\frac{b}{q}\\right)$ and \"$a$ is a fourth power mod $p$ iff $b$ is a fourth power mod $q$\". Determine $|S|$ and output the unique $N$ with $0\\le N<1000$ and $N\\equiv |S|\\pmod{1000}$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime with $4\\mid(p-1)$",
+        "purpose": "prime for the difference-of-powers LTE branch and quartic-residue digit classification"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "odd prime with $4\\mid(q-1)$ and $q\\ne p$",
+        "purpose": "prime for the sum-of-powers LTE branch and quartic-residue digit classification"
+      },
+      {
+        "name": "A",
+        "type": "int",
+        "domain": "integer $A\\ge 3$",
+        "purpose": "target valuation $v_p(x^n-1)=A$ and modulus exponent $p^{A+1}$"
+      },
+      {
+        "name": "B",
+        "type": "int",
+        "domain": "integer $B\\ge 3$",
+        "purpose": "target valuation $v_q(x^n+1)=B$ and modulus exponent $q^{B+1}$"
+      },
+      {
+        "name": "d_p",
+        "type": "int",
+        "domain": "integer $1<d_p\\mid(p-1)$ with $p\\nmid d_p$",
+        "purpose": "prescribed order modulo $p$ for the difference LTE reduction at $p$"
+      },
+      {
+        "name": "d_q",
+        "type": "int",
+        "domain": "integer $1<d_q$ with $2d_q\\mid(q-1)$ and $q\\nmid d_q$",
+        "purpose": "half-order modulo $q$ (forces $x^{d_q}\\equiv -1\\pmod q$) for the sum LTE reduction at $q$"
+      },
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "$n=\\operatorname{lcm}(d_p,d_q)p^{A-2}q^{B-2}$",
+        "purpose": "structured exponent that makes the LTE reductions land at exact depth $2$ for the prime-cube digit regime"
+      },
+      {
+        "name": "M",
+        "type": "int",
+        "domain": "$M=p^{A+1}q^{B+1}$",
+        "purpose": "modulus enabling independent prime-power analysis and CRT recombination"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "order2_bridge_to_negative_one",
+        "depends_on": [
+          "q",
+          "d_q"
+        ],
+        "statement": "If $\\operatorname{ord}_q(x)=2d_q$ then $x^{d_q}$ has order $2$ modulo $q$, hence $x^{d_q}\\equiv -1\\pmod q$ and $q\\mid(x^{d_q}+1)$."
+      },
+      {
+        "name": "parity_gate_for_sum_LTE",
+        "depends_on": [
+          "d_p",
+          "d_q",
+          "n"
+        ],
+        "statement": "$n/d_q$ is odd (equivalently $\\operatorname{lcm}(d_p,d_q)/d_q$ is odd), enabling the odd-exponent LTE formula for $v_q(x^n+1)$."
+      },
+      {
+        "name": "LTE_depth_2_reduction",
+        "depends_on": [
+          "p",
+          "q",
+          "d_p",
+          "d_q",
+          "n",
+          "A",
+          "B"
+        ],
+        "statement": "Under the order constraints and parity gate, $v_p(x^n-1)=v_p(x^{d_p}-1)+v_p(n/d_p)$ and $v_q(x^n+1)=v_q(x^{d_q}+1)+v_q(n/d_q)$; choosing $n$ with $v_p(n/d_p)=A-2$ and $v_q(n/d_q)=B-2$ makes the valuation targets equivalent to $v_p(x^{d_p}-1)=2$ and $v_q(x^{d_q}+1)=2$."
+      },
+      {
+        "name": "prime_cube_second_digit",
+        "depends_on": [
+          "p",
+          "q",
+          "d_p",
+          "d_q"
+        ],
+        "statement": "If $v_p(x^{d_p}-1)=2$ then there is a unique $a\\in(\\mathbb{Z}/p\\mathbb{Z})^\\times$ with $x^{d_p}\\equiv 1+p^2a\\pmod{p^3}$, and if $v_q(x^{d_q}+1)=2$ then there is a unique $b\\in(\\mathbb{Z}/q\\mathbb{Z})^\\times$ with $x^{d_q}\\equiv -1+q^2b\\pmod{q^3}$."
+      },
+      {
+        "name": "hensel_unique_prime_square_lift",
+        "depends_on": [
+          "p",
+          "q",
+          "d_p",
+          "d_q"
+        ],
+        "statement": "For odd prime $r$ with $r\\nmid m$, any solution of $y^m\\equiv\\pm 1\\pmod r$ lifts uniquely to a solution modulo $r^2$ (simple-root Hensel regime)."
+      },
+      {
+        "name": "affine_second_digit_bijection_at_prime_cube",
+        "depends_on": [
+          "p",
+          "q"
+        ],
+        "statement": "Fix $r$, $m$ with $r\\nmid m$ and a lift $y_1$ with $y_1^m\\equiv\\pm 1\\pmod{r^2}$. The lifts $y_1+r^2t$ modulo $r^3$ make the digit $(y^m\\mp 1)/r^2\\bmod r$ an affine bijection of $t\\in\\mathbb{Z}/r\\mathbb{Z}$; exactly one lift has digit $0$ (depth $\\ge 3$), the others give all nonzero digits exactly once."
+      },
+      {
+        "name": "quartic_residue_partition",
+        "depends_on": [
+          "p",
+          "q"
+        ]
+      }
+    ]
+  },
+  "instance_snapshot": {
+    "final_answer": {
+      "value": "100240625664",
+      "normalized": "664"
+    }
+  }
+}

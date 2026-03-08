@@ -1,0 +1,32 @@
+Palindromic quintic real-root count -> orthogonal centralizer dimension for a T-built partition
+
+For an integer $a$ with $-8\le a\le 8$, define $b=-a-1$ and consider the palindromic quintic
+$P_a(x)=x^5+ax^4+bx^3+bx^2+ax+1$.
+(So $P_a(1)=0$ by construction.)
+Let $T$ be the number of integers $a\in[-8,8]$ for which $P_a$ has exactly four distinct real roots.
+
+Now define the partition
+$\lambda=(2T+1,\;2T-1,\;2T-3)$.
+Let $\lambda'$ be the conjugate partition and let $o(\lambda)$ be the number of odd parts of $\lambda$.
+Compute
+$C=\frac{\sum_k (\lambda'_k)^2-o(\lambda)}{2}$
+and output $C \bmod 1000$.
+
+Solution.
+Step 1 (palindromic_forces_root_minus1): Because $P_a$ is palindromic of odd degree, $P_a(-1)=0$ always, so $x+1$ is a factor (a reciprocity symmetry fact).
+Step 2 (use_P1_constraint): With $b=-a-1$, we have $P_a(1)=0$. In fact one checks (or factors) that $P_a(x)=(x-1)^2(x+1)(x^2+(a+1)x+1)$.
+Step 3 (real_root_structure): Thus the distinct real roots are always $x=1$ and $x=-1$, and the remaining two roots are the roots of $q_a(x)=x^2+(a+1)x+1$.
+Step 4 (discriminant_condition): The quadratic has two distinct real roots iff its discriminant $\Delta=(a+1)^2-4$ is positive, i.e. $(a+1)^2>4$, so $a<-3$ or $a>1$.
+Step 5 (count_T): In the range $-8\le a\le 8$, this gives $a\in\{-8,-7,-6,-5,-4\}$ (5 values) or $a\in\{2,3,4,5,6,7,8\}$ (7 values), hence $T=12$ (a case-by-case count).
+Step 6 (bridge_lemma): Bridge Lemma: the Lie-theoretic partition $\lambda=(2T+1,2T-1,2T-3)$ depends on the count $T$ coming from the real-root criterion; without computing $T$, the centralizer-dimension quantity $C$ is undefined.
+Step 7 (conjugate_partition): For $T=12$, $\lambda=(25,23,21)$. Its conjugate partition has column lengths $3$ for $k=1,\dots,21$, then $2$ for $k=22,23$, then $1$ for $k=24,25$.
+Step 8 (centralizer_formula): Compute $\sum_k (\lambda'_k)^2=21\cdot 3^2+2\cdot 2^2+2\cdot 1^2=189+8+2=199$. All three parts are odd, so $o(\lambda)=3$. Hence $C=\frac{199-3}{2}=98$.
+Step 9 (mod_and_format): Modulo $1000$ this is $98$, so the required three-digit output is $098$.
+Answer: 098
+
+Uniqueness Test
+
+N1 (necessity): Each P_a is uniquely determined by a, and its distinct-real-root count is determined uniquely by the quadratic discriminant; without computing T from these constraints, the partition  (and hence C) is not determined.
+N2 (non-factorization): The answer is not a trivial combine: the polynomial root-structure produces the integer T which directly defines ; changing the real-root criterion changes  and therefore C in a coupled way.
+
+98

@@ -1,0 +1,119 @@
+depends_on: [T_{±}]
+
+Let P(x)=ax^2+bx+c with a,b,c\inℂ and deg(P)=2. Define linear operators T± on such quadratics by
+  T_{±}P
+  = e^{-2x}\Big(\frac{d}{dx}+2\Big)^2\!\big(e^{2x}P(x)\big)
+    ± e^{x}\Big(\frac{d}{dx}-3\Big)\!\big(e^{-x}P(x)\big).
+
+Let Q(x)=60x^2+102x+43. Assume P_+(x) and P_-(x) are quadratics satisfying
+  T_{+}P_{+}(x)=Q(x)  and  T_{-}P_{-}(x)=Q(x)
+for all real x.
+
+Let z=2+i. Write P_{±}(z)=u_{±}+v_{±}i with u_{±},v_{±}\inℝ, and define
+  S=(u_+-u_-)^2+(v_+-v_-)^2.
+Find the unique integer N\in{0,1,...,999} such that
+  N \equiv 25S (mod 1000).
+
+Solution.
+Step 1 (operator_conjugation)
+Let D = d/dx. Use the standard exponential conjugation identities:
+  e^{-cx}De^{cx}=D+c,          e^{cx}De^{-cx}=D-c,
+and hence
+  e^{-cx}(D+α)e^{cx}=D+α+c,    e^{cx}(D+α)e^{-cx}=D+α-c.
+
+Apply these to each block.
+
+First block:
+  e^{-2x}(D+2)e^{2x} = D+2+2 = D+4,
+so
+  e^{-2x}(D+2)^2(e^{2x}P) = (D+4)^2P.
+
+Second block:
+  e^{x}(D-3)e^{-x} = D-3-1 = D-4,
+so
+  e^{x}(D-3)(e^{-x}P) = (D-4)P.
+
+Therefore, for quadratics P,
+  T_{±}P = (D+4)^2P ± (D-4)P.
+
+Step 2 (coefficient_matching)
+Write P(x)=ax^2+bx+c. Then
+  DP = 2ax + b,      D^2P = 2a.
+
+Compute
+  (D+4)^2P = (D^2 + 8D + 16)P
+           = 2a + 8(2ax+b) + 16(ax^2+bx+c)
+           = 16a x^2 + (16a+16b)x + (2a+8b+16c).
+
+Also
+  (D-4)P = DP - 4P
+         = (2ax+b) - 4(ax^2+bx+c)
+         = (-4a)x^2 + (2a-4b)x + (b-4c).
+
+Hence:
+  T_+P = (D+4)^2P + (D-4)P
+       = (12a)x^2 + (18a+12b)x + (2a+9b+12c),
+
+  T_-P = (D+4)^2P - (D-4)P
+       = (20a)x^2 + (14a+20b)x + (2a+7b+20c).
+
+Now impose T_+P_+ = Q and T_-P_- = Q, where Q(x)=60x^2+102x+43.
+
+For P_+(x)=a_+x^2+b_+x+c_+:
+  12a_+ = 60            \Rightarrow a_+ = 5,
+  18a_+ + 12b_+ = 102   \Rightarrow 90 + 12b_+ = 102 \Rightarrow b_+ = 1,
+  2a_+ + 9b_+ + 12c_+ = 43
+     \Rightarrow 10 + 9 + 12c_+ = 43 \Rightarrow 12c_+ = 24 \Rightarrow c_+ = 2.
+So
+  P_+(x)=5x^2 + x + 2.
+
+For P_-(x)=a_-x^2+b_-x+c_-:
+  20a_- = 60            \Rightarrow a_- = 3,
+  14a_- + 20b_- = 102   \Rightarrow 42 + 20b_- = 102 \Rightarrow b_- = 3,
+  2a_- + 7b_- + 20c_- = 43
+     \Rightarrow 6 + 21 + 20c_- = 43 \Rightarrow 20c_- = 16 \Rightarrow c_- = 4/5.
+So
+  P_-(x)=3x^2 + 3x + 4/5.
+
+Step 3 (complex_substitution_and_arithmetic)
+Let z=2+i. Then z^2=(2+i)^2=4+4i+i^2=3+4i.
+
+Evaluate:
+  P_+(z) = 5z^2 + z + 2
+         = 5(3+4i) + (2+i) + 2
+         = (15+2+2) + (20i+i)
+         = 19 + 21i.
+
+  P_-(z) = 3z^2 + 3z + 4/5
+         = 3(3+4i) + 3(2+i) + 4/5
+         = (9+6) + 4/5 + (12i+3i)
+         = 79/5 + 15i.
+
+Thus
+  P_+(z) - P_-(z) = (19 - 79/5) + (21-15)i = 16/5 + 6i.
+So
+  S = |P_+(z) - P_-(z)|^2 = (16/5)^2 + 6^2 = 256/25 + 36 = 1156/25.
+
+Step 4 (modular_postprocessing)
+Compute
+  25S = 25 \cdot (1156/25) = 1156.
+Reduce modulo 1000:
+  1156 \equiv 156 (mod 1000).
+Therefore the required N is
+  N = 156.
+
+Uniqueness Test
+1) (Deterministic reduction to coefficient matching.)
+By Step 1, restricting to degree-2 polynomials turns each T_{±} into a constant-coefficient differential operator, hence a linear map on the 3-dimensional coefficient space of quadratics. Since T_{±}P = Q holds for all real x, it holds as a polynomial identity, so matching x^2,x,1 coefficients is necessary and sufficient.
+
+2) (Triangular solvability and uniqueness.)
+From the explicit formulas in Step 2:
+- For T_+, the x^2 coefficient is 12a; for T_-, the x^2 coefficient is 20a. Both are nonzero, so a is uniquely determined by the x^2 coefficient of Q.
+- With a fixed, the x coefficient equation uniquely determines b.
+- With a and b fixed, the constant term equation uniquely determines c.
+Hence P_+ and P_- are uniquely determined quadratics.
+
+3) (Deterministic evaluation and reduction.)
+Once P_± are unique, P_±(z), the squared distance S=|P_+(z)-P_-(z)|^2, and the residue N\equiv25S (mod 1000) are all uniquely determined. Because 25S is an integer, the canonical representative N\in{0,...,999} is unique.
+
+156

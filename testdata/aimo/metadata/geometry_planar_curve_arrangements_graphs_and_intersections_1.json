@@ -1,0 +1,269 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "plane_curves__circle_semicircle_graphs__moving_diagonal_line__bounded_region_component_count",
+    "instance_id": "r2_circle_semicircles_vertical_x0_line_y_eq_x_plus_a_regions3_components_2026_02_13",
+    "short_name": "Count parameter components giving exactly 3 bounded regions (circle + diameter + moving line)",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "geometry",
+    "subdomain(s)": [
+      "planar curve arrangements (graphs and intersections)",
+      "topology of bounded regions (region-count invariants)",
+      "calculus-assisted tangency thresholds"
+    ],
+    "topic_path": [
+      "geometry",
+      "plane curves",
+      "parameter-dependent region counting"
+    ],
+    "tags": [
+      "plane_curve",
+      "circle",
+      "semicircle_graph",
+      "tangency",
+      "parameter_sweep",
+      "bounded_regions",
+      "critical_values_partition"
+    ]
+  },
+  "problem_spec": {
+    "summary": "A circle (given as two semicircle graphs), a fixed vertical diameter, and a translated diagonal line y=x+a define a planar subdivision; count the number of connected parameter-sets for which the bounded region count equals a target value.",
+    "object(s)": [
+      {
+        "name": "a",
+        "type": "real",
+        "role": "unknown",
+        "dependency": "independent"
+      },
+      {
+        "name": "f",
+        "type": "function",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "g",
+        "type": "function",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "ell",
+        "type": "other",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "p",
+        "type": "function",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "C",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "Curves are graphs of f(x)=sqrt(4-x^2) and g(x)=-sqrt(4-x^2), each defined on the real domain [-2,2].",
+      "The fixed vertical line is ell: x=0.",
+      "The moving line is p_a: y = x + a for real parameter a.",
+      "A \"bounded region\" is a connected bounded face of the planar subdivision induced by these curves/lines."
+    ],
+    "ask": [
+      "Determine the number of disjoint (connected) subsets of real a-values for which the arrangement has exactly 3 bounded regions (pad to 3 digits)."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "a",
+        "type": "real",
+        "domain": "all_real_numbers",
+        "purpose": "translates the moving line y=x+a and changes the chord it cuts in the disk"
+      },
+      {
+        "name": "target_region_count",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "required bounded region count (here 3)"
+      },
+      {
+        "name": "radius",
+        "type": "real",
+        "domain": "positive_real_numbers",
+        "purpose": "radius of the circle given by semicircle graphs (here radius=2)"
+      },
+      {
+        "name": "fixed_vertical_line",
+        "type": "real",
+        "domain": "all_real_numbers",
+        "purpose": "x-coordinate of the fixed vertical line (here 0)"
+      },
+      {
+        "name": "curve_family",
+        "type": "other",
+        "domain": "circle_as_two_semicircle_graphs_plus_two_lines",
+        "purpose": "defines the arrangement whose bounded faces are counted"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "local_constancy_away_from_events",
+        "depends_on": [
+          "a"
+        ],
+        "statement": "The bounded region-count is constant on any open interval of a with no topological events (no tangency, no intersection creation/annihilation, no endpoint degeneracy)."
+      },
+      {
+        "name": "critical_event_types",
+        "depends_on": [
+          "a"
+        ],
+        "statement": "Region-count can change only when the moving line is tangent to the circle, passes through an existing vertex/intersection point (e.g., circle ∩ fixed line), or hits a curve endpoint (x=±radius for the semicircle graphs)."
+      },
+      {
+        "name": "bounded_regions_live_inside_closed_curve",
+        "depends_on": [
+          "f",
+          "g",
+          "ell",
+          "p"
+        ],
+        "statement": "Since the only closed curve is the circle (f∪g), all bounded regions lie inside the disk it encloses; lines alone cannot create bounded faces."
+      }
+    ],
+    "operator(s)": [
+      "intersection_finding",
+      "tangency_condition",
+      "monotonicity_test",
+      "planar_region_count",
+      "continuity_argument",
+      "connected_component_count"
+    ],
+    "essential_assumption(s)": [
+      "Curves are considered with their real domains, and regions are counted only when fully enclosed.",
+      "Generic a values avoid degeneracies; critical a values are isolated.",
+      "The circle is treated as the union of the semicircle graphs, including their endpoints."
+    ],
+    "uniqueness_certificate(s)": [
+      "Once all critical a values are identified and ordered, the region-count on each interval is fixed; hence the number of disjoint solution-sets is uniquely determined by checking a representative a in each interval and handling isolated critical cases."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "event_detection_via_tangency_and_intersections",
+        "inputs": [
+          "moving line p_a and fixed semicircle graphs f,g and fixed line ell"
+        ],
+        "purpose": "find the finite set of critical a where topology can change",
+        "outputs": [
+          "critical a values from tangency and pass-through events (here ±2, ±2\\sqrt2)"
+        ]
+      },
+      {
+        "name": "interval_constancy_by_continuity",
+        "inputs": [
+          "ordered list of critical a values"
+        ],
+        "purpose": "reduce the problem to finitely many representative checks",
+        "outputs": [
+          "constant region-count on each open interval between consecutive critical values"
+        ]
+      },
+      {
+        "name": "region_count_on_representatives",
+        "inputs": [
+          "representative a values per interval and the critical points"
+        ],
+        "purpose": "compute bounded region-count using geometric casework (chord crosses diameter vs not)",
+        "outputs": [
+          "explicit characterization of {a : R(a)=3}"
+        ]
+      },
+      {
+        "name": "connected_component_count",
+        "inputs": [
+          "solution set as union of intervals/singletons"
+        ],
+        "purpose": "compute number of disjoint parameter-sets",
+        "outputs": [
+          "final component count C"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "continuous deformation invariance (planar arrangements)",
+        "role": "region-count is unchanged under continuous parameter changes absent topological events"
+      },
+      {
+        "name": "tangency criterion via derivatives",
+        "role": "identify when the moving line touches a semicircle graph with multiplicity \\geq2"
+      },
+      {
+        "name": "line-circle intersection discriminant test",
+        "role": "determine for which a the moving line intersects the circle in 0,1,2 points"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Continuity and intersection-count control (used to partition parameter space)"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Identify all critical a where the topology can change (tangency ±2\\sqrt2 and pass-through ±2), then use interval-by-interval constancy.",
+      "Reduce region counting to how the moving line chord interacts with the fixed diameter inside the disk."
+    ],
+    "finish_type": "finite_casework_and_interval_count"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "sympy",
+        "reason": "optional symbolic solving of tangency/intersection conditions (e.g., a=±2\\sqrt2) and exact comparisons"
+      },
+      {
+        "name": "mpmath",
+        "reason": "optional numerical checking/sample plotting for sanity checks"
+      }
+    ],
+    "import_hint(s)": [
+      "import sympy as sp",
+      "import mpmath as mp"
+    ],
+    "task(s)": [
+      {
+        "name": "compute_critical_a_values",
+        "reason": "confirm critical values by solving tangency/intersection equations"
+      },
+      {
+        "name": "sample_and_count_regions",
+        "reason": "sample a-values in each interval and verify region counts via geometric predicates"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "target_region_count": 3,
+      "radius": 2,
+      "fixed_vertical_line": 0
+    },
+    "final_answer": {
+      "value": 2,
+      "normalized": 2
+    }
+  }
+}

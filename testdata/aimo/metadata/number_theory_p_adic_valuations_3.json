@@ -1,0 +1,393 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "p_adic_valuation__basic_rules__vp_of_sum_product__buffed",
+    "instance_id": "imocompendium:Def_exact_power_of_p_Thm2.126",
+    "short_name": "$p$-adic valuation algebra (sum/product rules, compare $v_p$) - Buffed Seed",
+    "generation": 2
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "p-adic valuations",
+      "divisibility"
+    ],
+    "topic_path": [
+      "p_adic_valuations",
+      "valuation_rules",
+      "vp_sum_min_rule"
+    ],
+    "tags": [
+      "compare_vp_on_both_sides",
+      "exact_power_definition",
+      "valuation_comparisons",
+      "valuation_invariant",
+      "valuation_vp_definition",
+      "vp_product",
+      "vp_quotient",
+      "vp_sum_exact_when_unequal",
+      "vp_sum_lower_bound",
+      "sterilized",
+      "buffed",
+      "gymnasium_ready",
+      "two_regime_interaction",
+      "order_lifting",
+      "prime_power_unit_group"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Let $p$ and $q$ be distinct odd primes and let $x,y$ be nonzero integers with $v_p(x)=v_p(y)$ and $v_q(x)\\ne v_q(y)$. Write $a:=v_p(x)=v_p(y)$, set $x=p^a u$ and $y=p^a v$ with $p\\nmid uv$, and fix an integer $k\\ge 2$; consider the unit $r\\equiv u v^{-1}\\pmod{p^{k+1}}$. Assume that $r$ has multiplicative order $2$ modulo $p^k$ but does not have order $2$ modulo $p^{k+1}$.",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "k",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "x",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "y",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "a",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "u",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "v",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "r",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "t",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$p$ and $q$ are distinct odd primes.",
+      "$k\\in\\mathbb{Z}$ with $k\\ge 2$.",
+      "$x,y\\in\\mathbb{Z}\\setminus\\{0\\}$ and $v_p(x)=v_p(y)=:a\\ge 1$.",
+      "Write $x=p^a u$ and $y=p^a v$ with $p\\nmid uv$, and set $r\\equiv u\\,v^{-1}\\pmod{p^{k+1}}$ (so $r\\in(\\mathbb{Z}/p^{k+1}\\mathbb{Z})^\\times$).",
+      "The class $r\\pmod{p^k}$ has multiplicative order $2$, but $r\\pmod{p^{k+1}}$ does not have order $2$ (equivalently, $r\\equiv -1\\pmod{p^k}$ and $r\\not\\equiv -1\\pmod{p^{k+1}}$).",
+      "At the second prime, the valuations are distinct and nontrivial: $v_q(x)$ and $v_q(y)$ are positive integers with $v_q(x)\\ne v_q(y)$."
+    ],
+    "ask": [
+      "Stage 1 (order). Let $t:=\\operatorname{ord}_{p^{k+1}}(r)$. Prove that $t$ is uniquely determined by the givens and compute $t$ explicitly.",
+      "Stage 2 (valuation). Using the value of $t$, compute $$N := v_p\\bigl(x^{t/2}+y^{t/2}\\bigr) + v_q(x+y)$$ and report the final answer as the unique integer in $\\{0,1,\\dots,999\\}$ congruent to $N\\pmod{1000}$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime $p\\ge 3$",
+        "purpose": "prime governing the $p$-adic valuation and the unit group $(\\mathbb{Z}/p^{k+1}\\mathbb{Z})^\\times$"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "odd prime $q\\ge 3$ with $q\\ne p$",
+        "purpose": "second prime used to force an independent unequal-valuation constraint at $q$"
+      },
+      {
+        "name": "k",
+        "type": "int",
+        "domain": "integer $k\\ge 2$",
+        "purpose": "structural depth parameter: forces a nontrivial order-lifting step from $p^k$ to $p^{k+1}$"
+      },
+      {
+        "name": "x",
+        "type": "int",
+        "domain": "nonzero integer $x$ with $v_p(x)\\ge 1$ and $v_q(x)\\ge 1$",
+        "purpose": "first integer (carries both $p$- and $q$-adic divisibility data)"
+      },
+      {
+        "name": "y",
+        "type": "int",
+        "domain": "nonzero integer $y$ with $v_p(y)=v_p(x)$ and $v_q(y)\\ge 1$ but $v_q(y)\\ne v_q(x)$",
+        "purpose": "second integer (shares the $p$-adic valuation with $x$ but differs at $q$)"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "anti_triviality_distinct_odd_primes",
+        "depends_on": [
+          "p",
+          "q"
+        ],
+        "statement": "$p$ and $q$ are distinct odd primes (in particular $p\\ne 2$), avoiding $2$-adic exceptional behavior and ensuring a unique element of order $2$ in $(\\mathbb{Z}/p^n\\mathbb{Z})^\\times$ for all $n\\ge 1$."
+      },
+      {
+        "name": "anti_triviality_depth_and_equal_p_valuation",
+        "depends_on": [
+          "p",
+          "k",
+          "x",
+          "y"
+        ],
+        "statement": "The instance enforces $k\\ge 2$ and $v_p(x)=v_p(y)=a\\ge 1$, so the one-step unequal-valuation minimum rule at $p$ does not apply and a genuine lifting argument at a prime power modulus is required."
+      },
+      {
+        "name": "valuation_additivity",
+        "depends_on": [
+          "x",
+          "y",
+          "p"
+        ],
+        "statement": "For nonzero integers, $v_p(xy)=v_p(x)+v_p(y)$ and $v_p(x/y)=v_p(x)-v_p(y)$ when $y\\mid x$ in $\\mathbb{Z}_{(p)}$."
+      },
+      {
+        "name": "min_rule_for_sum_when_unequal",
+        "depends_on": [
+          "x",
+          "y",
+          "q"
+        ],
+        "statement": "If $v_q(x)\\ne v_q(y)$ then $v_q(x+y)=\\min\\{v_q(x),v_q(y)\\}$."
+      },
+      {
+        "name": "order_2_characterizes_minus_one_mod_p_power",
+        "depends_on": [
+          "p",
+          "k"
+        ],
+        "statement": "For odd prime $p$, the unique element of order $2$ in $(\\mathbb{Z}/p^k\\mathbb{Z})^\\times$ is $-1\\bmod p^k$. Thus $\\operatorname{ord}_{p^k}(r)=2$ forces $r\\equiv -1\\pmod{p^k}$."
+      },
+      {
+        "name": "order_lift_from_pk_to_pk1_in_minus_one_coset",
+        "depends_on": [
+          "p",
+          "k"
+        ],
+        "statement": "If $r\\equiv -1\\pmod{p^k}$ but $r\\not\\equiv -1\\pmod{p^{k+1}}$ with odd prime $p$, then $\\operatorname{ord}_{p^{k+1}}(r)=2p$ (the order multiplies by $p$ in this lift)."
+      },
+      {
+        "name": "vp_of_power_sum_from_order",
+        "depends_on": [
+          "p",
+          "k",
+          "x",
+          "y"
+        ],
+        "statement": "With $a=v_p(x)=v_p(y)$, $x=p^a u$, $y=p^a v$ and $r\\equiv u v^{-1}\\pmod{p^{k+1}}$, if $t=\\operatorname{ord}_{p^{k+1}}(r)=2p$ then $r^{t/2}=r^{p}\\equiv -1\\pmod{p^{k+1}}$ and $v_p(u+v)=k$, hence (by LTE) $v_p(u^{t/2}+v^{t/2})=k+1$; therefore $v_p(x^{t/2}+y^{t/2})=a\\cdot \\frac t2 + (k+1)$."
+      }
+    ],
+    "operator(s)": [
+      "valuation_vp_definition",
+      "vp_product",
+      "vp_quotient",
+      "vp_sum_lower_bound",
+      "vp_sum_exact_when_unequal",
+      "compare_vp_on_both_sides",
+      "valuation_invariant",
+      "multiplicative_order_mod_prime_power",
+      "unit_factorization_x_equals_p_power_times_unit",
+      "order_lifting_prime_power",
+      "vp_of_power_sum_via_factorization"
+    ],
+    "essential_assumption(s)": [
+      "Instances are forced into the equal-$p$-valuation regime $v_p(x)=v_p(y)$ (with $k\\ge 2$), so the standard one-step template $v_p(x+y)=\\min\\{v_p(x),v_p(y)\\}$ cannot be used at $p$.",
+      "The order constraint on the unit ratio $r\\equiv (x/p^{v_p(x)})(y/p^{v_p(y)})^{-1}\\pmod{p^{k+1}}$ is essential: it pins down the exact lift $t=\\operatorname{ord}_{p^{k+1}}(r)$ and therefore forces $v_p(x^{t/2}+y^{t/2})$; without it, the $p$-adic valuation of the power-sum can jump and the output would not be well-defined from the stated data.",
+      "Normalization is part of the task contract: the computed integer is reported modulo $1000$ to obtain a unique output in $\\{0,1,\\dots,999\\}$."
+    ],
+    "uniqueness_certificate(s)": [
+      "The condition $\\operatorname{ord}_{p^k}(r)=2$ forces $r\\equiv -1\\pmod{p^k}$, while the explicit exclusion of order $2$ modulo $p^{k+1}$ forces the unique lift $\\operatorname{ord}_{p^{k+1}}(r)=2p$, so Stage 1 has a single outcome.",
+      "Given $t$, the value $v_p(x^{t/2}+y^{t/2})$ is forced by factoring out $p^{a\\cdot t/2}$ and using the induced congruence $r^{t/2}\\equiv -1\\pmod{p^{k+1}}$ together with LTE to obtain an exact exponent; independently, $v_q(x+y)$ is forced by the unequal-valuation minimum rule at $q$.",
+      "Therefore $N$ is uniquely determined as an integer, and the normalization rule $N\\mapsto N\\bmod 1000$ yields a unique final answer in $\\{0,1,\\dots,999\\}$."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "valuation_vp_definition",
+        "inputs": [
+          "integer $n\\ne 0$ and prime $p$"
+        ],
+        "purpose": "encode divisibility by prime powers as an exponent and enable conversion between congruences/divisibility and valuation inequalities",
+        "outputs": [
+          "the integer $v_p(n)$ such that $p^{v_p(n)}\\mid n$ but $p^{v_p(n)+1}\\nmid n$"
+        ]
+      },
+      {
+        "name": "vp_product",
+        "inputs": [
+          "$x,y$"
+        ],
+        "purpose": "linearize multiplicative divisibility constraints after factoring common prime powers",
+        "outputs": [
+          "$v_p(xy)=v_p(x)+v_p(y)$"
+        ]
+      },
+      {
+        "name": "vp_sum_exact_when_unequal_at_q",
+        "inputs": [
+          "$x,y$ with $v_q(x)\\ne v_q(y)$"
+        ],
+        "purpose": "compute $v_q(x+y)$ exactly via the unequal-valuation minimum rule (secondary prime valuation constraint)",
+        "outputs": [
+          "$v_q(x+y)=\\min\\{v_q(x),v_q(y)\\}$"
+        ]
+      },
+      {
+        "name": "order_in_unit_group_mod_prime_power",
+        "inputs": [
+          "odd prime $p$, level $n\\ge 1$, and a unit class $r\\in (\\mathbb{Z}/p^n\\mathbb{Z})^\\times$"
+        ],
+        "purpose": "use multiplicative order (ORDER regime) to translate order information into rigid congruences such as $r\\equiv -1\\pmod{p^n}$ when the order is $2$",
+        "outputs": [
+          "rigid congruence information about $r$ forced by its order modulo $p^n$"
+        ]
+      },
+      {
+        "name": "order_lifting_from_pk_to_pk1",
+        "inputs": [
+          "unit $r\\equiv -1\\pmod{p^k}$ with $r\\not\\equiv -1\\pmod{p^{k+1}}$"
+        ],
+        "purpose": "determine the lifted multiplicative order $\\operatorname{ord}_{p^{k+1}}(r)$; this ORDER step is what makes the valuation computation well-posed",
+        "outputs": [
+          "$\\operatorname{ord}_{p^{k+1}}(r)=2p$"
+        ]
+      },
+      {
+        "name": "order_to_vp_power_sum_interaction",
+        "inputs": [
+          "the computed order $t=\\operatorname{ord}_{p^{k+1}}(r)$ and the factorization $x=p^a u,\\ y=p^a v$"
+        ],
+        "purpose": "interaction kernel (VP + ORDER): use $r^{t/2}\\equiv -1\\pmod{p^{k+1}}$ to force an exact $p$-adic valuation of the power-sum $u^{t/2}+v^{t/2}$ (via LTE), then lift it back to $v_p(x^{t/2}+y^{t/2})$ by valuation additivity",
+        "outputs": [
+          "a closed-form expression for $v_p(x^{t/2}+y^{t/2})$ in terms of $a,k,t$"
+        ]
+      },
+      {
+        "name": "compare_vp_on_both_sides",
+        "inputs": [
+          "an identity or divisibility relation"
+        ],
+        "purpose": "compare valuations to isolate unknown exponents (e.g., showing an order cannot be $2$ by comparing $v_p(r^2-1)$ at successive levels)",
+        "outputs": [
+          "inequalities/equalities of integer exponents coming from valuations"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "exact_division_arguments",
+        "role": "translate \"$p^t\\mid n$\" into \"$v_p(n)\\ge t$\" and vice versa; used to pass between congruences and valuations."
+      },
+      {
+        "name": "cyclic_unit_group_mod_odd_prime_power",
+        "role": "for odd prime $p$, the group $(\\mathbb{Z}/p^n\\mathbb{Z})^\\times$ is cyclic; in particular the element of order $2$ is uniquely $-1$."
+      },
+      {
+        "name": "binomial_lift_of_order",
+        "role": "if $r\\equiv -1\\pmod{p^k}$ but not modulo $p^{k+1}$, then $r^2\\equiv 1+cp^k\\pmod{p^{k+1}}$ with $p\\nmid c$, so $(r^2)^p\\equiv 1\\pmod{p^{k+1}}$ while $r^2\\not\\equiv 1\\pmod{p^{k+1}}$, forcing order $2p$."
+      },
+      {
+        "name": "LTE_for_u^p_plus_v^p",
+        "role": "for odd prime $p$ with $p\\mid(u+v)$ and $p\\nmid uv$, one has $v_p(u^p+v^p)=v_p(u+v)+1$; used to get the exact exponent $k+1$ in the power-sum valuation."
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Divisibility by prime powers is controlled by a single integer exponent; multiplicative order constraints in unit groups modulo prime powers rigidify congruences, which then feed into valuation bookkeeping on power-sums."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Factor $x=p^a u$ and $y=p^a v$ to separate the common $p$-power from $p$-units, and encode the unit ratio $r\\equiv u v^{-1}\\pmod{p^{k+1}}$.",
+      "Use that the unique element of order $2$ in $(\\mathbb{Z}/p^k\\mathbb{Z})^\\times$ is $-1$ and lift the order from $p^k$ to $p^{k+1}$ to force $t=2p$; this ORDER step is what makes the $p$-adic valuation computation rigid.",
+      "Translate the congruence $r^{t/2}\\equiv -1\\pmod{p^{k+1}}$ into an exact valuation for $u^{t/2}+v^{t/2}$ via LTE, then use valuation additivity to obtain $v_p(x^{t/2}+y^{t/2})$; compute $v_q(x+y)$ separately by the unequal-valuation minimum rule and finally reduce modulo $1000$."
+    ],
+    "finish_type": "closed_form"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, lcm, modular exponentiation scaffolding."
+      },
+      {
+        "name": "sympy",
+        "reason": "Symbolic/number theory utilities: factorint, primerange, mod_inverse, crt; useful for verification tasks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, crt, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Validate that the produced object(s) satisfy all defining congruences/divisibility constraints for a deterministic sweep of small admissible parameter tuples (e.g., the first few odd primes and bounded |x|,|y| satisfying the invariants)."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Cross-check the main result via an alternative computation (e.g., brute force for small bounds, or an independent formula such as order computation vs. valuation computation)."
+      },
+      {
+        "name": "vp_rule_enumerative_check",
+        "reason": "Enumerate small primes and integers in a fixed bounded range, compute $v_p$ by repeated division, and verify the stated product/sum rules."
+      },
+      {
+        "name": "order_lift_and_power_sum_check",
+        "reason": "For a deterministic collection of admissible instances, compute $r=(x/p^a)(y/p^a)^{-1}\\bmod p^{k+1}$, verify $\\operatorname{ord}_{p^k}(r)=2$ and $\\operatorname{ord}_{p^{k+1}}(r)=2p$, then numerically check the predicted valuations $v_p(x^{t/2}+y^{t/2})$ and $v_q(x+y)$."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 744,
+      "normalized": 744
+    }
+  }
+}

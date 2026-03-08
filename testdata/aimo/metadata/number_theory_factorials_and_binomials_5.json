@@ -1,0 +1,367 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "binomial_mod_p__digitbox_second_moment__Lucas_factorization",
+    "instance_id": "realization:nt_09_3:2026-02-25:nonce_00001",
+    "short_name": "Digit-box moments for indices with $p\\nmid \\binom{n}{k}$ using Lucas' theorem",
+    "generation": 2
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "factorials and binomials",
+      "binomial coefficients modulo a prime",
+      "base-$p$ representations",
+      "modular arithmetic",
+      "finite combinatorial sums"
+    ],
+    "topic_path": [
+      "factorials_binomials",
+      "Lucas_theorem",
+      "digit_box_moments"
+    ],
+    "tags": [
+      "Lucas_theorem",
+      "base_p_digit_decomposition",
+      "digit_box_factorization",
+      "second_moment",
+      "sum_of_squares",
+      "mod_1000_reduction"
+    ]
+  },
+  "problem_spec": {
+    "summary": "For a prime $p$ and an integer $n$ given by its base-$p$ digits, use Lucas' theorem to describe $S=\\{k: p\\nmid \\binom{n}{k}\\}$ as a digit-box. Compute $C=|S|$ and $Q=\\sum_{k\\in S}k^2$, then output the unique $N$ with $0\\le N<1000$ and $N\\equiv C+Q\\pmod{1000}$.",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "d_0",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "d_1",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "d_2",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "d_3",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "d_4",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "d_5",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "k",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "A_k",
+        "type": "sequence",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "S",
+        "type": "set",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "C",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "Q",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$p$ is a prime",
+      "$d_0,d_1,d_2,d_3,d_4,d_5\\in\\{0,1,\\dots,p-1\\}$",
+      "$n=d_0+d_1p+d_2p^2+d_3p^3+d_4p^4+d_5p^5$",
+      "For $0\\le k\\le n$, $A_k=\\binom{n}{k}$",
+      "$S=\\{k\\in\\{0,1,\\dots,n\\}: p\\nmid A_k\\}$, $C=|S|$, and $Q=\\sum_{k\\in S}k^2$"
+    ],
+    "ask": [
+      "Determine the unique integer $N$ with $0\\le N<1000$ and $N\\equiv C+Q\\pmod{1000}$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "prime $p$",
+        "purpose": "modulus/base for Lucas' theorem and base-$p$ digits"
+      },
+      {
+        "name": "d_0",
+        "type": "int",
+        "domain": "$0\\le d_0\\le p-1$",
+        "purpose": "least significant base-$p$ digit of $n$"
+      },
+      {
+        "name": "d_1",
+        "type": "int",
+        "domain": "$0\\le d_1\\le p-1$",
+        "purpose": "second base-$p$ digit of $n$"
+      },
+      {
+        "name": "d_2",
+        "type": "int",
+        "domain": "$0\\le d_2\\le p-1$",
+        "purpose": "third base-$p$ digit of $n$"
+      },
+      {
+        "name": "d_3",
+        "type": "int",
+        "domain": "$0\\le d_3\\le p-1$",
+        "purpose": "fourth base-$p$ digit of $n$"
+      },
+      {
+        "name": "d_4",
+        "type": "int",
+        "domain": "$0\\le d_4\\le p-1$",
+        "purpose": "fifth base-$p$ digit of $n$"
+      },
+      {
+        "name": "d_5",
+        "type": "int",
+        "domain": "$0\\le d_5\\le p-1$",
+        "purpose": "sixth base-$p$ digit of $n$"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "fixed_six_digit_base_p_n",
+        "depends_on": [
+          "p",
+          "d_0",
+          "d_1",
+          "d_2",
+          "d_3",
+          "d_4",
+          "d_5"
+        ],
+        "statement": "$n=d_0+d_1p+d_2p^2+d_3p^3+d_4p^4+d_5p^5$ has base-$p$ digits $(d_0,\\dots,d_5)$ from least to most significant."
+      },
+      {
+        "name": "Lucas_digitwise_nonvanishing",
+        "depends_on": [
+          "p",
+          "n",
+          "k"
+        ],
+        "statement": "For prime $p$, Lucas' theorem implies $p\\nmid \\binom{n}{k}$ if and only if each base-$p$ digit of $k$ is at most the corresponding base-$p$ digit of $n$."
+      },
+      {
+        "name": "digit_box_structure",
+        "depends_on": [
+          "p",
+          "n"
+        ],
+        "statement": "The set $S=\\{k: p\\nmid \\binom{n}{k}\\}$ is in bijection with the Cartesian product $\\prod_{i=0}^5\\{0,\\dots,d_i\\}$."
+      },
+      {
+        "name": "digit_box_second_moment",
+        "depends_on": [
+          "p",
+          "n"
+        ],
+        "statement": "The sum $Q=\\sum_{k\\in S}k^2$ can be computed by expanding $k^2$ in base-$p$ digits and factoring digitwise moments over the digit-box."
+      }
+    ],
+    "operator(s)": [
+      "base_p_digit_decomposition",
+      "Lucas_theorem",
+      "digit_box_bijection",
+      "digit_box_factorization_lemma",
+      "square_expansion",
+      "digitwise_moment_factorization",
+      "mod_1000_reduction"
+    ],
+    "essential_assumption(s)": [
+      "$p$ is prime so Lucas' theorem applies.",
+      "Normalization: choose the unique $N$ with $0\\le N<1000$ and $N\\equiv C+Q\\pmod{1000}$."
+    ],
+    "uniqueness_certificate(s)": [
+      "Lucas' theorem forces a unique digitwise description of $S$, hence $S$ and $C$ are unique.",
+      "Digit-box factorization forces a unique value of $Q=\\sum_{k\\in S}k^2$.",
+      "Reduction modulo $1000$ and the condition $0\\le N<1000$ produce a unique output."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "base_p_digit_decomposition",
+        "inputs": [
+          "$n$ as a polynomial in $p$"
+        ],
+        "purpose": "Extract the base-$p$ digits of $n$ needed for Lucas' digitwise criterion.",
+        "outputs": [
+          "digits $(n_0,\\dots,n_5)$"
+        ]
+      },
+      {
+        "name": "Lucas_theorem",
+        "inputs": [
+          "base-$p$ digits of $n$ and $k$"
+        ],
+        "purpose": "Reduce $\\binom{n}{k}\\bmod p$ to a product of digit binomials.",
+        "outputs": [
+          "criterion $p\\nmid\\binom{n}{k}$ iff $k_i\\le n_i$ for all digits"
+        ]
+      },
+      {
+        "name": "digit_box_factorization_lemma",
+        "inputs": [
+          "Cartesian product of digit intervals"
+        ],
+        "purpose": "Factor digit-separable sums into products of one-digit sums.",
+        "outputs": [
+          "closed forms for digit moments over $S$"
+        ]
+      },
+      {
+        "name": "square_expansion",
+        "inputs": [
+          "$k=\\sum k_ip^i$"
+        ],
+        "purpose": "Expand $k^2$ into diagonal and cross terms in the digits.",
+        "outputs": [
+          "separable expression for $\\sum_{k\\in S}k^2$"
+        ]
+      },
+      {
+        "name": "digitwise_moment_factorization",
+        "inputs": [
+          "digit-box moments $u_i=\\sum d$ and $v_i=\\sum d^2$"
+        ],
+        "purpose": "Compute $Q=\\sum_{k\\in S}k^2$ from one-digit moments and cross moments.",
+        "outputs": [
+          "$Q$ modulo $1000$"
+        ]
+      },
+      {
+        "name": "mod_1000_reduction",
+        "inputs": [
+          "$C$ and $Q$"
+        ],
+        "purpose": "Compute $N\\equiv C+Q\\pmod{1000}$ with $0\\le N<1000$.",
+        "outputs": [
+          "$N$"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Lucas_theorem",
+        "role": "Gives $\\binom{n}{k}\\equiv \\prod_i \\binom{n_i}{k_i}\\pmod p$ for prime $p$."
+      },
+      {
+        "name": "digit_box_factorization_lemma",
+        "role": "Factors sums over a Cartesian digit-box into products of one-variable sums."
+      },
+      {
+        "name": "finite_sum_identities",
+        "role": "Closed forms for $\\sum_{d=0}^m d$ and $\\sum_{d=0}^m d^2$."
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Base-$p$ digits convert modular binomial conditions into digitwise independent constraints."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use Lucas' theorem to turn $p\\nmid \\binom{n}{k}$ into digit inequalities, then compute $\\sum_{k\\in S}k^2$ by digit moment factorization."
+    ],
+    "finish_type": "existence_uniqueness"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Exact integer arithmetic."
+      },
+      {
+        "name": "itertools",
+        "reason": "Enumerate digit tuples in the digit-box for independent verification."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "import itertools"
+    ],
+    "task(s)": [
+      {
+        "name": "verify_C_and_Q_mod_1000_by_enumeration",
+        "reason": "Enumerate all digit tuples $(k_0,\\dots,k_5)\\in\\prod_i\\{0,\\dots,d_i\\}$, map to $k=\\sum_{i=0}^5 k_i p^i$, compute $C$ and $Q\\bmod 1000$."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "p": 19,
+      "d_0": 8,
+      "d_1": 15,
+      "d_2": 4,
+      "d_3": 0,
+      "d_4": 9,
+      "d_5": 2
+    },
+    "final_answer": {
+      "value": 800,
+      "normalized": 800
+    }
+  }
+}

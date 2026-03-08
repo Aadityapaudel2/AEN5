@@ -1,0 +1,68 @@
+{
+  "root": "n:\\AIMO",
+  "output_dir": "D:\\AthenaPlayground\\AthenaV5\\testdata\\aimo",
+  "problems_dir": "D:\\AthenaPlayground\\AthenaV5\\testdata\\aimo\\problems",
+  "metadata_dir": "D:\\AthenaPlayground\\AthenaV5\\testdata\\aimo\\metadata",
+  "inventory_counts": {
+    "reference": 133,
+    "repair_source": 207,
+    "candidate": 711
+  },
+  "parsed_kind_counts": {
+    "reference": 358,
+    "metadata_only": 249,
+    "problem_plus_metadata": 223,
+    "problem_text": 221
+  },
+  "accepted_count": 237,
+  "rejected_count": 169,
+  "accepted_source_backed_metadata_count": 237,
+  "verification_counts": {
+    "rejected": 163,
+    "verified": 237
+  },
+  "accepted_by_domain": {
+    "algebra": 51,
+    "analysis": 6,
+    "calculus": 5,
+    "combinatorics": 9,
+    "discrete_math": 3,
+    "geometry": 9,
+    "linear_algebra": 19,
+    "mixed": 8,
+    "number_theory": 124,
+    "probability": 3
+  },
+  "rejected_reason_counts": {
+    "missing_dedupe_key": 6,
+    "missing_problem": 23,
+    "missing_solution": 23,
+    "no_independently_defensible_verification_path": 163,
+    "answer_out_of_range": 30,
+    "metadata_incomplete": 27,
+    "metadata_not_source_backed": 102,
+    "conflicting_answers_across_duplicates": 25,
+    "answer_mismatch_with_metadata": 19,
+    "conflicting_metadata_answers_across_duplicates": 6,
+    "missing_answer": 16,
+    "broken_or_ambiguous_latex": 1
+  },
+  "repair_action_counts": {
+    "borrowed_problem": 93,
+    "borrowed_solution": 93,
+    "borrowed_answer": 92,
+    "filled_metadata_final_answer_value_from_answer": 57,
+    "filled_metadata_final_answer_normalized_from_answer": 59,
+    "fixed_mojibake": 57,
+    "filled_answer_from_metadata": 54,
+    "filled_metadata_modulus": 8,
+    "attached_sibling_metadata": 28,
+    "generated_title_from_stem": 18,
+    "upgraded_title": 19,
+    "repaired_from_archive": 16,
+    "filled_metadata_short_name_from_title": 3,
+    "borrowed_title": 1
+  },
+  "zip_repair_source_count": 19,
+  "pdf_repair_source_count": 188
+}

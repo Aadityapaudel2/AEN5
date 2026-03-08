@@ -1,0 +1,109 @@
+Minimum devices (odd a,b) to sum to 12 with terms a/b+b/a
+
+A "device" has resistance
+  R(a,b) = a/b + b/a
+where a and b are positive odd integers. Devices connected in series have total resistance equal to the sum of their resistances.
+
+Find the smallest integer k such that there exist k devices with odd integer parameters (a_i,b_i) satisfying
+  R(a1,b1) + R(a2,b2) +  \cdot  \cdot  \cdot  + R(ak,bk) = 12.
+
+Solution.
+Step 1 (coprime_normalization; gcd_lemma).
+For any odd a,b>0, replacing (a,b) by (a/g, b/g) where g=gcd(a,b) does not change a/b + b/a. Thus we may assume each pair (a_i,b_i) is coprime.
+
+If gcd(a,b)=1, then gcd(a^2+b^2, ab)=1:
+- if a prime p divides ab, then p|a or p|b;
+- if also p|(a^2+b^2), then p divides the other square as well, forcing p|a and p|b, contradicting gcd(a,b)=1.
+
+Hence each term (a^2+b^2)/(ab) is already in lowest terms with odd denominator ab.
+
+Step 2 (prove_one_term_impossible).
+Show k\neq1. If a/b + b/a = 12, then with t=a/b (a rational number),
+  t + 1/t = 12
+\Rightarrow t^2 - 12t + 1 = 0.
+Thus t = (12 ± \sqrt(12^2-4))/2 = (12 ± \sqrt140)/2, which is irrational since 140 is not a perfect square. Contradiction. So 12 cannot be obtained with one device.
+
+Step 3 (prove_two_terms_impossible; two_term_alignment; modular_arithmetic).
+Assume for contradiction that k=2 works:
+  (a^2+b^2)/(ab) + (c^2+d^2)/(cd) = 12,
+with gcd(a,b)=gcd(c,d)=1 and all a,b,c,d odd.
+
+Clear denominators:
+  (a^2+b^2)cd + (c^2+d^2)ab = 12 \cdot abcd.      (★)
+
+Reduce (★) modulo ab. The terms (c^2+d^2)ab and 12 \cdot abcd are \equiv0 (mod ab), so
+  (a^2+b^2)cd \equiv 0 (mod ab).
+Because gcd(a^2+b^2,ab)=1 (Step 1), we deduce ab | cd.
+By symmetry (reduce modulo cd), we also get cd | ab, hence
+  ab = cd.                                            (†)
+
+Using (†) in (★) and dividing by ab gives
+  a^2+b^2 + c^2+d^2 = 12ab.                            (‡)
+
+Now work modulo 3. Since 12ab is divisible by 3, (‡) implies
+  a^2+b^2 + c^2+d^2 \equiv 0 (mod 3).
+
+For a coprime pair (u,v), u^2+v^2 is never 0 mod 3:
+- squares mod 3 are 0 or 1;
+- u^2+v^2 \equiv 0 would force u\equivv\equiv0 (mod3), contradicting gcd(u,v)=1.
+So u^2+v^2 \equiv 1 or 2 (mod3). More precisely:
+- u^2+v^2 \equiv 1 (mod3) iff exactly one of u,v is divisible by 3;
+- u^2+v^2 \equiv 2 (mod3) iff neither u nor v is divisible by 3.
+
+To have (a^2+b^2)+(c^2+d^2) \equiv 0 (mod3), one of these sums must be \equiv1 and the other \equiv2 (mod3).
+WLOG assume a^2+b^2 \equiv 1 (mod3). Then exactly one of a,b is divisible by 3, so 3|ab.
+But ab=cd, so 3|cd, forcing at least one of c,d divisible by 3, which would make c^2+d^2 \equiv 1 (mod3), not 2. Contradiction.
+
+Hence k\neq2.
+
+Step 4 (parity_obstruction_from_odd_pairs; modular_reduction mod 4).
+For odd a,b, we have a^2\equiv1 (mod4) and b^2\equiv1 (mod4), so
+  a^2+b^2 \equiv 2 (mod4).
+Since ab is odd, it is invertible modulo 4. Therefore the residue class of
+  R(a,b) = (a^2+b^2)/(ab)
+modulo 4 is well-defined and equals
+  R(a,b) \equiv 2 \cdot (ab)^{-1} \equiv 2 (mod4)
+(because (ab)^{-1} is 1 or 3 mod4, and 2 \cdot 1\equiv2 \cdot 3\equiv2 mod4).
+
+Thus every device contributes \equiv2 (mod4), so any sum of k devices satisfies
+  R(a1,b1)+ \cdot  \cdot  \cdot +R(ak,bk) \equiv 2k (mod4).
+
+Since the target is 12\equiv0 (mod4), we must have 2k\equiv0 (mod4), i.e. k is even.
+Therefore k cannot be 3 (or any odd integer).
+
+Combining Steps 2-4 gives the lower bound k \geq 4.
+
+Step 5 (give_four_term_construction; constructive_sum).
+Exhibit k=4.
+
+Use one device with (a,b)=(1,1):
+  R(1,1)=1/1+1/1=2.
+
+Use three devices with (a,b)=(1,3):
+  R(1,3)=1/3+3/1=10/3.
+
+Then
+  2 + 3 \cdot (10/3) = 2 + 10 = 12,
+and all parameters are positive odd integers.
+
+So k \leq 4.
+
+Step 6 (combine_bounds).
+From Step 4, k \geq 4, and from Step 5, k \leq 4. Therefore the minimum is
+  k = 4.
+
+Uniqueness Test
+(Referencing uniqueness_certificate(s): explicit construction gives an upper bound; congruence/gcd obstructions give a matching lower bound.)
+
+1) Upper bound: Step 5 constructs an explicit representation of 12 as a sum of 4 admissible terms, so the minimum k satisfies k \leq 4.
+
+2) Lower bound:
+   - Step 2 proves k\neq1 (no single term can equal 12).
+   - Step 3 proves k\neq2 by combining the two-term alignment ab=cd (from gcd and clearing denominators) with a mod-3 contradiction.
+   - Step 4 proves any admissible representation must have even k, since each term with odd a,b is \equiv2 (mod4) and 12\equiv0 (mod4), so k cannot be 3.
+
+   Hence k cannot be 1,2,3, so k \geq 4.
+
+3) Since k \leq 4 and k \geq 4, the minimum k is uniquely determined and equals 4.
+
+4

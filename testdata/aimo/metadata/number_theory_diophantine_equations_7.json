@@ -1,0 +1,430 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "Pell_equation__dual_primes_from_x1sq_plus_1__add_twoadic_and_ramified_factors__CRT_four_factor_count_mod_1000",
+    "instance_id": "athena:nt_16:g3:2026-02-25T00:00:00Z:final",
+    "short_name": "Pell $x^2-Dy^2=1$ -> choose $p,q$ from $x_1^2+1$ by residues mod $8$ -> add $2^t$ and ramified $r^c$ -> CRT count mod $1000$",
+    "generation": 3
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "Diophantine equations",
+      "quadratic forms",
+      "modular arithmetic",
+      "local methods"
+    ],
+    "topic_path": [
+      "diophantine",
+      "Pell_equation",
+      "local_solution_counts",
+      "Hensel_lifting",
+      "Chinese_remainder_theorem"
+    ],
+    "tags": [
+      "Pell_equation",
+      "continued_fraction_optional",
+      "residue_class_filtered_prime_selection",
+      "quadratic_reciprocity",
+      "split_inert_dichotomy",
+      "Hensel_lifting",
+      "two_adic_units",
+      "ramified_prime",
+      "CRT_multiplicativity",
+      "counting_congruences"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Compute a Pell fundamental solution, select $p$ and $q$ from prime divisors of $x_1^2+1$ by residue classes modulo $8$, use the Pell to Legendre symbol bridge and quadratic reciprocity to force inert versus split local regimes, add a $2^t$ factor and an odd ramified prime power $r^c$ with $r\\mid D$ to the modulus, count solutions to $x^2-Dy^2\\equiv 1$ modulo the resulting coprime product via local counting and Hensel-type lifting, and output the count modulo $1000$.\n",
+    "object(s)": [
+      {
+        "name": "D",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "t",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "a",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "b",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "c",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "(x1,y1)",
+        "type": "other",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "r",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "C",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$D>1$ is squarefree and not a perfect square.",
+      "$D\\equiv 2$ modulo $4$.",
+      "$(x_1,y_1)$ is the fundamental positive solution to $x^2-Dy^2=1$ with minimal $x_1>1$ and $y_1>0$.",
+      "There exists a prime divisor of $x_1^2+1$ with residue $5$ modulo $8$, and $p$ is the smallest such prime.",
+      "There exists a prime divisor of $x_1^2+1$ with residue $1$ modulo $8$, and $q$ is the smallest such prime.",
+      "$r$ is the largest odd prime divisor of $D$.",
+      "$t\\ge 3$ and $a,b,c\\ge 2$ are integers, and $N=2^t p^a q^b r^c$."
+    ],
+    "ask": [
+      "Let $C$ be the number of ordered pairs $(x,y)\\in(\\mathbb{Z}/N\\mathbb{Z})^2$ satisfying $x^2-Dy^2\\equiv 1$ modulo $N$. Determine the unique $A\\in\\{0,1,\\dots,999\\}$ such that $A\\equiv C$ modulo $1000$.\n"
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "D",
+        "type": "int",
+        "domain": "squarefree nonsquare integer with $D\\equiv 2$ modulo $4$ and at least one odd prime divisor",
+        "purpose": "Pell discriminant and source of an odd ramified prime $r\\mid D$"
+      },
+      {
+        "name": "t",
+        "type": "int",
+        "domain": "integer $t\\ge 3$",
+        "purpose": "exponent of the $2$ power factor $2^t$ in the modulus"
+      },
+      {
+        "name": "a",
+        "type": "int",
+        "domain": "integer $a\\ge 2$",
+        "purpose": "exponent of the inert prime power $p^a$"
+      },
+      {
+        "name": "b",
+        "type": "int",
+        "domain": "integer $b\\ge 2$",
+        "purpose": "exponent of the split prime power $q^b$"
+      },
+      {
+        "name": "c",
+        "type": "int",
+        "domain": "integer $c\\ge 2$",
+        "purpose": "exponent of the ramified odd prime power $r^c$"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "minimal_x_normalization",
+        "depends_on": [
+          "D"
+        ],
+        "statement": "Among solutions $(x,y)\\in\\mathbb{Z}^2$ to $x^2-Dy^2=1$ with $x>1$ and $y>0$, there is a unique one with minimal $x$, denoted $(x_1,y_1)$."
+      },
+      {
+        "name": "dual_residue_class_prime_selection",
+        "depends_on": [
+          "D"
+        ],
+        "statement": "Define $p$ as the smallest prime divisor of $x_1^2+1$ with $p\\equiv 5$ modulo $8$ and $q$ as the smallest prime divisor of $x_1^2+1$ with $q\\equiv 1$ modulo $8$."
+      },
+      {
+        "name": "Pell_to_Legendre_bridge",
+        "depends_on": [
+          "D"
+        ],
+        "statement": "For any odd prime $\\ell\\mid(x_1^2+1)$, one has $(\\frac{D}{\\ell})=(\\frac{-2}{\\ell})$."
+      },
+      {
+        "name": "split_inert_dichotomy_from_mod8",
+        "depends_on": [
+          "D"
+        ],
+        "statement": "If $\\ell\\equiv 5$ modulo $8$ then $(\\frac{-2}{\\ell})=-1$ and if $\\ell\\equiv 1$ modulo $8$ then $(\\frac{-2}{\\ell})=1$, hence $p$ is inert and $q$ is split."
+      },
+      {
+        "name": "unramified_odd_prime_power_lifting",
+        "depends_on": [
+          "a",
+          "b"
+        ],
+        "statement": "If $s$ is an odd prime with $s\\nmid D$, each solution modulo $s^k$ of $x^2-Dy^2\\equiv 1$ lifts to exactly $s$ solutions modulo $s^{k+1}$."
+      },
+      {
+        "name": "ramified_odd_prime_local_count",
+        "depends_on": [
+          "c",
+          "D"
+        ],
+        "statement": "If $r$ is an odd prime with $r\\mid D$, then the number of solutions modulo $r^c$ to $x^2-Dy^2\\equiv 1$ is $2r^c$."
+      },
+      {
+        "name": "two_adic_square_root_invariant",
+        "depends_on": [
+          "t",
+          "D"
+        ],
+        "statement": "For $t\\ge 3$ and $D\\equiv 2$ modulo $4$, solutions modulo $2^t$ have $y$ even, and for each such $y$ the congruence in $x$ has $4$ solutions, hence there are $2^{t+1}$ solutions modulo $2^t$."
+      },
+      {
+        "name": "CRT_multiplicativity_of_solution_counts",
+        "depends_on": [
+          "t",
+          "a",
+          "b",
+          "c"
+        ],
+        "statement": "For pairwise coprime moduli, solution sets decompose under the Chinese remainder theorem, so the total count modulo $N=2^t p^a q^b r^c$ is the product of the local counts."
+      }
+    ],
+    "operator(s)": [
+      "Pell_equation",
+      "continued_fraction_optional",
+      "residue_class_filtered_prime_selection",
+      "Pell_to_character_bridge",
+      "quadratic_reciprocity",
+      "inert_vs_split_local_counting",
+      "prime_power_solution_count_via_lifting",
+      "ramified_prime_square_root_lifting",
+      "two_adic_unit_group_square_counting",
+      "Chinese_remainder_theorem",
+      "counting_solutions_mod_prime_powers"
+    ],
+    "essential_assumption(s)": [
+      "The residue class filters for $p$ and $q$ require the existence of primes of residues $5$ and $1$ modulo $8$ among divisors of $x_1^2+1$.",
+      "The condition $D\\equiv 2$ modulo $4$ stabilizes the parity analysis modulo $2^t$ for $t\\ge 3$.",
+      "The prime $r$ is odd so that Hensel lifting for square roots applies with derivative $2x$ invertible modulo $r$.",
+      "The primes $p$ and $q$ do not divide $D$ in the intended regime, so unramified lifting applies to $p^a$ and $q^b$."
+    ],
+    "uniqueness_certificate(s)": [
+      "The fundamental solution $(x_1,y_1)$ is unique by minimality of $x_1$. The primes $p$ and $q$ are uniquely determined by the smallest residue class rules on prime divisors of $x_1^2+1$, and $r$ is uniquely determined as the largest odd prime divisor of $D$. The Pell to Legendre bridge and quadratic reciprocity determine $(\\frac{D}{p})$ and $(\\frac{D}{q})$, forcing inert versus split local regimes and hence the base local counts. Unramified odd prime power counts are uniquely determined by the uniform lifting lemma, the ramified odd prime power count is uniquely determined by square root Hensel lifting, and the $2$ power count is uniquely determined by the classification of odd squares modulo $2^t$. The Chinese remainder theorem then forces a unique global count $C$ and thus a unique residue $C$ modulo $1000$.\n"
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "continued_fraction_optional",
+        "inputs": [
+          "$\\sqrt{D}$"
+        ],
+        "purpose": "Compute the fundamental solution $(x_1,y_1)$ of $x^2-Dy^2=1$.",
+        "outputs": [
+          "$(x_1,y_1)$ with $x_1^2-Dy_1^2=1$."
+        ]
+      },
+      {
+        "name": "residue_class_filtered_prime_selection",
+        "inputs": [
+          "$x_1^2+1$"
+        ],
+        "purpose": "Select $p$ and $q$ as the smallest prime divisors of $x_1^2+1$ in residue classes $5$ and $1$ modulo $8$.",
+        "outputs": [
+          "$p,q$ and the modulus $N=2^t p^a q^b r^c$."
+        ]
+      },
+      {
+        "name": "Pell_to_character_bridge",
+        "inputs": [
+          "$x_1^2-Dy_1^2=1$",
+          "odd prime $\\ell\\mid(x_1^2+1)$"
+        ],
+        "purpose": "Derive $(\\frac{D}{\\ell})=(\\frac{-2}{\\ell})$.",
+        "outputs": [
+          "forced Legendre symbol values at $p$ and $q$."
+        ]
+      },
+      {
+        "name": "quadratic_reciprocity_evaluation",
+        "inputs": [
+          "$\\ell$ modulo $8$"
+        ],
+        "purpose": "Evaluate $(\\frac{-2}{\\ell})$ and force inert or split behavior.",
+        "outputs": [
+          "$(\\frac{D}{p})=-1$ and $(\\frac{D}{q})=1$."
+        ]
+      },
+      {
+        "name": "inert_vs_split_local_counting",
+        "inputs": [
+          "odd prime $s\\nmid D$ and the value $(\\frac{D}{s})$"
+        ],
+        "purpose": "Count solutions modulo $s$ via norm kernel size in the inert case and via factorization in the split case.",
+        "outputs": [
+          "$s+1$ or $s-1$ solutions modulo $s$."
+        ]
+      },
+      {
+        "name": "prime_power_solution_count_via_lifting",
+        "inputs": [
+          "odd prime $s\\nmid D$",
+          "exponent $k\\ge 2$"
+        ],
+        "purpose": "Lift solutions from modulo $s$ to modulo $s^k$ with a uniform factor of $s$ per level.",
+        "outputs": [
+          "solution counts $s^{k-1}(s\\pm 1)$."
+        ]
+      },
+      {
+        "name": "ramified_prime_square_root_lifting",
+        "inputs": [
+          "odd prime $r\\mid D$",
+          "exponent $c\\ge 1$"
+        ],
+        "purpose": "Reduce to $x^2\\equiv 1+Dy^2$ and lift the two roots $x\\equiv \\pm 1$.",
+        "outputs": [
+          "solution count $2r^c$ modulo $r^c$."
+        ]
+      },
+      {
+        "name": "two_adic_unit_group_square_counting",
+        "inputs": [
+          "exponent $t\\ge 3$",
+          "$D\\equiv 2$ modulo $4$"
+        ],
+        "purpose": "Force $y$ even modulo $2^t$, and count square roots using the classification of odd squares modulo $2^t$.",
+        "outputs": [
+          "solution count $2^{t+1}$ modulo $2^t$."
+        ]
+      },
+      {
+        "name": "Chinese_remainder_multiplicativity",
+        "inputs": [
+          "pairwise coprime prime powers dividing $N$"
+        ],
+        "purpose": "Multiply local counts to obtain the global count modulo $N$.",
+        "outputs": [
+          "$C$ and $C$ modulo $1000$."
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Pell_equation_continued_fraction_characterization",
+        "role": "Periodic continued fractions of $\\sqrt{D}$ produce the fundamental solution of $x^2-Dy^2=1$."
+      },
+      {
+        "name": "Euler_criterion_and_Legendre_symbol",
+        "role": "Converts quadratic congruences modulo an odd prime into Legendre symbol statements."
+      },
+      {
+        "name": "quadratic_reciprocity",
+        "role": "Evaluates $(\\frac{-2}{\\ell})$ from $\\ell$ modulo $8$."
+      },
+      {
+        "name": "Finite_field_multiplicative_group_cyclic",
+        "role": "Ensures $\\mathbb{F}_{s^2}^\\times$ is cyclic and enables the norm kernel count $s+1$."
+      },
+      {
+        "name": "Hensel_lifting_for_multivariate_congruences_odd_prime",
+        "role": "Gives uniform lifting of solutions modulo $s^k$ to modulo $s^{k+1}$ when the gradient is nonzero modulo $s$."
+      },
+      {
+        "name": "Hensel_lifting_for_square_roots_odd_prime",
+        "role": "Lifts the roots $x\\equiv \\pm 1$ modulo $r$ uniquely to modulo $r^c$ when $r$ is odd."
+      },
+      {
+        "name": "Unit_group_mod_2_power_structure_and_square_classification",
+        "role": "Classifies odd squares modulo $2^t$ for $t\\ge 3$ and proves there are $4$ square roots for each odd square."
+      },
+      {
+        "name": "Chinese_remainder_theorem",
+        "role": "Provides the bijection between solutions modulo $N$ and tuples of solutions modulo coprime factors."
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Norm $1$ conditions in quadratic extensions and local to global counting via CRT."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use prime divisors of $x_1^2+1$ together with the Pell equation to force Legendre symbol values and hence inert or split behavior.",
+      "Add genuinely new local regimes, namely the $2$ power factor and the ramified odd prime factor, and count each locally before multiplying via CRT."
+    ],
+    "finish_type": "counting_argument"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "sympy",
+        "reason": "Factorization, Legendre symbols, and automated modular arithmetic verification."
+      },
+      {
+        "name": "math",
+        "reason": "Basic integer arithmetic."
+      },
+      {
+        "name": "itertools",
+        "reason": "Brute force counting for small moduli."
+      }
+    ],
+    "import_hint(s)": [
+      "import math, itertools",
+      "import sympy as sp",
+      "from sympy import factorint, legendre_symbol"
+    ],
+    "task(s)": [
+      {
+        "name": "verify_instance",
+        "reason": "Verify $(x_1,y_1)$, factor $x_1^2+1$ to obtain $p,q$, brute force counts modulo $2^5$, $5^2$, and $19^2$, verify the split prime power count for $q^b$ by lifting a square root of $D$ from modulo $q$ to modulo $q^b$ and reducing to $uv\\equiv 1$, and confirm the final product modulo $1000$.\n"
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "D": 38,
+      "t": 5,
+      "a": 2,
+      "b": 4,
+      "c": 2
+    },
+    "final_answer": {
+      "value": 920,
+      "normalized": 920
+    }
+  }
+}

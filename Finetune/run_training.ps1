@@ -31,7 +31,21 @@ function Resolve-OutputPath {
         [Parameter(Mandatory = $true)]
         [string]$PathValue
     )
-    $Candidate = if ([System.IO.Path]::IsPathRooted($PathValue)) { $PathValue } else { Join-Path $BaseDir $PathValue }
+    $Normalized = ($PathValue -replace "/", "\").Trim()
+    $UseFutureTunedRoot = -not [System.IO.Path]::IsPathRooted($Normalized) -and (
+        $Normalized -ieq "models\tuned" -or
+        $Normalized.StartsWith("models\tuned\", [System.StringComparison]::OrdinalIgnoreCase)
+    )
+    if ($UseFutureTunedRoot) {
+        $TunedRoot = if ($env:ATHENA_TUNED_MODELS_ROOT) { $env:ATHENA_TUNED_MODELS_ROOT } else { "N:\AthenaModels\tuned" }
+        $Suffix = ""
+        if ($Normalized.Length -gt "models\tuned".Length) {
+            $Suffix = $Normalized.Substring("models\tuned".Length).TrimStart("\")
+        }
+        $Candidate = if ($Suffix) { Join-Path $TunedRoot $Suffix } else { $TunedRoot }
+    } else {
+        $Candidate = if ([System.IO.Path]::IsPathRooted($Normalized)) { $Normalized } else { Join-Path $BaseDir $Normalized }
+    }
     if (-not (Test-Path -LiteralPath $Candidate)) {
         New-Item -ItemType Directory -Path $Candidate -Force | Out-Null
     }

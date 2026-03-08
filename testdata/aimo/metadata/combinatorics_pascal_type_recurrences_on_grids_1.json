@@ -1,0 +1,284 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "2d_pascal_recurrence_square_grid__mixed_boundary_top_arith_left_constant__double_hockey_stick_sum__mod_1000",
+    "instance_id": "n27_top_row_1_to_n_left_col_1__interior_above_plus_left__S_mod1000",
+    "short_name": "Sum of mixed-boundary Pascal-grid entries for n=27 mod 1000",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "combinatorics",
+    "subdomain(s)": [
+      "Pascal-type recurrences on grids",
+      "binomial coefficients and lattice-path counts",
+      "iterated hockey-stick summations",
+      "modular reduction of combinatorial totals"
+    ],
+    "topic_path": [
+      "combinatorics",
+      "lattice_paths",
+      "binomial_coefficients",
+      "summation_identities",
+      "modular_postprocessing"
+    ],
+    "tags": [
+      "rectangular_pascal_table",
+      "above_plus_left_recurrence",
+      "mixed_boundary_conditions",
+      "closed_form_entry",
+      "double_sum",
+      "hockey_stick",
+      "n_equals_27",
+      "mod_1000"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Define an n×n grid by the Pascal recurrence a(i,j)=a(i-1,j)+a(i,j-1) with a mixed boundary: top row is 1..n while the left column is constant 1. Find S(n)=sum of all entries and compute S(27) mod 1000.\n",
+    "object(s)": [
+      {
+        "name": "n",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "A",
+        "type": "matrix",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "a",
+        "type": "function",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "S",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      },
+      {
+        "name": "out",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "n is a positive integer (instance uses n=27).",
+      "Top row: a(1,j)=j for j=1..n.",
+      "Left column: a(i,1)=1 for i=1..n.",
+      "Interior recurrence: a(i,j)=a(i-1,j)+a(i,j-1) for i,j>=2.",
+      "S(n)=sum_{i=1}^n sum_{j=1}^n a(i,j)."
+    ],
+    "ask": [
+      "Compute S(27) mod 1000."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer_mod_m",
+    "normalization": "mod_1000_representative_in_0_to_999",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "integer >= 1",
+        "purpose": "grid size"
+      },
+      {
+        "name": "boundary_profile",
+        "type": "pair_of_sequences",
+        "domain": "(top_row=1..n, left_col=all_ones)",
+        "purpose": "initializes the recurrence on the top/left borders"
+      },
+      {
+        "name": "recurrence",
+        "type": "other",
+        "domain": "a(i,j)=a(i-1,j)+a(i,j-1)",
+        "purpose": "Pascal-type interior rule"
+      },
+      {
+        "name": "modulus",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "final reduction (here 1000)"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "pascal_grid_binomial_closed_form",
+        "depends_on": [
+          "a"
+        ],
+        "statement": "With top row a(1,j)=j and left column a(i,1)=1, the unique solution is a(i,j)=C(i+j-1,i)=C(i+j-1,j-1), since it matches the boundary and satisfies Pascal's identity.\n"
+      },
+      {
+        "name": "iterated_hockey_stick_for_total_sum",
+        "depends_on": [
+          "n"
+        ],
+        "statement": "S(n)=\\sum_{i=1}^n\\sum_{j=1}^n C(i+j-1,i) reduces via two hockey-stick applications to S(n)=C(2n+1,n)-(n+1).\n"
+      },
+      {
+        "name": "uniqueness_from_boundary_and_recurrence",
+        "depends_on": [
+          "boundary_profile",
+          "recurrence"
+        ],
+        "statement": "The boundary values and recurrence determine all interior entries uniquely by forward filling, hence S(n) is uniquely determined.\n"
+      }
+    ],
+    "operator(s)": [
+      "derive_closed_form_entry",
+      "binomial_coefficient",
+      "apply_hockey_stick_identity",
+      "evaluate_double_binomial_sum",
+      "simplify_to_single_binomial_expression",
+      "modular_reduction"
+    ],
+    "essential_assumption(s)": [
+      "Binomial coefficients use the standard integer definition and standard identities.",
+      "The recurrence is applied over integers (not modulo) before the final modular reduction."
+    ],
+    "uniqueness_certificate(s)": [
+      "The recurrence with the specified boundary conditions has a unique solution array. The closed form gives a unique integer S(n), and reducing mod 1000 produces a unique residue.\n"
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "derive_closed_form_entry_via_pascal_identity",
+        "inputs": [
+          "boundary_profile",
+          "recurrence"
+        ],
+        "purpose": "guess and verify a binomial closed form for a(i,j) using boundary matching and Pascal's identity",
+        "outputs": [
+          "a(i,j)=C(i+j-1,i)"
+        ]
+      },
+      {
+        "name": "evaluate_total_sum_by_double_hockey_stick",
+        "inputs": [
+          "a(i,j)=C(i+j-1,i)"
+        ],
+        "purpose": "evaluate S(n) by summing over j then over i using hockey-stick identities",
+        "outputs": [
+          "S(n)=C(2n+1,n)-(n+1)"
+        ]
+      },
+      {
+        "name": "substitute_and_reduce_mod",
+        "inputs": [
+          "n=27",
+          "modulus=1000"
+        ],
+        "purpose": "compute S(27) from the closed form and reduce to a residue mod 1000",
+        "outputs": [
+          "out=192"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Pascal_identity",
+        "role": "C(m,r)=C(m-1,r)+C(m-1,r-1) validates the recurrence for binomial closed forms"
+      },
+      {
+        "name": "hockey_stick_identity",
+        "role": "\\sum_{t=r}^M C(t,r)=C(M+1,r+1) evaluates binomial sums"
+      },
+      {
+        "name": "uniqueness_of_grid_recurrence_solution",
+        "role": "boundary plus local recurrence determines the grid uniquely"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "interpret recurrence values through binomial identities, then evaluate totals by standard summation identities"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Recognize the mixed boundary forces the simple binomial form a(i,j)=C(i+j-1,i).",
+      "Use hockey-stick twice to collapse the double sum to S(n)=C(2n+1,n)-(n+1).",
+      "Compute the final residue modulo 1000."
+    ],
+    "finish_type": "closed_form_then_mod"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "provides exact integer binomial coefficients via comb for large values"
+      },
+      {
+        "name": "itertools",
+        "reason": "optional dynamic-programming verification of the recurrence table for n=27"
+      }
+    ],
+    "import_hint(s)": [
+      "from math import comb",
+      "from itertools import product"
+    ],
+    "task(s)": [
+      {
+        "name": "compute_binomial_mod_1000",
+        "reason": "compute comb(55,27) exactly and reduce mod 1000 to get the final residue"
+      },
+      {
+        "name": "dynamic_program_check_mod_1000",
+        "reason": "compute the grid values mod 1000 by recurrence and sum them to confirm the same residue"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "n": 27,
+      "modulus": 1000,
+      "boundary_profile": {
+        "top_row": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27
+        ],
+        "left_col": "all ones"
+      }
+    },
+    "final_answer": {
+      "value": 192,
+      "normalized": 192
+    }
+  }
+}

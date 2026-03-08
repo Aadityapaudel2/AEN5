@@ -1,0 +1,173 @@
+Random 3x3 ODE + polynomial-sum divisibility (n=7 variant)
+
+Let n=7. Choose the following random data independently and uniformly:
+- S is a 3-subset of {1,2,3,4,5,6,7}, written S={s1<s2<s3}.
+- v is a nonzero binary vector in {0,1}^3 \ {(0,0,0)}.
+- T is a 3-subset of {0,1,2,3,4,5,6}.
+
+From S define the real 3×3 matrix
+            [ 0   1   0 ]
+  A_S   =   [ 0   0   1 ],
+            [ (-1)^{s1}   (s2-4)   (-1)^{s3} ].
+
+Let X(t) be the solution to the linear ODE system
+  X'(t) = A_S X(t),   X(0)=v,
+and define the "Wronskian-type" determinant
+  W(t) = det[ X(t), X'(t), X''(t) ],
+where the three vectors form the columns of a 3×3 matrix.
+
+From T define the polynomial
+  q_T(z) = \prod_{t\inT} (z-t)  \in ℤ[z],
+and the integer
+  Θ_T = \sum_{k=0}^4 q_T(k).
+
+Define the event E that both conditions hold:
+(i) W(t) \neq 0 for all t \geq 0,
+(ii) 6 divides Θ_T.
+
+Let P(E)=m/n be the exact probability in lowest terms with m\geq0, n>0, gcd(m,n)=1.
+Output the three-digit string for the residue of (m+2n) modulo 1000 (zero-padded if needed).
+
+Solution.
+Step 1 (wronskian_to_initial_data_determinant)
+For constant A_S, the unique solution is X(t)=e^{tA_S}v. Differentiating gives
+  X'(t)=A_S X(t),  X''(t)=A_S^2 X(t),
+so
+  W(t)=det[ X(t), A_S X(t), A_S^2 X(t) ].
+
+Factor out e^{tA_S} from each column:
+  X(t)=e^{tA_S}v,  A_S X(t)=e^{tA_S}(A_S v),  A_S^2 X(t)=e^{tA_S}(A_S^2 v).
+Thus
+  W(t)=det(e^{tA_S}) \cdot det[ v, A_S v, A_S^2 v ].
+
+Using det(e^{tA_S}) = e^{t \cdot tr(A_S)}, define
+  \Delta_S(v) := det[ v, A_S v, A_S^2 v ].
+Then
+  W(t)=e^{t \cdot tr(A_S)} \cdot \Delta_S(v).
+
+Since e^{t \cdot tr(A_S)}\neq0 for all real t, we have:
+  W(t)\neq0 for all t\geq0  ⇔  \Delta_S(v)\neq0.
+
+So condition (i) reduces to a finite determinant check at t=0.
+
+Step 2 (event_independence_factorization)
+The pair (S,v) is independent of T. Condition (i) depends only on (S,v) via \Delta_S(v), and condition (ii) depends only on T via Θ_T. Hence
+  P(E) = P(\Delta_S(v)\neq0)  \cdot  P(6 | Θ_T).
+
+We compute these two probabilities separately.
+
+Step 3 (discrete_parameterization_of_A_S + enumerate_zero_locus_over_binary_vectors)
+Write
+  α = (-1)^{s1} \in {±1},  β = s2-4 \in {-2,-1,0,1,2},  γ = (-1)^{s3} \in {±1}.
+Then
+  A_S = [[0,1,0],[0,0,1],[α,β,γ]] depends only on (α,β,γ).
+
+For fixed (α,β,γ), evaluate \Delta_S(v)=det[v,Av,A^2v] on the 7 nonzero binary vectors v\in{0,1}^3\{0}.
+A direct check over the 20 parameter triples (α,β,γ) with α,γ\in{±1}, β\in{-2,-1,0,1,2} shows:
+- For all parameter triples except the four listed below, \Delta_S(v)\neq0 for all 7 choices of v.
+- The only parameter triples producing any vanishing are:
+
+  (α,β,γ)=(-1,-1,-1): exactly 1 of the 7 vectors v gives \Delta_S(v)=0.
+  (α,β,γ)=( 1,-1, 1): exactly 2 of the 7 vectors v gives \Delta_S(v)=0.
+  (α,β,γ)=(-1, 1, 1): exactly 3 of the 7 vectors v gives \Delta_S(v)=0.
+  (α,β,γ)=( 1, 1,-1): exactly 3 of the 7 vectors v gives \Delta_S(v)=0.
+
+Now count how many subsets S yield each of these parameter triples.
+
+Since β=s2-4:
+- β=-1 means s2=3. Then s1\in{1,2} and s3\in{4,5,6,7}. For fixed parities (i.e. fixed α and γ), there is 1 choice of s1 and 2 choices of s3, so each (α,-1,γ) occurs exactly 2 times.
+- β=1 means s2=5. Then s1\in{1,2,3,4} (two odds, two evens) and s3\in{6,7} (one even, one odd). For fixed (α,1,γ), there are 2 choices of s1 and 1 choice of s3, so each occurs exactly 2 times.
+
+Therefore each of the four "bad" parameter triples above occurs for exactly 2 subsets S.
+
+Total number of (S,v) pairs is
+  |C(7,3)|  \cdot  7 = 35 \cdot 7 = 245.
+
+Total number of "bad" pairs with \Delta_S(v)=0 is
+  2 \cdot 1 + 2 \cdot 2 + 2 \cdot 3 + 2 \cdot 3 = 18.
+
+Hence the number of good (S,v) pairs is 245-18=227, so
+  P(\Delta_S(v)\neq0) = 227/245.
+
+Step 4 (expand_theta_via_symmetric_sums + classify_T_by_residues_mod3)
+Let T={t1,t2,t3} and write the elementary symmetric sums
+  s1 = t1+t2+t3,   s2 = t1t2+t1t3+t2t3,   s3 = t1t2t3.
+Then
+  q_T(z) = (z-t1)(z-t2)(z-t3) = z^3 - s1 z^2 + s2 z - s3.
+
+So
+  Θ_T = \sum_{k=0}^4 q_T(k)
+      = \sum_{k=0}^4 k^3  - s1\sum_{k=0}^4 k^2 + s2\sum_{k=0}^4 k  - 5s3.
+
+Compute the fixed sums:
+  \sum_{k=0}^4 k = 10,   \sum_{k=0}^4 k^2 = 30,   \sum_{k=0}^4 k^3 = 100.
+Hence
+  Θ_T = 100 - 30s1 + 10s2 - 5s3.                                            (★)
+
+We need 6 | Θ_T, i.e. (2|Θ_T) and (3|Θ_T).
+
+Mod 2:
+From (★), 100,30s1,10s2 are even, so
+  Θ_T \equiv -5s3 \equiv s3 (mod 2).
+Thus Θ_T is even iff s3=t1t2t3 is even, i.e. T contains at least one even number.
+In {0,1,2,3,4,5,6} the only 3-subset with all entries odd is {1,3,5}, so the parity condition fails only for T={1,3,5}.
+
+Mod 3:
+Reduce (★) modulo 3:
+  100 \equiv 1,  -30s1 \equiv 0,  10s2 \equiv s2,  -5s3 \equiv (+1)s3   (mod 3),
+so
+  Θ_T \equiv 1 + s2 + s3 (mod 3).
+Thus 3|Θ_T iff
+  s2 + s3 \equiv 2 (mod 3).                                                      (†)
+
+Now work modulo 3 on the set {0,1,2,3,4,5,6}:
+Residue classes:
+  0 mod 3: {0,3,6} (3 numbers),
+  1 mod 3: {1,4}   (2 numbers),
+  2 mod 3: {2,5}   (2 numbers).
+
+Let the residues of (t1,t2,t3) be (x,y,z) in {0,1,2}. Modulo 3,
+  s2 + s3 = (xy+xz+yz) + xyz.
+A short check of residue patterns shows that (†) holds exactly when {x,y,z}={0,1,2},
+i.e. T contains exactly one element from each residue class 0,1,2 modulo 3:
+- If one residue is missing or repeated (e.g. 0,0,1 or 1,1,2), then (xy+xz+yz)+xyz \neq 2 (mod 3).
+- If the pattern is 0,1,2, then xy+xz+yz = 0 \cdot 1+0 \cdot 2+1 \cdot 2 = 2 and xyz=0, so the sum is 2 (mod 3).
+
+Therefore, the mod-3 condition selects precisely the sets with one element from each residue class, and there are
+  3 \cdot 2 \cdot 2 = 12
+such 3-subsets.
+
+Among these 12, exactly one is all odd, namely {1,3,5}, which fails the mod-2 condition.
+Hence the number of T with 6|Θ_T is
+  12 - 1 = 11.
+
+Since there are |C(7,3)|=35 total choices for T,
+  P(6|Θ_T) = 11/35.
+
+Step 5 (multiply_probabilities_and_postprocess)
+Combine Steps 2-4:
+  P(E) = (227/245) \cdot (11/35) = 2497/8575,
+already in lowest terms.
+
+Thus m=2497 and n=8575, and
+  m + 2n = 2497 + 2 \cdot 8575 = 19647 \equiv 647 (mod 1000).
+
+The required three-digit output string is:
+  647.
+
+Uniqueness Test
+1) (Wronskian reduction is deterministic.)
+For constant-coefficient systems X'=AX, we always have X^{(k)}=A^kX and det(e^{tA})=e^{t tr(A)}. Hence W(t)=e^{t tr(A)} \cdot \Delta_S(v) holds identically, so "W(t)\neq0 for all t\geq0" is equivalent to the single algebraic condition \Delta_S(v)\neq0. No ambiguity is possible.
+
+2) (Independence forces factorization.)
+The random choices S, v, and T are independent and uniform on fixed finite sets. Condition (i) depends only on (S,v), and condition (ii) depends only on T, so P(E)=P(i)P(ii) uniquely.
+
+3) (Counts uniquely determine the probability.)
+The sample space sizes are fixed:
+  |S|=C(7,3)=35, |v|=7, |T|=C(7,3)=35.
+Thus the exact counts "227 good (S,v)" and "11 good T" yield unique reduced fractions 227/245 and 11/35, hence a unique P(E)=2497/8575.
+
+4) (Lowest-terms reduction and modular postprocessing are unique.)
+The fraction m/n in lowest terms is unique by gcd normalization, and the residue (m+2n) mod 1000 has a unique representative in {0,...,999}. Zero-padding to three digits is deterministic, so the output string "647" is unique.
+
+647

@@ -1,0 +1,300 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "transaction_balance_equations__bulk_discount_threshold__square_first_pricing__determine_unknown_unit_price__fixed_red_quantity_store3",
+    "instance_id": "apples_three_stores_G4_square_first_fixed1red_find_R_2026_02_13",
+    "short_name": "Find red-apple price with Store 3 buying exactly one red (square-first)",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "algebra",
+    "subdomain(s)": [
+      "integer equations from transactional balance constraints",
+      "piecewise pricing rules (bulk discount)",
+      "case analysis with divisibility constraints"
+    ],
+    "topic_path": [
+      "algebra",
+      "systems of equations",
+      "integer-constrained pricing rules"
+    ],
+    "tags": [
+      "case_split",
+      "divisibility",
+      "piecewise_definition",
+      "arithmetic_constraints",
+      "square_first"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Three stores execute fixed purchase/return transactions under shared pricing rules, then spend the remaining balance on red apples; two stores impose divisibility constraints from bulk discounts, and a third store with square-first pricing and a fixed final red quantity pins down the unique listed price R.",
+    "object(s)": [
+      {
+        "name": "G",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "Y",
+        "type": "integer",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "W",
+        "type": "integer",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "R",
+        "type": "integer",
+        "role": "unknown",
+        "dependency": "independent"
+      },
+      {
+        "name": "B1",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "B2",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "B3",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n1",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "n2",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "n3",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      }
+    ],
+    "givens": [
+      "Listed prices satisfy G=4, Y=G+2, W=3G-1, so Y=6 and W=11.",
+      "Bulk-discount rule (Stores 1 and 2): in any single purchase transaction buying at least 3 of the same type, each unit costs 1 less than its listed price; returns are credited at listed price.",
+      "Store 1 starts with balance B1=33, does: buy 2G, return 1Y, buy 1W, then spends remaining balance on red apples in one final purchase transaction.",
+      "Store 2 starts with balance B2=47, does: return 1G, buy 3Y, buy 1W, then spends remaining balance on red apples in one final purchase transaction.",
+      "Store 3 starts with balance B3=188 and uses square-first pricing: a purchase of q items at per-item price p costs p^2+(q-1)p (using discounted p if bulk discount applies); returns occur only as single-item transactions and are credited p^2.",
+      "Store 3 does: return 1G, buy 1Y, buy 2W, then spends remaining balance by buying exactly n3=1 red apple in one final transaction."
+    ],
+    "ask": [
+      "Determine the listed price R of a red apple."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "base_price_G",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "anchors all listed prices (here G=4)"
+      },
+      {
+        "name": "price_relations",
+        "type": "other",
+        "domain": "linear_relations_among_item_prices",
+        "purpose": "defines Y and W from G (here Y=G+2 and W=3G-1)"
+      },
+      {
+        "name": "unknown_price_R",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "the target listed price to solve for"
+      },
+      {
+        "name": "bulk_discount_threshold",
+        "type": "int",
+        "domain": "integer_ge_3",
+        "purpose": "triggers per-item discount in a transaction (here threshold=3, discount size=1)"
+      },
+      {
+        "name": "square_first_rule",
+        "type": "enum",
+        "domain": {
+          "applies_in_store_3_only": null
+        },
+        "purpose": "changes transaction cost calculation in Store 3"
+      },
+      {
+        "name": "fixed_final_red_quantity_store3",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "fixes the final number of red apples bought in Store 3 (here n3=1)"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "transaction_balance_conservation",
+        "depends_on": [
+          "B1",
+          "B2",
+          "B3"
+        ],
+        "statement": "Each store's remaining balance equals initial balance plus credits from returns minus costs of purchases under that store's applicable pricing rule."
+      },
+      {
+        "name": "discounted_red_unit_price",
+        "depends_on": [
+          "R",
+          "n1",
+          "n2"
+        ],
+        "statement": "In Stores 1 and 2, if the final red purchase buys at least 3 reds then per-red cost is R-1; otherwise per-red cost is R."
+      },
+      {
+        "name": "square_first_cost_formula",
+        "depends_on": [
+          "square_first_rule"
+        ],
+        "statement": "In Store 3, a purchase transaction with per-item price p and quantity q\\geq1 costs p^2+(q-1)p (with discounted p if bulk discount applies); a single-item return credits p^2."
+      },
+      {
+        "name": "fixed_red_quantity_equation_store3",
+        "depends_on": [
+          "fixed_final_red_quantity_store3",
+          "R"
+        ],
+        "statement": "With n3=1, Store 3's final red purchase costs R^2 and must equal Store 3's remaining balance after its prior transactions."
+      }
+    ],
+    "operator(s)": [
+      "piecewise_pricing",
+      "integer_equation_solving",
+      "divisibility_filter",
+      "case_split"
+    ],
+    "essential_assumption(s)": [
+      "Listed prices are integers and transactions are executed exactly as described.",
+      "In Stores 1 and 2, the final red purchase is a single transaction that spends the entire remaining balance.",
+      "In Store 3, the final red purchase buys exactly n3 reds and spends the entire remaining balance."
+    ],
+    "uniqueness_certificate(s)": [
+      "Stores 1 and 2 restrict R to a small finite set via case splits (n=1,2 vs n\\geq3) and divisibility constraints.",
+      "Store 3, with square-first pricing and a fixed final red quantity, yields a single equation in R that selects a unique value from the intersection."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "compute_known_prices",
+        "inputs": [
+          "G and relations for Y,W"
+        ],
+        "purpose": "reduce known prices to explicit integers",
+        "outputs": [
+          "Y and W"
+        ]
+      },
+      {
+        "name": "convert_store_balances_to_constraints_on_R",
+        "inputs": [
+          "store transaction sequences and bulk-discount rule"
+        ],
+        "purpose": "express remaining balances as either nR (n=1,2) or n(R-1) (n\\geq3), forcing divisibility constraints on R",
+        "outputs": [
+          "candidate sets for R from Stores 1 and 2"
+        ]
+      },
+      {
+        "name": "intersect_candidate_sets",
+        "inputs": [
+          "candidate sets from Stores 1 and 2"
+        ],
+        "purpose": "reduce to a small intersection of possible R values",
+        "outputs": [
+          "small candidate list"
+        ]
+      },
+      {
+        "name": "verify_store3_square_first_fixed_quantity",
+        "inputs": [
+          "Store 3 square-first cost formula and fixed n3"
+        ],
+        "purpose": "convert Store 3 into a direct equation in R (typically quadratic), selecting the unique consistent R",
+        "outputs": [
+          "final R"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "basic divisibility in Z",
+        "role": "if a balance equals n(R-1) with integer n, then R-1 divides the balance"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Systems of integer equations with piecewise-defined costs."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Translate \"spend remaining balance in one transaction into a case split: n=1,2 gives remaining=nR, while n\\geq3 forces remaining=n(R-1).",
+      "Use Stores 1 and 2 to obtain a small finite candidate set for R.",
+      "Use Store 3's square-first rule with a fixed final red quantity to force a quadratic equation R^2 = remaining, yielding a unique R."
+    ],
+    "finish_type": "finite_enumeration"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "itertools",
+        "reason": "brute-force check candidate R values and small purchase counts for verification"
+      }
+    ],
+    "import_hint(s)": [
+      "from itertools import product"
+    ],
+    "task(s)": [
+      {
+        "name": "brute_force_R_check",
+        "reason": "iterate R in a reasonable range, enforce Store 1/2 divisibility constraints, and verify Store 3's equation"
+      },
+      {
+        "name": "validate_unique_solution",
+        "reason": "confirm only one integer R satisfies all store constraints"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "G": 4,
+      "B1": 33,
+      "B2": 47,
+      "B3": 188,
+      "bulk_discount_threshold": 3,
+      "fixed_final_red_quantity_store3": 1
+    },
+    "final_answer": {
+      "value": 6,
+      "normalized": 6
+    }
+  }
+}

@@ -1,0 +1,246 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "multiplicative_order__Euler_Fermat__exponent_cycles",
+    "instance_id": "imocompendium:2.4.2_Thm2.121_2.123_2.124",
+    "short_name": "Multiplicative order and exponent cycles (Euler/Fermat, primitive roots)",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "modular arithmetic",
+      "orders"
+    ],
+    "topic_path": [
+      "modular_arithmetic",
+      "orders_and_cycles",
+      "multiplicative_order"
+    ],
+    "tags": [
+      "Euler_phi",
+      "Euler_theorem",
+      "Fermat_little",
+      "Wilson_optional",
+      "discrete_log_structure_light",
+      "exponent_cycles",
+      "group_of_units_mod_n",
+      "lifting_solutions_mod_p_to_p2_optional",
+      "lifting_solutions_mod_p_to_p^k_optional",
+      "mod_prime_obstructions",
+      "mod_prime_powers_optional",
+      "modulo_cycles",
+      "order_arguments",
+      "order_arguments_in_exponentials",
+      "order_based_factorization_a^n_minus_1",
+      "order_mod_n",
+      "primitive_root_mod_p_optional"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Given integers $a,n$ with $\\gcd(a,n)=1$, determine the multiplicative order $\\mathrm{ord}_n(a)$ (the least $t\\ge 1$ with $a^t\\equiv 1\\pmod n$), and use it to evaluate exponential congruences.",
+    "object(s)": [
+      {
+        "name": "a",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "t",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$n\\in\\mathbb{N},\\ n\\ge 2$",
+      "$a\\in\\mathbb{Z}$",
+      "$\\gcd(a,n)=1$"
+    ],
+    "ask": [
+      "Find the least positive integer $t$ such that $a^t\\equiv 1\\pmod n$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "$n\\ge 2$",
+        "purpose": "varies the modulus; determines the unit group $(\\mathbb{Z}/n\\mathbb{Z})^\\times$"
+      },
+      {
+        "name": "a",
+        "type": "int",
+        "domain": "$a\\in\\mathbb{Z}$ with $\\gcd(a,n)=1$",
+        "purpose": "selects an element of the unit group whose cycle length is sought"
+      },
+      {
+        "name": "factorization_hint_mode",
+        "type": "enum",
+        "domain": "{none, phi_factor_known, n_prime}",
+        "purpose": "controls whether the instance supplies factorization information to compute the order efficiently"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "Euler_cycle_bound",
+        "depends_on": [
+          "a",
+          "n"
+        ],
+        "statement": "By Euler, $a^{\\varphi(n)}\\equiv 1\\pmod n$, so $\\mathrm{ord}_n(a)$ exists and divides $\\varphi(n)$."
+      },
+      {
+        "name": "order_divides_phi",
+        "depends_on": [
+          "a",
+          "n"
+        ],
+        "statement": "$t=\\mathrm{ord}_n(a)$ is the minimal positive period of the sequence $a^k\\bmod n$, hence $t\\mid\\varphi(n)$."
+      }
+    ],
+    "operator(s)": [
+      "Euler_phi",
+      "Euler_theorem",
+      "Fermat_little",
+      "order_mod_n",
+      "exponent_cycles",
+      "primitive_root_mod_p_optional",
+      "mod_prime_powers_optional",
+      "lifting_solutions_mod_p_to_p^k_optional",
+      "mod_prime_obstructions"
+    ],
+    "essential_assumption(s)": [
+      "Coprimality $\\gcd(a,n)=1$ (unit condition) is required so that a multiplicative order is defined.",
+      "If $n$ is not prime and no factorization data are given, computing $\\mathrm{ord}_n(a)$ may be hard; the family allows a \"hint mode\" parameter to keep instances decidable."
+    ],
+    "uniqueness_certificate(s)": [
+      "The set $\\{k\\ge 1: a^k\\equiv 1\\pmod n\\}$ is nonempty (Euler) and closed under gcd; its least element exists and is unique by well-ordering, hence $\\mathrm{ord}_n(a)$ is well-defined and unique."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Euler_theorem",
+        "inputs": [
+          "$a,n$ with $\\gcd(a,n)=1$"
+        ],
+        "purpose": "guarantee existence of a finite exponent cycle",
+        "outputs": [
+          "certificate that some exponent (namely $\\varphi(n)$) returns $1$ modulo $n$"
+        ]
+      },
+      {
+        "name": "Fermat_little",
+        "inputs": [
+          "$a$ modulo prime $p$"
+        ],
+        "purpose": "specialize Euler when $n$ is prime; simplifies order computation",
+        "outputs": [
+          "bound $\\mathrm{ord}_p(a)\\mid p-1$"
+        ]
+      },
+      {
+        "name": "order_mod_n",
+        "inputs": [
+          "unit $a\\in(\\mathbb{Z}/n\\mathbb{Z})^\\times$"
+        ],
+        "purpose": "define and manipulate the minimal exponent period",
+        "outputs": [
+          "divisibility constraints on admissible exponents"
+        ]
+      },
+      {
+        "name": "exponent_cycles",
+        "inputs": [
+          "sequence $a^k\\bmod n$"
+        ],
+        "purpose": "reduce large exponents using periodicity",
+        "outputs": [
+          "evaluation of $a^E\\bmod n$ via $E\\bmod t$"
+        ]
+      },
+      {
+        "name": "lifting_solutions_mod_p_to_p^k_optional",
+        "inputs": [
+          "solutions mod $p$ and local derivative condition"
+        ],
+        "purpose": "(optional) lift order/congruence information from $p$ to $p^k$ when $n$ has prime power factors",
+        "outputs": [
+          "constraints on order modulo prime powers"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Euler_phi",
+        "role": "provides the size of the unit group modulo $n$ and an exponent bound"
+      },
+      {
+        "name": "Wilson_optional",
+        "role": "optional tool to compute factorial residues modulo primes and deduce order information in special constructions"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Units modulo $n$ form a finite multiplicative group; every element has finite order."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use $a^{\\varphi(n)}\\equiv 1\\pmod n$ to restrict the order to divisors of $\\varphi(n)$, then test divisors (often via prime factorization of $\\varphi(n)$).",
+      "Exploit prime-power structure (optional) to control orders when $n$ is not prime."
+    ],
+    "finish_type": "finite_enumeration"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, lcm, modular exponentiation scaffolding."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional symbolic/number theory utilities: factorint, primerange, mod_inverse, crt; useful for verification tasks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, crt, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Validate that the produced object(s) satisfy all defining congruences/divisibility/Diophantine constraints for randomly sampled parameters within the declared domain."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Cross-check the main result via an alternative computation (e.g., brute force for small bounds, or an independent formula such as factorization vs. valuation, or CRT reconstruction vs. direct search)."
+      },
+      {
+        "name": "order_computation_crosscheck",
+        "reason": "Compute $t$ by brute force for small $n$ and compare to the divisor-testing method using factorization of $\\varphi(n)$."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 620,
+      "normalized": 620
+    }
+  }
+}

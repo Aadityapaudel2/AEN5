@@ -1,0 +1,64 @@
+- Optional verification (not required for the derivation):
+
+Let V be a 7-dimensional complex vector space with a nondegenerate symmetric bilinear form, and let W be a 5-dimensional complex vector space with a nondegenerate symmetric bilinear form.
+Let A\inEnd(V) be nilpotent with a single Jordan block of size 7 and skew-symmetric with respect to the form on V, and let B\inEnd(W) be nilpotent with a single Jordan block of size 5 and skew-symmetric with respect to the form on W.
+Let U=V⊗W with the induced nondegenerate symmetric bilinear form Q, and define
+  T = A⊗I_W + I_V⊗B  \in End(U).
+Let so(U,Q) = {S\inEnd(U) : S is skew-symmetric with respect to Q}.
+Compute
+  dim_C { S \in so(U,Q) : ST = TS }.
+
+Solution.
+Step 1 (Jacobson-Morozov / sl2 model)
+Because A and B are principal nilpotents in orthogonal Lie algebras, each extends to an sl2-triple.
+Thus, as sl2-modules,
+  V ≅ 𝟕 (highest weight 6),  W ≅ 𝟓 (highest weight 4),
+and A,B act as the raising operators e_V,e_W.
+With the diagonal sl2-action on U=V⊗W, the induced raising operator is exactly
+  e_U = e_V⊗I + I⊗e_W = T.
+Therefore, the Jordan blocks of T have sizes equal to the dimensions of the irreducible sl2-summands of U.
+
+Step 2 (Clebsch-Gordan decomposition \Rightarrow Jordan partition)
+For sl2 irreducibles, 𝟐a+1 ⊗ 𝟐b+1 ≅ ⊕_{k=|a-b|}^{a+b} 𝟐k+1.
+Here a=3 (since dim V=7) and b=2 (since dim W=5), so
+  𝟕 ⊗ 𝟓 ≅ 𝟑 ⊕ 𝟓 ⊕ 𝟕 ⊕ 𝟗 ⊕ 𝟏𝟏.
+Hence the Jordan partition of the nilpotent T is
+  λ = (11,9,7,5,3).
+
+Step 3 (gl-centralizer dimension from conjugate partition)
+For a nilpotent with Jordan type λ, viewed as a C[t]-module ⊕ C[t]/(t^{λ_i}),
+  dim C_gl(T) = Σ_k (λ'_k)^2,
+where λ' is the conjugate partition.
+
+Compute λ' for λ=(11,9,7,5,3):
+For k=1..11, λ'_k = #{parts \geq k}, giving
+  λ' = (5,5,5,4,4,3,3,2,2,1,1).
+Then
+  Σ (λ'_k)^2
+  = 3 \cdot 5^2 + 2 \cdot 4^2 + 2 \cdot 3^2 + 2 \cdot 2^2 + 2 \cdot 1^2
+  = 3 \cdot 25 + 2 \cdot 16 + 2 \cdot 9 + 2 \cdot 4 + 2 \cdot 1
+  = 75 + 32 + 18 + 8 + 2
+  = 135.
+So dim C_gl(T)=135.
+
+Step 4 (pass from gl to so via the adjoint involution)
+Inside End(U), the bilinear form Q defines an involution * (adjoint with respect to Q).
+Then
+  so(U,Q) = {S : S* = -S}.
+The centralizer C_gl(T) is stable under *, and the desired space is the (-1)-eigenspace:
+  Z_so(T) = C_gl(T) ∩ so(U,Q).
+For orthogonal nilpotents, one has the standard trace identity
+  dim Z_so(T) = (dim C_gl(T) - (# of odd Jordan blocks of T))/2.
+Here all parts of λ=(11,9,7,5,3) are odd, so the number of odd parts is 5. Therefore
+  dim Z_so(T) = (135 - 5)/2 = 65.
+
+Answer: 65.
+
+Uniqueness Test
+1) The hypotheses "single Jordan block of size 7" (resp. 5) and "skew-symmetric w.r.t. a symmetric form" force V≅𝟕 and W≅𝟓 as sl2-modules via Jacobson-Morozov; this fixes the diagonal sl2-module structure on U=V⊗W.
+2) Clebsch-Gordan uniquely determines the irreducible decomposition of U, hence uniquely determines the Jordan partition λ of the raising operator T.
+3) The dimension of the centralizer of a nilpotent in so depends only on λ via the formula
+   dim Z_so(T) = (Σ(λ'_k)^2 - o(λ))/2,
+so the resulting integer 65 is uniquely determined.
+
+65

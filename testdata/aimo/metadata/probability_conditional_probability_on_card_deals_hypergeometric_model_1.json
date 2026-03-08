@@ -1,0 +1,255 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "card_deal_probability__conditional_on_single_known_card__contract_success_as_two_key_cards_not_both_in_west",
+    "instance_id": "bridge_contract_success_not_both_QJ_spades_given_west_hq_2026_02_13",
+    "short_name": "Conditional probability a contract succeeds unless West holds both Q♠ and J♠",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "probability",
+    "subdomain(s)": [
+      "conditional probability on card deals (hypergeometric model)",
+      "events defined by key-card ownership patterns",
+      "combinatorial probability on constrained distributions"
+    ],
+    "topic_path": [
+      "counting and probability",
+      "conditional probability",
+      "card-deal success probability"
+    ],
+    "tags": [
+      "hypergeometric",
+      "conditional_probability",
+      "finite_sample_space",
+      "card_deal",
+      "ownership_constraints",
+      "fraction_reduction"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Given a fixed 26-card defender pool in a bridge deal and an ownership constraint from trick 1, assume a uniform conditional distribution of the remaining cards between East and West; compute the probability a contract succeeds when failure occurs exactly if West holds both specified key cards.",
+    "object(s)": [
+      {
+        "name": "deck",
+        "type": "set",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "D",
+        "type": "set",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "info",
+        "type": "other",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "X",
+        "type": "rational",
+        "role": "output",
+        "dependency": "dependent"
+      },
+      {
+        "name": "A",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "B",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "ans",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "Standard 52-card deck; four players with North-South fixed and known.",
+      "The defenders (East and West) jointly hold a known 26-card set D; all other cards belong to North-South.",
+      "Trick-1 information: West is known to hold a specific card (here ♥Q).",
+      "Model: among the remaining unknown cards, all splits between East (13 cards total) and West (13 cards total) consistent with the ownership constraint are equally likely (uniform conditional deal model).",
+      "The contract fails iff West holds both specified key cards (here ♠Q and ♠J); otherwise it succeeds."
+    ],
+    "ask": [
+      "Let X be the conditional probability the contract succeeds. Write X=A/B in lowest terms. Find B-A."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "fixed_holdings",
+        "type": "other",
+        "domain": "specified_defender_pool_D_of_size_26",
+        "purpose": "defines the conditioned sample space (defenders' card pool)"
+      },
+      {
+        "name": "ownership_constraints",
+        "type": "other",
+        "domain": "one_specific_card_assigned_to_west",
+        "purpose": "restricts the conditional distribution (e.g., \"West has ♥Q\")"
+      },
+      {
+        "name": "success_event",
+        "type": "other",
+        "domain": "failure_iff_west_has_both_of_two_key_cards",
+        "purpose": "defines success via an ownership pattern of two key cards (here {♠Q,♠J})"
+      },
+      {
+        "name": "output_transform",
+        "type": "other",
+        "domain": "reduced_fraction_then_B_minus_A",
+        "purpose": "map probability X to the requested integer B-A"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "uniform_conditional_deal_model",
+        "depends_on": [
+          "fixed_holdings",
+          "ownership_constraints"
+        ],
+        "statement": "All defender deals consistent with the constraints are equally likely; equivalently, West's remaining cards form a uniformly random subset of the unknown cards of the required size."
+      },
+      {
+        "name": "event_depends_only_on_west_subset",
+        "depends_on": [
+          "success_event"
+        ],
+        "statement": "The success/failure event depends only on whether West's subset contains both key cards, so probabilities reduce to hypergeometric counting."
+      }
+    ],
+    "operator(s)": [
+      "conditional_probability",
+      "hypergeometric_counting",
+      "fraction_reduction"
+    ],
+    "essential_assumption(s)": [
+      "The only information extracted from trick 1 is the ownership constraint on the specified card; no further strategic inference is used.",
+      "Conditioned on the constraint, all consistent allocations of the remaining cards are equally likely."
+    ],
+    "uniqueness_certificate(s)": [
+      "The conditional sample space is finite and uniform, so X is uniquely defined as a rational favorable/total ratio; reducing X to lowest terms makes B-A uniquely determined."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "define_conditional_sample_space",
+        "inputs": [
+          "defender pool D and ownership constraint(s)"
+        ],
+        "purpose": "formalize the uniform conditional distribution as a finite set of equally likely deals",
+        "outputs": [
+          "total count |Ω| as a binomial coefficient"
+        ]
+      },
+      {
+        "name": "compute_probability",
+        "inputs": [
+          "event described by containment of key cards in West's subset"
+        ],
+        "purpose": "compute X via favorable/total counting (hypergeometric)",
+        "outputs": [
+          "rational probability X"
+        ]
+      },
+      {
+        "name": "fraction_reduction",
+        "inputs": [
+          "rational X as a quotient of binomial coefficients"
+        ],
+        "purpose": "reduce to lowest terms and compute B-A",
+        "outputs": [
+          "integer answer"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Basic conditional probability on uniform finite spaces",
+        "role": "probability = favorable / total"
+      },
+      {
+        "name": "Hypergeometric counting for fixed-size subsets",
+        "role": "count deals where West's subset contains specified cards"
+      },
+      {
+        "name": "Uniqueness of reduced fractions",
+        "role": "ensures B-A is well-defined from X"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Uniform probability on constrained combinatorial configurations"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Encode the deal (given the constraint) as a uniformly random subset selection for West.",
+      "Count unfavorable outcomes by forcing the two key cards into West's subset and choosing the remainder freely.",
+      "Simplify the resulting ratio of binomial coefficients to a reduced fraction."
+    ],
+    "finish_type": "counting_argument"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "exact binomial coefficients via math.comb for verification"
+      },
+      {
+        "name": "fractions",
+        "reason": "exact rational reduction (Fraction) for verification"
+      },
+      {
+        "name": "itertools",
+        "reason": "optional brute-force enumeration over subsets for small sanity-check variants (not required here)"
+      }
+    ],
+    "import_hint(s)": [
+      "from math import comb",
+      "from fractions import Fraction",
+      "from itertools import combinations"
+    ],
+    "task(s)": [
+      {
+        "name": "verify_probability_by_binomial_coefficients",
+        "reason": "compute C(23,10)/C(25,12) exactly and reduce"
+      },
+      {
+        "name": "compute_B_minus_A",
+        "reason": "extract A,B from reduced Fraction and output B-A"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "contract_goal": 12,
+      "known_west_card": "♥Q",
+      "key_cards": [
+        "♠Q",
+        "♠J"
+      ]
+    },
+    "final_answer": {
+      "value": 11,
+      "normalized": 11
+    }
+  }
+}

@@ -1,0 +1,291 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "complex_2x2_operator__eigenvalue_power__re_im_ratio_mod__integral_series_entries",
+    "instance_id": "c2_matrix_int_series__lambda10_ratio__mod1000_2026_02_13",
+    "short_name": "Eigenvalue power ratio for an integral/series-defined 2x2 operator",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "linear_algebra",
+    "subdomain(s)": [
+      "eigenvalues of 2x2 complex matrices",
+      "linear operators on finite-dimensional complex vector spaces",
+      "complex polar form and powering",
+      "analytic evaluation of constants (limits/integrals/series)"
+    ],
+    "topic_path": [
+      "linear_algebra",
+      "matrices",
+      "eigenvalues",
+      "complex_numbers",
+      "powering_and_arguments"
+    ],
+    "tags": [
+      "GL2_over_C",
+      "eigenvalue_selection_by_imag_sign",
+      "matrix_from_integrals_series",
+      "de_moivre",
+      "repeated_squaring",
+      "rational_ratio",
+      "modular_reduction"
+    ]
+  },
+  "problem_spec": {
+    "summary": "A 2x2 complex matrix is defined by evaluating an integral and a geometric series. Select the eigenvalue with positive imaginary part, raise it to a fixed power, form Re/Im as a reduced rational, then output (p+q) mod 1000.",
+    "object(s)": [
+      {
+        "name": "C",
+        "type": "field",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "M",
+        "type": "matrix",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "T",
+        "type": "linear_operator",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "lambda",
+        "type": "complex_number",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "Omega",
+        "type": "complex_number",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "Psi",
+        "type": "rational_number",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "out",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "T is represented on C^2 by the matrix M = [[ ∫_0^1 4x dx,   -\\sum_{n=1}^∞ (1/2)^n ], [  \\sum_{n=1}^∞ (1/2)^n,  ∫_0^1 4x dx ]].",
+      "lambda is the eigenvalue of M with Im(lambda) > 0.",
+      "Omega = lambda^10.",
+      "Psi = Re(Omega) / Im(Omega)."
+    ],
+    "ask": [
+      "Write Psi in lowest terms as p/q with p,q in Z and q>0, then compute (p+q) mod 1000."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_1000_representative_in_0_to_999",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "entry_definitions",
+        "type": "symbolic_recipe",
+        "domain": "convergent_limits_integrals_series",
+        "purpose": "defines numeric constants used as matrix entries"
+      },
+      {
+        "name": "exponent",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "power applied to the selected eigenvalue (here 10)"
+      },
+      {
+        "name": "selection_rule",
+        "type": "predicate",
+        "domain": "Im(lambda)>0",
+        "purpose": "makes the eigenvalue choice unique when eigenvalues are non-real conjugates"
+      },
+      {
+        "name": "modulus",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "final modular reduction of p+q (here 1000)"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "conjugate_eigenpair",
+        "depends_on": [
+          "M"
+        ],
+        "statement": "If M has non-real eigenvalues and real characteristic polynomial coefficients, they occur as a conjugate pair; Im(lambda)>0 selects one uniquely."
+      },
+      {
+        "name": "ratio_as_cotangent",
+        "depends_on": [
+          "lambda",
+          "exponent"
+        ],
+        "statement": "Writing lambda = r e^{i theta}, Omega = r^{exponent} e^{i exponent theta}, so Psi = Re(Omega)/Im(Omega) = cot(exponent theta) when Im(Omega) != 0."
+      },
+      {
+        "name": "special_form_rotation_scaling",
+        "depends_on": [
+          "M"
+        ],
+        "statement": "A matrix of the form [[a,-b],[b,a]] has eigenvalues a±bi, simplifying eigenvalue selection."
+      }
+    ],
+    "operator(s)": [
+      "evaluate_limits_integrals_series",
+      "characteristic_polynomial",
+      "eigenvalue_selection",
+      "complex_polar_form",
+      "de_moivre_power",
+      "real_imag_extract",
+      "rational_reduction_via_gcd",
+      "modular_reduction"
+    ],
+    "essential_assumption(s)": [
+      "The integral and series converge and define finite matrix entries.",
+      "The chosen eigenvalue satisfies Im(lambda)>0 and is non-real.",
+      "Im(Omega) != 0 so Psi is defined."
+    ],
+    "uniqueness_certificate(s)": [
+      "The evaluated constants uniquely determine M. The eigenvalue with Im(lambda)>0 is unique. Omega and Psi are uniquely determined, and the reduced fraction p/q is unique by gcd normalization, giving a unique residue (p+q) mod 1000."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "constant_evaluation_for_matrix_entries",
+        "inputs": [
+          "entry_definitions"
+        ],
+        "purpose": "compute explicit numeric entries of M from an integral and a geometric series",
+        "outputs": [
+          "M"
+        ]
+      },
+      {
+        "name": "eigenvalue_from_characteristic_polynomial",
+        "inputs": [
+          "M"
+        ],
+        "purpose": "compute eigenvalues and apply Im(lambda)>0 selection",
+        "outputs": [
+          "lambda"
+        ]
+      },
+      {
+        "name": "polar_form_power_and_ratio",
+        "inputs": [
+          "lambda",
+          "exponent"
+        ],
+        "purpose": "compute Omega=lambda^exponent and Psi=Re(Omega)/Im(Omega) (using exact complex powering)",
+        "outputs": [
+          "Psi"
+        ]
+      },
+      {
+        "name": "reduce_fraction_and_apply_modulus",
+        "inputs": [
+          "Psi",
+          "modulus"
+        ],
+        "purpose": "write Psi as p/q in lowest terms and compute (p+q) mod modulus",
+        "outputs": [
+          "out"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "eigenvalues_of_2x2_matrix",
+        "role": "characteristic polynomial roots determine eigenvalues"
+      },
+      {
+        "name": "complex_conjugate_root_property",
+        "role": "real-coefficient characteristic polynomial yields conjugate eigenpair when non-real"
+      },
+      {
+        "name": "de_moivre_and_polar_form",
+        "role": "compute lambda^n via magnitude/argument or exact complex arithmetic"
+      },
+      {
+        "name": "gcd_uniqueness_of_reduced_fraction",
+        "role": "ensures unique p/q normalization"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "reduce the task to eigenvalue computation, then compute a power and track Re/Im as exact integers"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Evaluate the integral and series to get a concrete matrix of the form [[a,-b],[b,a]].",
+      "Select the eigenvalue by Im(lambda)>0 to avoid ambiguity.",
+      "Compute lambda^10 exactly (e.g., repeated squaring), then form Psi=Re/Im and reduce.",
+      "Output (p+q) mod 1000."
+    ],
+    "finish_type": "explicit_computation_to_mod_residue"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "sympy",
+        "reason": "exact eigenvalues, exact complex powers, and exact rational simplification"
+      }
+    ],
+    "import_hint(s)": [
+      "from sympy import Matrix, I, Rational"
+    ],
+    "task(s)": [
+      {
+        "name": "verify_matrix_entries",
+        "reason": "evaluate the integral/series and confirm the numeric matrix M"
+      },
+      {
+        "name": "verify_eigenvalue_choice",
+        "reason": "compute eigenvalues and select the one with Im>0"
+      },
+      {
+        "name": "verify_ratio_and_mod",
+        "reason": "compute Omega=lambda^10, Psi=Re/Im, reduce to p/q, and compute (p+q)%1000"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "exponent": 10,
+      "modulus": 1000
+    },
+    "final_answer": {
+      "value": 353,
+      "normalized": 353
+    }
+  }
+}

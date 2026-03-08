@@ -1,0 +1,116 @@
+Count Pythagorean triples with an axis-parallel hypotenuse embedding (c<=500)
+
+Call a Pythagorean triple (a,b,c) with a\leqb "axis-hypotenuse embeddable" if there exist lattice points P,Q,R \in ℤ^2 forming a right triangle with side lengths a,b,c (so c is the hypotenuse) such that:
+- the hypotenuse QR is parallel to an axis, and
+- neither leg is parallel to an axis.
+
+Equivalently (after translating/reflecting), there exist integers u,v with v\neq0 and 0<u<c such that the triangle with vertices
+  Q=(0,0), R=(c,0), P=(u,v)
+has side lengths a,b,c.
+
+Let C_max = 500. Count the number of axis-hypotenuse embeddable triples (a,b,c) with a\leqb and c\leq500, and output the count as a three-digit string (000-999).
+
+Solution.
+Step 1 (derive_axis_aligned_hypotenuse_model).
+Assume we have an axis-hypotenuse embedding. By translation and reflection we may take
+  Q=(0,0), R=(c,0), P=(u,v)
+with integers v\neq0 and 0<u<c. Let
+  a = |PQ| = \sqrt(u^2+v^2),     b = |PR| = \sqrt((c-u)^2+v^2).
+Then automatically a^2+b^2=c^2, so (a,b,c) is a Pythagorean triple.
+
+Step 2 (derive_divisibility_criterion_c_divides_a2).
+Subtract the two squared-distance equations:
+  a^2 = u^2+v^2,
+  b^2 = (c-u)^2+v^2 = c^2 - 2cu + u^2 + v^2.
+Hence
+  b^2 - a^2 = c^2 - 2cu.
+But also c^2 = a^2 + b^2, so
+  b^2 - a^2 = (a^2+b^2) - 2cu
+\Rightarrow -a^2 = a^2 - 2cu
+\Rightarrow 2a^2 = 2cu
+\Rightarrow cu = a^2.
+
+Therefore c | a^2, and u = a^2/c is forced. Similarly, since b^2 = c^2 - a^2, the same argument shows c | b^2 as well.
+
+Conversely, suppose (a,b,c) is a Pythagorean triple and c | a^2. Define
+  u = a^2/c,     v = ab/c.
+We claim u,v are integers and give the required embedding:
+- u is an integer by assumption.
+- Since b^2 = c^2 - a^2 and c|a^2, we get c|b^2.
+  Let p^e be any prime power dividing c. From p^e|a^2 we get p^{⌈e/2⌉}|a, and from p^e|b^2 we get p^{⌈e/2⌉}|b,
+  so p^e|ab. Hence c|ab, so v is an integer.
+Now check distances:
+  u^2+v^2 = (a^4/c^2) + (a^2b^2/c^2) = a^2(a^2+b^2)/c^2 = a^2 c^2 / c^2 = a^2,
+so |PQ|=a.
+Also c-u = c - a^2/c = (c^2-a^2)/c = b^2/c is an integer, and
+  (c-u)^2+v^2 = (b^4/c^2) + (a^2b^2/c^2) = b^2(a^2+b^2)/c^2 = b^2 c^2 / c^2 = b^2,
+so |PR|=b.
+Finally, because a,b < c in any nondegenerate right triangle, we have 0<u=a^2/c<c, and v=ab/c \neq 0.
+Thus the legs have both coordinate differences nonzero, so neither is axis-parallel.
+
+Conclusion:
+A Pythagorean triple (a,b,c) is axis-hypotenuse embeddable  ⇔  c divides a^2 (equivalently b^2).
+
+Step 3 (reduce_to_primitive_scaling).
+Write (a,b,c) = k(a0,b0,c0) where (a0,b0,c0) is primitive (gcd(a0,b0,c0)=1) and k=gcd(a,b,c).
+For primitive triples one has gcd(a0,c0)=gcd(b0,c0)=1.
+
+The embeddability condition c|a^2 becomes:
+  k c0 | (k a0)^2 = k^2 a0^2
+\Rightarrow c0 | k a0^2.
+Since gcd(a0,c0)=1, this forces c0 | k.
+
+Conversely, if k is a multiple of c0, say k=c0 t, then
+  c = k c0 = c0^2 t
+and
+  a^2 = (k a0)^2 is certainly divisible by k c0, so c|a^2 holds and the triple is embeddable.
+
+So:
+(a,b,c) is axis-hypotenuse embeddable ⇔ in its primitive decomposition (a,b,c)=k(a0,b0,c0), the scale k is divisible by c0.
+
+Step 4 (enumerate_primitive_triples_via_Euclid).
+We need c\leq500 and c=c0^2 t with t\geq1, hence c0^2 \leq 500, so c0 \leq 22.
+
+List primitive triples with c0\leq22 using Euclid's formula:
+  (a0,b0,c0) = (m^2-n^2, 2mn, m^2+n^2),
+with m>n, gcd(m,n)=1, and opposite parity.
+
+Compute m^2+n^2 \leq 22:
+- (m,n)=(2,1): c0=5 \to (3,4,5).
+- (m,n)=(3,2): c0=13 \to (5,12,13).
+- (m,n)=(4,1): c0=17 \to (15,8,17), i.e. (8,15,17) with a0\leqb0.
+No other coprime opposite-parity pairs give c0\leq22.
+
+Thus the only primitive hypotenuses c0 with c0^2\leq500 are 5,13,17.
+
+Step 5 (count_scales_per_primitive).
+For each primitive triple with hypotenuse c0, admissible scales are k=c0 t, giving hypotenuse
+  c = k c0 = c0^2 t \leq 500
+so t ranges from 1 to ⌊500/c0^2⌋. Each t produces exactly one triple (a,b,c) with a\leqb.
+
+Compute:
+- c0=5:  ⌊500/25⌋ = 20.
+- c0=13: ⌊500/169⌋ = 2.
+- c0=17: ⌊500/289⌋ = 1.
+
+Total count = 20 + 2 + 1 = 23.
+
+Step 6 (format_three_digit_output).
+As a three-digit string, the answer is "023".
+
+3) Uniqueness Test
+(References uniqueness_certificate(s): "primitive-decomposition bijection + finite sum over floors".)
+
+- By Step 2, axis-hypotenuse embeddability is equivalent to the arithmetic condition c|a^2.
+- By Step 3, writing (a,b,c)=k(a0,b0,c0) with primitive (a0,b0,c0), this is equivalent to c0|k.
+- For each primitive triple with hypotenuse c0, the admissible triples with c\leq500 are in bijection with integers
+    t \in {1,2,..., ⌊500/c0^2⌋}
+  via k=c0 t and (a,b,c)=(k a0, k b0, k c0) reordered to satisfy a\leqb.
+  This bijection is canonical and has no overlap between different primitive triples (primitive decomposition is unique).
+- Since there are finitely many primitive triples with c0^2\leq500, the total count is uniquely determined by the finite sum
+    Σ ⌊500/c0^2⌋
+  over those primitive hypotenuses.
+
+Therefore the maximum/answer is unique and equals 23, i.e. "023".
+
+23

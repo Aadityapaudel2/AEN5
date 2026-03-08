@@ -1,0 +1,195 @@
+Linear congruence with $p$-adic binomial truncation and an order output
+
+Let $v_r(m)$ denote the exponent of a prime $r$ in the prime factorization of a nonzero integer $m$.
+
+Let $p=3$, $q=163$, $k=5$, and $n=p^kq=3^5\cdot 163$. Let $a=490$, and define
+$A=\frac{a^{q-1}-1}{p^k}=\frac{490^{162}-1}{243}$,
+$C=\frac{a^{p-1}-1}{q}=\frac{490^2-1}{163}$,
+and $b=A+p^{k-4}C=A+3C$.
+
+Let $x$ be the least nonnegative integer such that $ax\equiv b\pmod n$.
+Let $t$ be the multiplicative order of $x$ modulo $q$, meaning that $t$ is the least positive integer with $x^t\equiv 1\pmod q$.
+Let $N$ be the unique integer with $0\le N<999$ and $N\equiv x+t\pmod{999}$.
+
+Determine $N$.
+
+Solution.
+Step 1 (Lemma 1: integrality and exact valuations via LTE).
+Lemma 1. The integers $A$ and $C$ are well-defined. Moreover $3\nmid A$ and $163\nmid C$.
+Proof.
+We have $a-1=489=3\cdot 163$, so $v_3(a-1)=1$ and $v_{163}(a-1)=1$.
+
+For $A$, note $q-1=162$ and $v_3(162)=4$. Since $3$ is odd and $3\mid (a-1)$, LTE gives
+$v_3(a^{162}-1)=v_3(a-1)+v_3(162)=1+4=5$.
+Thus $3^5\mid (a^{162}-1)$, so $A=(a^{162}-1)/3^5$ is an integer, and the valuation is exactly $5$, so $3\nmid A$.
+
+For $C$, note $p-1=2$ and $v_{163}(2)=0$. Since $163$ is odd and $163\mid (a-1)$, LTE gives
+$v_{163}(a^2-1)=v_{163}(a-1)+v_{163}(2)=1+0=1$.
+Thus $C=(a^2-1)/163$ is an integer, and the valuation is exactly $1$, so $163\nmid C$.
+This proves Lemma 1. $\square$
+
+Step 2 (Linear congruence uniqueness).
+Since $a=490\equiv 1\pmod 3$ and $a\equiv 1\pmod{163}$, we have $\gcd(a,3^5\cdot 163)=1$. Therefore the congruence $ax\equiv b\pmod n$ has exactly one solution class modulo $n$, and the least nonnegative solution $x\in\{0,1,\dots,n-1\}$ is uniquely determined.
+
+Step 3 (Work modulo $q=163$).
+Because $a\equiv 1\pmod{163}$, the congruence reduces to $x\equiv b\pmod{163}$.
+Also $a\equiv 1\pmod{163}$ implies $a^{162}\equiv 1\pmod{163}$, so $163\mid (a^{162}-1)$. Since $\gcd(163,243)=1$, it follows that $163\mid A$. Hence
+$b=A+3C\equiv 3C\pmod{163}$,
+so
+$x\equiv 3C\pmod{163}$.
+
+Step 4 (Compute $C$ and deduce $x\bmod 163$).
+Compute
+$C=\frac{490^2-1}{163}=\frac{240100-1}{163}=\frac{240099}{163}=1473$.
+Reducing modulo $163$, we have $1473-9\cdot 163=1473-1467=6$, so $C\equiv 6\pmod{163}$.
+From Step 3, $x\equiv 3\cdot 6=18\pmod{163}$.
+
+Step 5 (Set up the congruence modulo $3^5=243$).
+Modulo $243$, we have $a=490\equiv 4\pmod{243}$.
+Also $C=1473\equiv 1473-18\cdot 81=1473-1458=15\pmod{81}$, hence $3C\equiv 45\pmod{243}$.
+Therefore
+$b=A+3C\equiv A+45\pmod{243}$.
+To solve modulo $243$, it remains to compute $A\bmod 243$.
+
+Step 6 (Lemma 2: compute $A\bmod 243$ using binomial truncation and Kummer).
+Lemma 2. $A\equiv 194\pmod{243}$.
+Proof.
+Write $a=490=1+3u$ with $u=163$. By the binomial theorem,
+$(1+3u)^{162}-1=\sum_{i=1}^{162}\binom{162}{i}3^iu^i$,
+so
+$A=\frac{(1+3u)^{162}-1}{3^5}=\sum_{i=1}^{162}\binom{162}{i}3^{i-5}u^i$.
+We work modulo $3^5=243$.
+
+For $i\ge 10$, the factor $3^{i-5}$ is divisible by $3^5$, so these terms are $0$ modulo $243$. Thus only $i\le 9$ can contribute.
+
+We now show the terms $i=7,8,9$ also vanish modulo $243$.
+By Kummer's theorem, $v_3(\binom{162}{i})$ equals the number of carries in base $3$ when adding $i$ and $162-i$.
+Since $162=(20000)_3$:
+$7=(00021)_3$ and $162-7=155=(12202)_3$, giving $4$ carries, so $v_3(\binom{162}{7})=4$.
+$8=(00022)_3$ and $162-8=154=(12201)_3$, giving $4$ carries, so $v_3(\binom{162}{8})=4$.
+$9=(00100)_3$ and $162-9=153=(12200)_3$, giving $2$ carries, so $v_3(\binom{162}{9})=2$.
+
+For $i=7,8,9$, the $3$-adic valuation of the term $\binom{162}{i}3^{i-5}u^i$ is
+$v_3(\binom{162}{i})+(i-5)$, since $3\nmid u$.
+Thus for $i=7$ we get $4+2=6\ge 5$, for $i=8$ we get $4+3=7\ge 5$, and for $i=9$ we get $2+4=6\ge 5$. Hence all these terms are divisible by $3^5$ and vanish modulo $243$.
+
+Therefore, modulo $243$ we only need $i=1,2,3,4,5,6$.
+
+Next compute powers of $u$ modulo $243$:
+$u=163$,
+$u^2=163^2=26569\equiv 82\pmod{243}$,
+$u^3\equiv 82\cdot 163=13366\equiv 1\pmod{243}$.
+Hence $u^4\equiv 163$, $u^5\equiv 82$, $u^6\equiv 1\pmod{243}$.
+
+Now compute each term modulo $243$.
+
+For $i=1$:
+$\binom{162}{1}3^{-4}u=162u/81=2u\equiv 2\cdot 163=326\equiv 83\pmod{243}$.
+
+For $i=2$:
+$\binom{162}{2}=162\cdot 161/2=81\cdot 161=13041$, so $\binom{162}{2}/27=483$ and
+$\binom{162}{2}3^{-3}u^2=(\binom{162}{2}/27)u^2\equiv 483\cdot 82\pmod{243}$.
+Since $483\equiv 240\pmod{243}$, this is $\equiv 240\cdot 82=19680\equiv 240\pmod{243}$.
+
+For $i=3$:
+$\binom{162}{3}=162\cdot 161\cdot 160/6=695520$, so $\binom{162}{3}/9=77280$ and
+$\binom{162}{3}3^{-2}u^3=(\binom{162}{3}/9)u^3\equiv 77280\cdot 1\equiv 6\pmod{243}$.
+
+For $i=4$:
+$\binom{162}{4}=27646920$, so $\binom{162}{4}/3=9215640$ and
+$\binom{162}{4}3^{-1}u^4=(\binom{162}{4}/3)u^4\equiv 9215640\cdot 163\pmod{243}$.
+Reduce $9215640$ modulo $243$: since $243\cdot 37924=9215532$, we get $9215640\equiv 108\pmod{243}$, hence the term is $\equiv 108\cdot 163=17604\equiv 108\pmod{243}$.
+
+For $i=5$:
+We use $v_3(\binom{162}{5})=4$, which follows from Kummer since
+$5=(00012)_3$ and $162-5=157=(12211)_3$ add to $(20000)_3$ with $4$ carries.
+Write $\binom{162}{5}=81B$ with $3\nmid B$. Then
+$\binom{162}{5}u^5\equiv 81(Bu^5)\pmod{243}$, so it depends only on $Bu^5\bmod 3$.
+Compute
+$\binom{162}{5}=\frac{162\cdot 161\cdot 160\cdot 159\cdot 158}{120}
+=\frac{(162\cdot 159)\cdot 161\cdot 160\cdot 158}{3\cdot 40}$.
+Since $162\cdot 159=2\cdot 53\cdot 3^5$, dividing by $3$ leaves $2\cdot 53\cdot 3^4$, so
+$B=\binom{162}{5}/81=\frac{106\cdot 161\cdot 160\cdot 158}{40}=106\cdot 161\cdot 4\cdot 158$.
+Reducing modulo $3$, we have $106\equiv 1$, $161\equiv 2$, $4\equiv 1$, $158\equiv 2$, so $B\equiv 1\pmod 3$.
+Also $u^5\equiv 82\equiv 1\pmod 3$, hence $Bu^5\equiv 1\pmod 3$, so the $i=5$ term is $\equiv 81\pmod{243}$.
+
+For $i=6$:
+We use $v_3(\binom{162}{6})=3$, which follows from Kummer since
+$6=(00020)_3$ and $162-6=156=(12210)_3$ add to $(20000)_3$ with $3$ carries.
+Write $\binom{162}{6}=27K$ with $3\nmid K$. Then
+$\binom{162}{6}\cdot 3\cdot u^6=81Ku^6$, so modulo $243$ it depends only on $Ku^6\bmod 3$.
+Compute
+$\binom{162}{6}=\frac{162\cdot 161\cdot 160\cdot 159\cdot 158\cdot 157}{720}
+=\frac{(162\cdot 159)\cdot 161\cdot 160\cdot 158\cdot 157}{9\cdot 80}$.
+As above, $162\cdot 159=2\cdot 53\cdot 3^5$, dividing by $9=3^2$ leaves $2\cdot 53\cdot 3^3$, so
+$K=\binom{162}{6}/27=\frac{106\cdot 161\cdot 160\cdot 158\cdot 157}{80}=212\cdot 161\cdot 158\cdot 157$.
+Reducing modulo $3$, we have $212\equiv 2$, $161\equiv 2$, $158\equiv 2$, $157\equiv 1$, so $K\equiv 2\pmod 3$.
+Also $u^6\equiv 1\pmod 3$, hence $Ku^6\equiv 2\pmod 3$, so the $i=6$ term is $\equiv 81\cdot 2=162\pmod{243}$.
+
+Summing the contributions for $i=1$ to $6$:
+$A\equiv 83+240+6+108+81+162=680\equiv 680-2\cdot 243=194\pmod{243}$.
+This proves Lemma 2. $\square$
+
+Step 7 (Solve modulo $243$).
+From Step 5 and Lemma 2, $b\equiv 194+45=239\pmod{243}$. The congruence $ax\equiv b\pmod{243}$ becomes
+$4x\equiv 239\pmod{243}$.
+Since $4\cdot 61=244\equiv 1\pmod{243}$, we have $4^{-1}\equiv 61\pmod{243}$, so
+$x\equiv 239\cdot 61\equiv 14579\equiv -1\equiv 242\pmod{243}$.
+
+Step 8 (Chinese remainder theorem to compute $x$).
+We have
+$x\equiv 242\pmod{243}$ and $x\equiv 18\pmod{163}$.
+Write $x=242+243m$. Reducing modulo $163$, note $243\equiv 80\pmod{163}$ and $242\equiv 79\pmod{163}$, so
+$79+80m\equiv 18\pmod{163}$, hence $80m\equiv -61\equiv 102\pmod{163}$.
+
+Compute the inverse of $80$ modulo $163$ by the Euclidean algorithm:
+$163=2\cdot 80+3$,
+$80=26\cdot 3+2$,
+$3=1\cdot 2+1$.
+Back-substituting gives
+$1=3-1\cdot 2=3-(80-26\cdot 3)=27\cdot 3-80=27(163-2\cdot 80)-80=27\cdot 163-55\cdot 80$.
+Thus $80^{-1}\equiv -55\equiv 108\pmod{163}$, so
+$m\equiv 102\cdot 108=11016\equiv 95\pmod{163}$.
+Taking $m=95$ gives
+$x=242+243\cdot 95=242+23085=23327$.
+Since $0\le 23327<39609$, this is the least nonnegative solution.
+
+Step 9 (Order reduction).
+Modulo $163$, we have $x\equiv 18$, so the multiplicative order of $x$ modulo $163$ equals the multiplicative order of $18$ modulo $163$.
+Because $163$ is prime, Fermat's little theorem gives $18^{162}\equiv 1\pmod{163}$, so the order divides $162=2\cdot 3^4$.
+All proper divisors of $162$ are contained in $81=162/2$ or $54=162/3$. Therefore it suffices to show $18^{81}\not\equiv 1\pmod{163}$ and $18^{54}\not\equiv 1\pmod{163}$.
+
+Step 10 (Lemma 3: Euler criterion shows $18^{81}\equiv -1$).
+Lemma 3. $18^{81}\equiv -1\pmod{163}$.
+Proof.
+Compute the Legendre symbol $(18/163)$. Since $18=2\cdot 3^2$ and $(3^2/163)=1$, we have $(18/163)=(2/163)$.
+The supplementary law for $2$ gives $(2/q)=(-1)^{(q^2-1)/8}$ for odd prime $q$.
+Here $163\equiv 3\pmod 8$, so $(2/163)=-1$, hence $(18/163)=-1$.
+By Euler's criterion, $18^{(163-1)/2}=18^{81}\equiv (18/163)\equiv -1\pmod{163}$.
+This proves Lemma 3. $\square$
+
+In particular, $18^{81}\not\equiv 1\pmod{163}$.
+
+Step 11 (Compute $18^{54}\pmod{163}$ by repeated squaring).
+First $18^2=324\equiv -2\pmod{163}$, so $18^4\equiv 4$, $18^8\equiv 16$, $18^{16}\equiv 16^2=256\equiv 93$, and $18^{32}\equiv 93^2=8649\equiv 10\pmod{163}$.
+Since $54=32+16+4+2$,
+$18^{54}\equiv 18^{32}\cdot 18^{16}\cdot 18^4\cdot 18^2\equiv 10\cdot 93\cdot 4\cdot (-2)\pmod{163}$.
+Compute $10\cdot 93=930\equiv 115$, then $115\cdot 4=460\equiv 134$, then $134\cdot (-2)=-268\equiv 58\pmod{163}$.
+Thus $18^{54}\equiv 58\not\equiv 1\pmod{163}$.
+
+Therefore the order cannot divide $54$ or $81$, so it must be $162$. Hence $t=162$.
+
+Step 12 (Compute $N$).
+We have $x+t=23327+162=23489$. Reducing modulo $999$, since $999\cdot 23=22977$ we get $23489-22977=512$.
+Thus $N=512$.
+
+Uniqueness Test
+1) Lemma 1 shows $A$ and $C$ are integers, hence $b=A+3C$ is an integer and the congruence $ax\equiv b\pmod n$ is well-defined.
+
+2) Since $\gcd(a,n)=1$, the congruence has exactly one solution class modulo $n$. The condition $0\le x<n$ selects a unique integer $x$.
+
+3) Because $x\equiv 18\pmod{163}$, we have $\gcd(x,163)=1$, so the multiplicative order $t$ of $x$ modulo $163$ is uniquely defined.
+
+4) The condition $0\le N<999$ and $N\equiv x+t\pmod{999}$ selects a unique $N$.
+
+512

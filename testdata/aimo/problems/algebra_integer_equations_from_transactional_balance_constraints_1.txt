@@ -1,0 +1,109 @@
+- Language: python (optional; the proof is short by hand, but brute-force verification is straightforward).
+
+Listed (integer) prices satisfy G=4, Y=G+2, and W=3G-1, so Y=6 and W=11. The listed price of a red apple is an unknown positive integer R.
+
+Bulk-discount rule (Stores 1 and 2): In any single purchase transaction that buys at least 3 of the same item type, each unit costs 1 less than its listed price. Returns are always credited at the listed price (no discount). Each "buy ..." or "return ..." line below is a separate transaction.
+
+Store 1 starts with balance 33 and does:
+- buy 2G,
+- return 1Y,
+- buy 1W,
+then spends the entire remaining balance on red apples in one final purchase transaction.
+
+Store 2 starts with balance 47 and does:
+- return 1G,
+- buy 3Y,
+- buy 1W,
+then spends the entire remaining balance on red apples in one final purchase transaction.
+
+Store 3 starts with balance 188 and uses square-first pricing for every transaction:
+- For a purchase transaction of q\geq1 identical items whose per-item price for that transaction is p (after any bulk discount), the total cost is p^2+(q-1)p.
+- Returns in Store 3 occur only as single-item transactions and are credited by p^2, where p is the listed price of that item type (no discount on returns).
+
+Store 3 does:
+- return 1G,
+- buy 1Y,
+- buy 2W,
+then spends the entire remaining balance by buying exactly 1 red apple in one final purchase transaction.
+
+Determine the listed price R of a red apple.
+
+Solution.
+Step 1 (compute_known_prices)
+From G=4, we get
+  Y = G+2 = 6,   W = 3G-1 = 11.
+
+Step 2 (convert_store_balances_to_constraints_on_R: Store 1)
+Store 1 balance accounting (bulk discount only if buying \geq3 of the same type in one transaction):
+- buy 2G costs 2 \cdot 4 = 8 (no discount),
+- return 1Y credits 6,
+- buy 1W costs 11 (no discount).
+So Store 1 remaining balance is
+  33 - 8 + 6 - 11 = 20.
+
+Let n1 be the number of red apples bought in Store 1's final transaction.
+- If n1=1 or 2, then no bulk discount applies and 20 = n1 \cdot R, giving candidates R=20 (if n1=1) or R=10 (if n1=2).
+- If n1\geq3, bulk discount applies and each red costs R-1, so
+    20 = n1(R-1),
+  hence R-1 divides 20 with quotient n1\geq3. The divisors of 20 giving n1\geq3 are n1\in{4,5,10,20}, yielding
+    R = 20/4+1 = 6,
+    R = 20/5+1 = 5,
+    R = 20/10+1 = 3,
+    R = 20/20+1 = 2.
+Thus Store 1 allows
+  R \in {20,10,6,5,3,2}.                                                     (A)
+
+Step 3 (convert_store_balances_to_constraints_on_R: Store 2)
+Store 2 balance accounting:
+- return 1G credits 4,
+- buy 3Y is a single purchase of 3 identical items, so discount applies: per-item price is 6-1=5, total cost 3 \cdot 5=15,
+- buy 1W costs 11 (no discount).
+So Store 2 remaining balance is
+  47 + 4 - 15 - 11 = 25.
+
+Let n2 be the number of red apples bought in Store 2's final transaction.
+- If n2=1 or 2, then 25 = n2 \cdot R, which forces R=25 (n2=1) since 25 is odd.
+- If n2\geq3, then 25 = n2(R-1), so R-1 divides 25 with quotient n2\geq3. The possibilities are:
+    n2=5 \Rightarrow R=25/5+1=6,
+    n2=25 \Rightarrow R=25/25+1=2.
+Thus Store 2 allows
+  R \in {25,6,2}.                                                             (B)
+
+Step 4 (intersect_candidate_sets)
+Intersect (A) and (B):
+  {20,10,6,5,3,2} ∩ {25,6,2} = {6,2}.
+So after Stores 1 and 2, we have
+  R \in {6,2}.                                                                 (C)
+
+Step 5 (verify_store3_square_first with fixed red quantity)
+Compute Store 3 remaining balance under square-first pricing.
+
+Transactions (all are single-type; no bulk discount applies since quantities are 1,1,2):
+- return 1G credits 4^2 = 16,
+- buy 1Y costs 6^2 = 36,
+- buy 2W costs 11^2 + (2-1) \cdot 11 = 121 + 11 = 132.
+
+So remaining balance is
+  188 + 16 - 36 - 132 = 36.
+
+Store 3 then buys exactly 1 red apple in one final transaction. Since quantity is 1, no bulk discount applies; per-item price is R, and square-first cost is R^2.
+Because this final transaction spends the entire remaining balance,
+  R^2 = 36,
+so (with R a positive integer)
+  R = 6.
+
+Therefore the listed price of a red apple is R=6.
+
+Uniqueness Test
+(Uses the uniqueness certificates: Stores 1-2 restrict to a small finite set by divisibility/casework; Store 3's square-first rule with a fixed red quantity resolves the remaining ambiguity.)
+
+1) Stores 1 and 2 force a finite candidate set for R.
+In each of Stores 1 and 2, the "spend the entire remaining balance on reds in one transaction" condition implies:
+- either 1 or 2 reds are bought (no discount), giving remaining = R or remaining = 2R,
+- or at least 3 reds are bought (discount), giving remaining = n(R-1) with n\geq3.
+Thus each store yields a finite set of possible R values from simple divisibility. Concretely, Store 1 gives (A) and Store 2 gives (B), hence jointly (C): R\in{6,2}.
+
+2) Store 3 fixes R uniquely.
+Store 3's remaining balance after its fixed transactions is uniquely determined as 36. The final condition "buy exactly 1 red apple under square-first pricing and spend all remaining balance" forces R^2=36, hence R=6 uniquely among positive integers. This eliminates R=2 and leaves exactly one solution.
+
+6

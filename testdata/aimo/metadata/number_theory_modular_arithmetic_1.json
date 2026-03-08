@@ -1,0 +1,413 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "multiplicative_order__principal_units__safe_prime_QR__2power_component__mixed_valuations_mod1000",
+    "instance_id": "nt_03_gen3_instance_2026_02_25",
+    "short_name": "CRT order forcing with a $2^m$ component and valuation-sum normalization",
+    "generation": 3
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "modular arithmetic",
+      "multiplicative orders",
+      "p-adic valuations",
+      "2-adic valuations",
+      "quadratic residues"
+    ],
+    "topic_path": [
+      "modular_arithmetic",
+      "orders_and_cycles",
+      "orders_mod_prime_powers_safe_primes_and_2_powers"
+    ],
+    "tags": [
+      "Chinese_remainder_theorem",
+      "multiplicative_order",
+      "lcm_of_local_orders",
+      "principal_units",
+      "LTE",
+      "LTE_v2",
+      "quadratic_reciprocity",
+      "Euler_criterion",
+      "safe_prime",
+      "valuations",
+      "modular_reduction_mod_1000"
+    ]
+  },
+  "problem_spec": {
+    "summary": "A unit $a$ is defined by CRT constraints modulo $2^m$, $p^k$, $q^3$, and a safe prime $r=2q+1$. The local orders are forced using odd-prime LTE for the principal-unit congruences, a 2-adic LTE argument for the $2^m$ component, and quadratic reciprocity plus Euler's criterion for the safe-prime component. The global order $t$ is the least common multiple of the local orders, and the output is the normalized residue modulo $1000$ of $V=\\frac{t}{4}(v_2(a^t-1)+v_p(a^t-1)+v_q(a^t-1))$.\n",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "r",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "k",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "h",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "m",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "a",
+        "type": "integer",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "u",
+        "type": "sequence",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "t",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$p$ and $q$ are odd primes with $p\\ne q$.",
+      "$q\\equiv 1\\pmod 4$ and $r=2q+1$ is prime with $r\\ne p$.",
+      "Integers $k\\ge 2$, $m\\ge 4$, and $h$ with $1\\le h<k$ are fixed.",
+      "$n=2^m p^k q^3 r$.",
+      "$a\\in\\mathbb Z$ satisfies $a\\equiv 1+p^h\\pmod{p^k}$, $a\\equiv 1+q\\pmod{q^3}$, $a\\equiv 5\\pmod{2^m}$, and $a\\equiv 2\\pmod r$.",
+      "For $j\\ge 0$, $u_j\\equiv a^j\\pmod n$, and $t$ is the least positive integer with $u_{j+t}=u_j$ for all $j\\ge 0$."
+    ],
+    "ask": [
+      "Determine $N\\in\\{0,1,\\dots,999\\}$ such that $N\\equiv \\frac{t}{4}(v_2(a^t-1)+v_p(a^t-1)+v_q(a^t-1))\\pmod{1000}$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime $p\\ge 3$",
+        "purpose": "prime-power modulus $p^k$ with principal-unit depth parameter $h$"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "odd prime $q\\ge 5$ with $q\\equiv 1\\pmod 4$ and $r=2q+1$ prime",
+        "purpose": "supplies the $q^3$ modulus and the safe prime $r$ with $r\\equiv 3\\pmod 8$"
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "domain": "prime $r=2q+1$",
+        "purpose": "safe-prime modulus that forces a full order via quadratic character of $2$"
+      },
+      {
+        "name": "k",
+        "type": "int",
+        "domain": "integer $k\\ge 2$",
+        "purpose": "depth of the principal-unit congruence modulo $p^k$"
+      },
+      {
+        "name": "h",
+        "type": "int",
+        "domain": "integer with $1\\le h<k$",
+        "purpose": "forces $v_p(a-1)=h$ and changes the local order to $p^{k-h}$"
+      },
+      {
+        "name": "m",
+        "type": "int",
+        "domain": "integer $m\\ge 4$",
+        "purpose": "introduces a $2^m$ component so that $4\\mid t$ is forced by 2-adic order arguments"
+      },
+      {
+        "name": "a",
+        "type": "int",
+        "domain": "integer satisfying the stated CRT congruences modulo $2^m$, $p^k$, $q^3$, and $r$",
+        "purpose": "simultaneously forces local orders at $2$, $p$, $q$, and $r$"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "CRT_solvability",
+        "depends_on": [
+          "p",
+          "q",
+          "r",
+          "k",
+          "m"
+        ],
+        "statement": "The moduli $2^m$, $p^k$, $q^3$, and $r$ are pairwise coprime, so the system defining $a$ is solvable by CRT."
+      },
+      {
+        "name": "unit_condition",
+        "depends_on": [
+          "a",
+          "n"
+        ],
+        "statement": "The congruences force $\\gcd(a,n)=1$, so $t=\\operatorname{ord}_n(a)$ is defined."
+      },
+      {
+        "name": "odd_prime_LTE_forces_prime_power_orders",
+        "depends_on": [
+          "a",
+          "p",
+          "q",
+          "k",
+          "h"
+        ],
+        "statement": "From $v_p(a-1)=h$ and $v_q(a-1)=1$, odd-prime LTE forces $\\operatorname{ord}_{p^k}(a)=p^{k-h}$ and $\\operatorname{ord}_{q^3}(a)=q^2$."
+      },
+      {
+        "name": "two_adic_component_forces_divisibility_by_4",
+        "depends_on": [
+          "a",
+          "m"
+        ],
+        "statement": "From $a\\equiv 5\\pmod{2^m}$ with $m\\ge 4$, 2-adic LTE forces $\\operatorname{ord}_{2^m}(a)=2^{m-2}$, hence $4\\mid t$."
+      },
+      {
+        "name": "safe_prime_nonresidue_of_2",
+        "depends_on": [
+          "q",
+          "r"
+        ],
+        "statement": "Since $r\\equiv 3\\pmod 8$, we have $\\bigl(\\frac{2}{r}\\bigr)=-1$."
+      },
+      {
+        "name": "global_period_is_lcm",
+        "depends_on": [
+          "a",
+          "n"
+        ],
+        "statement": "With pairwise coprime factors, $t=\\operatorname{ord}_n(a)$ equals the least common multiple of the local orders."
+      },
+      {
+        "name": "valuations_at_t_forced",
+        "depends_on": [
+          "a",
+          "t",
+          "p",
+          "q"
+        ],
+        "statement": "Odd-prime LTE and 2-adic LTE force $v_p(a^t-1)=k$, $v_q(a^t-1)=3$, and $v_2(a^t-1)=m$ for every valid instance."
+      }
+    ],
+    "operator(s)": [
+      "Chinese_remainder_theorem",
+      "multiplicative_order",
+      "order_mod_n",
+      "lcm_of_local_orders",
+      "v_p_valuation",
+      "LTE",
+      "v2_valuation",
+      "LTE_v2",
+      "Legendre_symbol",
+      "quadratic_reciprocity",
+      "Euler_criterion",
+      "modular_reduction_mod_1000"
+    ],
+    "essential_assumption(s)": [
+      "$q\\equiv 1\\pmod 4$ and $r=2q+1$ is prime, so $r\\equiv 3\\pmod 8$ and $\\bigl(\\frac{2}{r}\\bigr)=-1$.",
+      "$m\\ge 4$, so the $2^m$ component forces $4\\mid t$ and makes $\\frac{t}{4}$ integral.",
+      "$1\\le h<k$, so $v_p(a-1)=h$ is fixed and the $p^k$ order is nontrivial."
+    ],
+    "uniqueness_certificate(s)": [
+      "The congruence system fixes $v_p(a-1)=h$, $v_q(a-1)=1$, the residue class $a\\equiv 5\\pmod{2^m}$, and $a\\equiv 2\\pmod r$. Odd-prime LTE forces $\\operatorname{ord}_{p^k}(a)=p^{k-h}$ and $\\operatorname{ord}_{q^3}(a)=q^2$. 2-adic LTE forces $\\operatorname{ord}_{2^m}(a)=2^{m-2}$, hence $4\\mid t$. Quadratic reciprocity plus Euler's criterion force $\\operatorname{ord}_r(a)=r-1$. Therefore $t=\\operatorname{ord}_n(a)$ is uniquely forced as the least common multiple of the local orders, and the same LTE tools force $v_2(a^t-1)$, $v_p(a^t-1)$, and $v_q(a^t-1)$, so $V$ and hence $N\\in\\{0,\\dots,999\\}$ are unique.\n"
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Chinese_remainder_theorem",
+        "inputs": [
+          "pairwise coprime moduli $2^m$, $p^k$, $q^3$, $r$ and specified residues"
+        ],
+        "purpose": "guarantee existence of $a$ and allow reduction to local congruence classes",
+        "outputs": [
+          "a valid unit $a$ modulo $n$"
+        ]
+      },
+      {
+        "name": "order_mod_n",
+        "inputs": [
+          "coprime factorization of $n$"
+        ],
+        "purpose": "reduce $\\operatorname{ord}_n(a)$ to the least common multiple of local orders",
+        "outputs": [
+          "$t=\\operatorname{lcm}(\\operatorname{ord}_{2^m}(a),\\operatorname{ord}_{p^k}(a),\\operatorname{ord}_{q^3}(a),\\operatorname{ord}_r(a))$"
+        ]
+      },
+      {
+        "name": "LTE_v_p_valuation",
+        "inputs": [
+          "odd primes dividing $a-1$"
+        ],
+        "purpose": "compute $v_p(a^n-1)$ and $v_q(a^n-1)$ from $v_p(a-1)$, $v_q(a-1)$ and the prime-power content of $n$",
+        "outputs": [
+          "forced odd-prime valuations and prime-power orders"
+        ]
+      },
+      {
+        "name": "LTE_v2_valuation",
+        "inputs": [
+          "odd $a$ and even exponent"
+        ],
+        "purpose": "compute $v_2(a^n-1)$ and control the $2^m$ order component",
+        "outputs": [
+          "forced 2-adic valuation and a forced factor $4\\mid t$"
+        ]
+      },
+      {
+        "name": "quadratic_reciprocity",
+        "inputs": [
+          "prime $r\\equiv 3\\pmod 8$"
+        ],
+        "purpose": "evaluate $\\bigl(\\frac{2}{r}\\bigr)$",
+        "outputs": [
+          "$\\bigl(\\frac{2}{r}\\bigr)=-1$"
+        ]
+      },
+      {
+        "name": "Euler_criterion",
+        "inputs": [
+          "residue $a\\equiv 2\\pmod r$"
+        ],
+        "purpose": "deduce $a^{(r-1)/2}\\equiv -1\\pmod r$ and force $\\operatorname{ord}_r(a)=r-1$",
+        "outputs": [
+          "the safe-prime local order"
+        ]
+      },
+      {
+        "name": "modular_reduction",
+        "inputs": [
+          "integer $V$ and modulus $1000$"
+        ],
+        "purpose": "produce the unique normalized output $N\\in\\{0,\\dots,999\\}$",
+        "outputs": [
+          "final answer"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Chinese_Remainder_Theorem",
+        "role": "existence of $a$ satisfying simultaneous congruences"
+      },
+      {
+        "name": "Lifting_the_Exponent_Lemma_LTE_odd_prime_case",
+        "role": "$v_\\ell(x^n-1)=v_\\ell(x-1)+v_\\ell(n)$ for odd $\\ell\\mid (x-1)$"
+      },
+      {
+        "name": "Lifting_the_Exponent_Lemma_LTE_2_adic_case",
+        "role": "$v_2(x^n-1)=v_2(x-1)+v_2(x+1)+v_2(n)-1$ for odd $x$ and even $n$"
+      },
+      {
+        "name": "Quadratic_Reciprocity_Supplement_for_2",
+        "role": "$\\bigl(\\frac{2}{r}\\bigr)$ from $r\\bmod 8$"
+      },
+      {
+        "name": "Euler_Criterion",
+        "role": "$x^{(r-1)/2}\\equiv \\bigl(\\frac{x}{r}\\bigr)\\pmod r$"
+      },
+      {
+        "name": "Order_mod_coprime_product_lcm",
+        "role": "order modulo a coprime product is the least common multiple of local orders"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Units modulo $n$ form a finite multiplicative group and the period is a multiplicative order."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Introduce a $2^m$ factor with $a\\equiv 5\\pmod{2^m}$ so that 2-adic LTE forces $4\\mid t$ and controls $v_2(a^t-1)$.",
+      "Use odd-prime LTE on two different prime-power moduli to force both local orders and valuations.",
+      "Use the safe-prime condition $r=2q+1$ with $r\\equiv 3\\pmod 8$ to force the full order modulo $r$ via quadratic reciprocity and Euler's criterion."
+    ],
+    "finish_type": "closed_form"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "$\\gcd$ and $\\operatorname{lcm}$ computations"
+      },
+      {
+        "name": "sympy",
+        "reason": "CRT construction and independent multiplicative order verification"
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "import sympy as sp",
+      "from sympy.ntheory.modular import crt",
+      "from sympy.ntheory.residue_ntheory import n_order"
+    ],
+    "task(s)": [
+      {
+        "name": "structural_verification",
+        "reason": "Use CRT to construct one admissible $a$, verify the congruences, compute local orders with $\\texttt{n_order}$, compute $t$ as their least common multiple, and verify $a^t\\equiv 1\\pmod n$. Compute $v_2(a^t-1)$, $v_p(a^t-1)$, $v_q(a^t-1)$ by prime-power congruence tests and reduce $V$ modulo $1000$.\n"
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "p": 17,
+      "q": 41,
+      "r": 83,
+      "k": 4,
+      "h": 2,
+      "m": 6,
+      "n": 30577735667392,
+      "a": 8301717710981,
+      "t": 7772944
+    },
+    "final_answer": {
+      "value": 68,
+      "normalized": 68
+    }
+  }
+}

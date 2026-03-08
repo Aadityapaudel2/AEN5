@@ -1,0 +1,232 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "capstone__CRT_plus_valuation__construct_N_then_LTE",
+    "instance_id": "imocompendium:2.4.1_Thm2.119_CRT_and_Thm2.126_valuation_lifting",
+    "short_name": "Capstone: build $N$ by CRT then compute $v_p(N^t\\!\\pm\\!1)$",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "capstone integration",
+      "CRT + p-adic valuations"
+    ],
+    "topic_path": [
+      "capstone",
+      "CRT_plus_valuation",
+      "construct_and_evaluate"
+    ],
+    "tags": [
+      "CRT_with_non_coprime_moduli_optional",
+      "Chinese_remainder",
+      "Hensel_style_light_optional",
+      "LTE_difference_of_powers",
+      "chain_CRT_to_LTE",
+      "compare_vp_on_both_sides",
+      "constructive_CRT",
+      "constructive_congruence_solution",
+      "gcd_invariant",
+      "interface_T_constructed_integer",
+      "lifting_solutions_mod_p_to_p2_optional",
+      "mod_invariant",
+      "mod_prime_powers_optional",
+      "order_arguments_in_exponentials",
+      "valuation_invariant",
+      "vp_sum_lower_bound"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Capstone CHAIN: (1) Use CRT on prime-power constraints to construct a canonical integer $T$ (least nonnegative solution). (2) Feed $T$ into valuation/exponent-lifting (LTE/Hensel-light) to compute an exact $p$-adic valuation of $T^t\\pm 1$ or to certify a desired prime-power divisibility.",
+    "object(s)": [
+      {
+        "name": "congruence_system",
+        "type": "set",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "T",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "v",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "A finite set of congruences specifying $T$ modulo pairwise coprime prime powers, typically of the form $T\\equiv 1\\pmod{p_i^{\\alpha_i}}$ and/or $T\\equiv -1\\pmod{q_j^{\\beta_j}}$.",
+      "A query prime $p$ (often among the $p_i$) and exponent $t\\in\\mathbb{N}$ for which $v=v_p(T^t\\pm 1)$ is requested."
+    ],
+    "ask": [
+      "Let $T$ be the least nonnegative solution of the congruence system (CRT). Compute $v=v_p(T^t\\pm 1)$ exactly."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "prime_power_constraints",
+        "type": "other",
+        "domain": "finite list of congruences modulo pairwise coprime prime powers",
+        "purpose": "defines the CRT construction stage"
+      },
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "prime $p$",
+        "purpose": "the valuation prime queried in stage (2)"
+      },
+      {
+        "name": "t",
+        "type": "int",
+        "domain": "$t\\ge 1$",
+        "purpose": "exponent in $T^t\\pm 1$"
+      },
+      {
+        "name": "sign_variant",
+        "type": "enum",
+        "domain": "{minus, plus}",
+        "purpose": "selects $T^t-1$ or $T^t+1$ in the valuation stage"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "interface_T",
+        "depends_on": [
+          "prime_power_constraints"
+        ],
+        "statement": "Stage (1) outputs the canonical integer $T$ (least nonnegative CRT solution). Stage (2) consumes this same $T$ to evaluate $v_p(T^t\\pm 1)$."
+      },
+      {
+        "name": "valuation_controlled_by_local_congruence",
+        "depends_on": [
+          "T",
+          "p",
+          "t"
+        ],
+        "statement": "If $T\\equiv 1\\pmod{p^{\\alpha}}$ then $v_p(T^t-1)$ can be computed via LTE as $\\alpha + v_p(t)$ under standard admissibility conditions (with analogous statements for $T\\equiv -1$ and the plus case)."
+      }
+    ],
+    "operator(s)": [
+      "CRT_plus_valuation_capstone",
+      "local_global_CRT_to_construct_numbers",
+      "v_p_constraints_on_congruences",
+      "mod_prime_powers_optional",
+      "lifting_solutions_mod_p_to_p2_optional",
+      "Hensel_style_light_optional",
+      "LTE_difference_of_powers",
+      "vp_sum_lower_bound",
+      "vp_sum_exact_when_unequal",
+      "Euclidean_algorithm",
+      "Chinese_remainder"
+    ],
+    "essential_assumption(s)": [
+      "The congruence moduli are pairwise coprime (or otherwise satisfy full CRT compatibility) so that a unique class modulo $M$ exists.",
+      "LTE/Hensel-light steps require admissibility (e.g., $p\\mid (T\\mp 1)$ and $p\\nmid T$ for odd $p$); instances must ensure the correct branch conditions."
+    ],
+    "uniqueness_certificate(s)": [
+      "Global uniqueness is chained: CRT gives a unique residue class for $T$ modulo $M$, and choosing the least nonnegative representative fixes $T$ uniquely. Then the $p$-adic valuation $v_p(T^t\\pm 1)$ is uniquely defined. Thus the composed output is globally unique and not the result of two unrelated subtasks."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "local_global_CRT_to_construct_numbers",
+        "inputs": [
+          "prime power congruence constraints"
+        ],
+        "purpose": "construct $T$ with prescribed local behavior at several primes simultaneously",
+        "outputs": [
+          "canonical $T$ modulo the product modulus"
+        ]
+      },
+      {
+        "name": "v_p_constraints_on_congruences",
+        "inputs": [
+          "constraints like $T\\equiv 1\\pmod{p^\\alpha}$"
+        ],
+        "purpose": "translate congruences into valuation statements about $T\\mp 1$",
+        "outputs": [
+          "baseline valuation $v_p(T\\mp 1)\\ge \\alpha$"
+        ]
+      },
+      {
+        "name": "LTE_difference_of_powers",
+        "inputs": [
+          "baseline valuation and exponent $t$"
+        ],
+        "purpose": "lift valuation from $T\\mp 1$ to $T^t\\mp 1$",
+        "outputs": [
+          "exact valuation $v_p(T^t\\mp 1)$"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Chinese_remainder",
+        "role": "provides the constructive existence/uniqueness of $T$ modulo the product modulus"
+      },
+      {
+        "name": "lifting_exponents_LTE",
+        "role": "core valuation-lifting principle used in stage (2)"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Local conditions modulo prime powers can be glued by CRT into a single integer; valuations then read off exactly how strongly those local conditions persist under exponentiation."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Define the interface integer $T$ by CRT so that $T\\equiv \\pm 1$ modulo specified prime powers.",
+      "Apply LTE to convert $v_p(T\\mp 1)$ into $v_p(T^t\\mp 1)$, keeping careful track of the correct sign and the $p=2$ parity branch if needed."
+    ],
+    "finish_type": "existence_uniqueness"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, lcm, modular exponentiation scaffolding."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional symbolic/number theory utilities: factorint, primerange, mod_inverse, crt; useful for verification tasks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, crt, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Validate that the produced object(s) satisfy all defining congruences/divisibility/Diophantine constraints for randomly sampled parameters within the declared domain."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Cross-check the main result via an alternative computation (e.g., brute force for small bounds, or an independent formula such as factorization vs. valuation, or CRT reconstruction vs. direct search)."
+      },
+      {
+        "name": "two_stage_chain_check",
+        "reason": "Implement CRT to compute $T$ for random small prime-power systems, then compute $v_p(T^t\\pm 1)$ directly and compare to the LTE-derived value."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 10,
+      "normalized": 10
+    }
+  }
+}

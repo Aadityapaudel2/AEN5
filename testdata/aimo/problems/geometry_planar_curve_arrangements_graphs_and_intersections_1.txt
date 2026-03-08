@@ -1,0 +1,127 @@
+Count parameter components giving exactly 3 bounded regions (circle + diameter + moving line)
+
+Consider the following plane curves in ℝ²:
+
+- Upper semicircle (as a graph):  f(x) = \sqrt(4 - x²),  defined for -2 \leq x \leq 2.
+- Lower semicircle (as a graph):  g(x) = -\sqrt(4 - x²), defined for -2 \leq x \leq 2.
+  (So f ∪ g is the circle x² + y² = 4.)
+- Fixed vertical line:            \ell : x = 0.
+- Moving line (parameter a \in ℝ):  p_a : y = x + a.
+
+These curves subdivide the plane. A "bounded region" means a connected bounded component of
+  ℝ² \ ( (graph of f) ∪ (graph of g) ∪ \ell ∪ p_a ).
+
+Let R(a) be the number of bounded regions for a given a. Determine the number C of disjoint (i.e., connected) subsets of ℝ on which R(a) = 3. (Pad C to three digits.)
+
+Solution.
+Step 1 (event_detection_via_tangency_and_intersections).
+Topology (hence bounded-region count) can change only at isolated "critical" a-values where p_a has a tangency or passes through a vertex/intersection already present in the fixed arrangement.
+
+1) Tangency of p_a with the circle x² + y² = 4:
+   Using the derivative-based criterion on f (upper semicircle):
+     f'(x) = d/dx \sqrt(4-x²) = -x / \sqrt(4-x²).
+   Tangency with p_a (slope 1) requires f'(x)=1 and y=f(x)=x+a.
+   Solve f'(x)=1:
+     -x / \sqrt(4-x²) = 1  \Rightarrow  \sqrt(4-x²) = -x  \Rightarrow  x \leq 0.
+   Square: 4-x² = x² \Rightarrow 2x²=4 \Rightarrow x = -\sqrt2.
+   Then y = \sqrt(4-2)=\sqrt2, and on p_a we have y = x+a \Rightarrow \sqrt2 = -\sqrt2 + a \Rightarrow a = 2\sqrt2.
+   Similarly, tangency with g occurs at a = -2\sqrt2.
+   So tangency critical values: a = ±2\sqrt2.
+
+2) Passing through the fixed intersection points of \ell with the circle:
+   \ell : x=0 meets the circle at (0,2) and (0,-2).
+   The moving line passes through (0,2) exactly when 2 = 0 + a \Rightarrow a=2.
+   It passes through (0,-2) exactly when -2 = 0 + a \Rightarrow a=-2.
+   So additional critical values: a = ±2.
+
+Thus the only critical a-values are
+  -2\sqrt2,  -2,  2,  2\sqrt2.
+
+Step 2 (interval_constancy_by_continuity).
+By continuous deformation invariance for planar arrangements, R(a) is constant on each open interval of a-values that contains no critical value. Hence we only need to determine R(a) on the five intervals
+  (-∞,-2\sqrt2),  (-2\sqrt2,-2),  (-2,2),  (2,2\sqrt2),  (2\sqrt2,∞),
+and then separately at the critical points a \in {-2\sqrt2,-2,2,2\sqrt2}.
+
+Step 3 (region_count_on_representatives).
+Observation: The only closed curve is the circle (f ∪ g). Two lines alone cannot form a bounded face, so every bounded region must lie inside the disk x²+y²<4. Therefore R(a) equals the number of regions into which the disk is cut by the chords coming from \ell and p_a.
+
+Baseline (no p_a effect): The fixed line \ell : x=0 intersects the circle in two points, so it cuts the disk into exactly 2 bounded regions (left half-disk and right half-disk). Thus R(a) is at least 2 for all a.
+
+Now analyze how p_a intersects the circle:
+
+- Intersections of p_a with the circle:
+  Substitute y=x+a into x²+y²=4:
+    x² + (x+a)² = 4
+    2x² + 2ax + a² - 4 = 0
+    x² + ax + (a²/2 - 2) = 0.
+  This quadratic has real solutions iff its discriminant is nonnegative:
+    \Delta = a² - 4(a²/2 - 2) = a² - 2a² + 8 = 8 - a².
+  Hence p_a meets the circle iff a² \leq 8, i.e. |a| \leq 2\sqrt2.
+  At |a|=2\sqrt2 it is tangent; for |a|<2\sqrt2 it meets in two points (a chord).
+
+- Whether the chord crosses the diameter \ell inside the disk:
+  The intersection point p_a ∩ \ell is (0,a). This lies inside the disk iff |a|<2 (since on x=0 the circle has y=±2).
+  So:
+  - If |a|<2, the chord from p_a crosses \ell at an interior point of the disk.
+  - If |a|>2, the chord lies entirely in one half-disk (it cannot cross x=0 inside the disk).
+  - If |a|=2, the chord meets \ell exactly at a boundary point (0,±2).
+
+Now count R(a) by cases:
+
+1) If |a| > 2\sqrt2:
+   p_a does not intersect the disk at all, so it does not subdivide bounded regions.
+   Therefore R(a)=2.
+
+2) If |a| = 2\sqrt2:
+   p_a is tangent to the circle, touching the boundary at one point and not creating a chord inside.
+   Therefore R(a)=2.
+
+3) If 2 < |a| < 2\sqrt2:
+   p_a cuts the disk in a chord entirely contained in exactly one half-disk (left or right), so it splits that half into 2 regions while the other half remains 1 region.
+   Therefore R(a)=3.
+
+4) If |a| = 2:
+   p_a meets the circle in two points, with one of them being (0,±2), i.e., the chord shares an endpoint with the diameter \ell but does not cross it in the interior.
+   That still splits exactly one half-disk into 2 regions.
+   Therefore R(a)=3.
+
+5) If |a| < 2:
+   p_a cuts the disk in a chord that crosses \ell at an interior point. Two chords crossing inside the disk divide it into 4 regions.
+   Therefore R(a)=4.
+
+So the set of parameters giving exactly 3 bounded regions is
+  S = {a : 2 \leq |a| < 2\sqrt2}
+    = (-2\sqrt2,-2] ∪ [2,2\sqrt2).
+
+Step 4 (connected_component_count).
+The set S is the union of two connected components:
+  (-2\sqrt2,-2]  and  [2,2\sqrt2).
+Hence the number of disjoint parameter-sets is
+  C = 2,
+and padded to three digits: 002.
+
+Uniqueness Test
+(References the uniqueness_certificate(s): "critical values partition ℝ into intervals with constant region count".)
+
+1) Exhaustiveness of critical values:
+   A change in bounded-region count requires a topological event in the arrangement: creation/annihilation of intersections or a tangency/endpoint degeneracy involving p_a.
+   For p_a interacting with the fixed set {circle, x=0}, such events can only occur when:
+   - p_a is tangent to the circle (computed uniquely as a=±2\sqrt2 via the tangency criterion), or
+   - p_a passes through the fixed intersection points of the circle with x=0 (uniquely at a=±2).
+   No other tangencies or "pass-through" events exist because the fixed set has no other vertices/intersections affecting the disk subdivision.
+
+2) Constancy on intervals:
+   Between consecutive critical a-values, the arrangement varies smoothly with no topological event, so R(a) is constant on each open interval.
+
+3) Deterministic region counts:
+   On each interval, R(a) is determined by two verifiable conditions:
+   - whether p_a intersects the circle (|a|<2\sqrt2), and
+   - whether the chord crosses x=0 inside the disk (|a|<2).
+   These conditions are unambiguous and lead to the unique classification:
+     R(a)=2 for |a|\geq2\sqrt2,
+     R(a)=3 for 2\leq|a|<2\sqrt2,
+     R(a)=4 for |a|<2.
+
+4) Therefore the solution set {a : R(a)=3} is uniquely determined as (-2\sqrt2,-2] ∪ [2,2\sqrt2), which has exactly 2 connected components. No alternative partition or count is possible.
+
+2

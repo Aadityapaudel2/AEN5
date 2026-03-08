@@ -1,0 +1,351 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "gcd_of_exponentials__Euclid_on_exponents__a_pow_m_minus_1__buffed",
+    "instance_id": "imocompendium:2.4.1_Thm2.115_gcd(a^m-1,a^n-1)",
+    "short_name": "GCD identities for exponential sequences - Buffed Seed",
+    "generation": 2
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "divisibility",
+      "exponential forms"
+    ],
+    "topic_path": [
+      "divisibility_and_gcd",
+      "gcd_of_exponentials",
+      "Euclid_on_exponents"
+    ],
+    "tags": [
+      "cyclotomic_factorization_light",
+      "exponent_gcd_reduction",
+      "gcd_constraints_in_systems",
+      "gcd_invariant",
+      "gcd_of_a^m_minus_1_and_a^n_minus_1",
+      "gcd_of_exponentials_a^m_minus_b^m",
+      "gcd_of_powers",
+      "gcd_sequences_patterns",
+      "order_arguments",
+      "sterilized",
+      "buffed",
+      "gymnasium_ready",
+      "two_regime_interaction"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Define a gcd-of-exponentials sequence from two affine exponent progressions. Under tight congruence and coprimality guards, the first index at which an odd prime power divides the gcd is forced. Solving it requires an ORDER step (multiplicative order modulo a prime power) and a LIN step (Bezout/Euclid reduction of a gcd of linear forms to a solvable congruence).",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "k",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "a",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "m",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "r",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "s",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "D",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "G_t",
+        "type": "sequence",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "t_0",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$p$ is an odd prime and $k\\ge 2$; set $M=p^k$.",
+      "$a\\in\\mathbb Z$ with $a>1$, $\\gcd(a,p)=1$, and $a\\equiv 1+p\\pmod{p^k}$.",
+      "$m,n,r,s\\in\\mathbb N$ with $1\\le r,s\\le p^{k-1}-1$ and $\\gcd(m,p)=1$.",
+      "Define $D:=ms-nr$; assume $D\\neq 0$, $\\gcd(m,D)=1$, and $p^{k-1}\\mid D$.",
+      "(Anti-triviality) $p^{k-1}\\nmid(m+r)$.",
+      "For each integer $t\\ge 1$, define $G_t=\\gcd\\!\\left(a^{mt+r}-1,\\ a^{nt+s}-1\\right)$."
+    ],
+    "ask": [
+      "\\\n        Show that the set $\\{t\\ge 1:\\ p^k\\mid G_t\\}$ is nonempty and that, under the stated\n        invariants,\n        \\[\n          p^k\\mid G_t \\iff \\mathrm{ord}_{p^k}(a)\\mid \\gcd(mt+r,\\ nt+s)\\iff p^{k-1}\\mid (mt+r).\n        \\]",
+      "\\\n        Let $t_0$ be the least positive integer $t$ such that $p^k\\mid G_t$.\n        Report the final answer $t_0 \\bmod 1000$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime $p\\ge 3$",
+        "purpose": "selects the prime whose prime-power modulus forces a nontrivial order regime"
+      },
+      {
+        "name": "k",
+        "type": "int",
+        "domain": "integer $k\\ge 2$",
+        "purpose": "sets the prime-power modulus $M=p^k$ (non-prime, order not trivial)"
+      },
+      {
+        "name": "a",
+        "type": "int",
+        "domain": "$a>1,\\ \\gcd(a,p)=1,\\ a\\equiv 1+p\\pmod{p^k}$",
+        "purpose": "fixes a base with forced order behavior modulo $p^k$"
+      },
+      {
+        "name": "m",
+        "type": "int",
+        "domain": "$m\\ge 1,\\ \\gcd(m,p)=1$",
+        "purpose": "slope of the first exponent progression; invertible modulo $p^{k-1}$ to force a unique minimal index"
+      },
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "$n\\ge 1$",
+        "purpose": "slope of the second exponent progression; participates in the determinant $D=ms-nr$"
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "domain": "$1\\le r\\le p^{k-1}-1$",
+        "purpose": "offset of the first exponent progression; prevents the $t=0$ shortcut and controls the extremal index"
+      },
+      {
+        "name": "s",
+        "type": "int",
+        "domain": "$1\\le s\\le p^{k-1}-1$",
+        "purpose": "offset of the second exponent progression; couples with $(m,n,r)$ through $D=ms-nr$"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "exponent_gcd_identity",
+        "depends_on": [
+          "a"
+        ],
+        "statement": "For all positive integers $u,v$, $\\gcd(a^u-1,\\ a^v-1)=a^{\\gcd(u,v)}-1$."
+      },
+      {
+        "name": "forced_order_prime_power_divisor_and_nondivisor",
+        "depends_on": [
+          "p",
+          "k",
+          "a"
+        ],
+        "statement": "\\\n        With $p$ odd, $k\\ge 2$, and $a\\equiv 1+p\\pmod{p^k}$, the multiplicative order satisfies\n        $\\mathrm{ord}_{p^k}(a)=p^{k-1}$. In particular, the order has the forced nontrivial divisor $p$\n        and is not divisible by any prime factor of $(p-1)$ (it is a pure $p$-power)."
+      },
+      {
+        "name": "determinant_Bezout_reduction_of_linear_exponent_gcd",
+        "depends_on": [
+          "m",
+          "n",
+          "r",
+          "s"
+        ],
+        "statement": "\\\n        Let $D=ms-nr$. For every $t\\ge 1$, any common divisor of $(mt+r)$ and $(nt+s)$ divides $D$.\n        Under the guard $\\gcd(m,D)=1$, this sharpens to\n        $\\gcd(mt+r,\\ nt+s)=\\gcd(mt+r,\\ D)$ for all $t\\ge 1$."
+      },
+      {
+        "name": "existence_guard_for_order_divisibility",
+        "depends_on": [
+          "p",
+          "k",
+          "m",
+          "n",
+          "r",
+          "s"
+        ],
+        "statement": "The condition $p^{k-1}\\mid D$ (with $D=ms-nr\\neq 0$) is necessary and sufficient (under $\\gcd(m,p)=1$) for the existence of some $t\\ge 1$ with $p^k\\mid G_t$."
+      },
+      {
+        "name": "anti_triviality_guard_excludes_t_equals_1",
+        "depends_on": [
+          "p",
+          "k",
+          "m",
+          "r"
+        ],
+        "statement": "The constraint $p^{k-1}\\nmid(m+r)$ ensures $t_0>1$, ruling out the immediate first-term solution."
+      }
+    ],
+    "operator(s)": [
+      "gcd_of_a^m_minus_1_and_a^n_minus_1",
+      "gcd_of_exponentials_a^m_minus_b^m",
+      "gcd_of_powers",
+      "gcd_sequences_patterns",
+      "order_arguments",
+      "gcd_invariant",
+      "Euclidean_algorithm_on_exponents",
+      "Bezout_linear_combination",
+      "multiplicative_order_mod_prime_power",
+      "linear_congruence_mod_prime_power",
+      "gcd_of_exponentials_sequence"
+    ],
+    "essential_assumption(s)": [
+      "The exponents are affine functions of the index $t$ and are coupled through $D=ms-nr$; this prevents the problem from collapsing to the one-step template $\\gcd(a^m-1,a^n-1)=a^{\\gcd(m,n)}-1$ and forces a second phase (Bezout/linear congruence) after the order reduction.",
+      "The forced-order hypothesis $a\\equiv 1+p\\pmod{p^k}$ is essential: without a controlled value of $\\mathrm{ord}_{p^k}(a)$, the divisibility condition $p^k\\mid G_t$ does not reduce to a unique solvable congruence for $t$."
+    ],
+    "uniqueness_certificate(s)": [
+      "Under $\\gcd(m,p)=1$, the congruence $mt\\equiv -r\\pmod{p^{k-1}}$ has a unique solution class modulo $p^{k-1}$, hence a unique least positive solution $t_0$. The reported output is then uniquely determined as $t_0 \\bmod 1000$ by the normalization rule."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Euclidean_algorithm_on_exponents",
+        "inputs": [
+          "exponents $u,v$ appearing in $a^u-1$ and $a^v-1$"
+        ],
+        "purpose": "derive $\\gcd(a^u-1,a^v-1)=a^{\\gcd(u,v)}-1$ by iterating Euclid steps on $(u,v)$",
+        "outputs": [
+          "reduction of the exponential gcd to a gcd of exponents"
+        ]
+      },
+      {
+        "name": "Bezout_on_linear_exponents",
+        "inputs": [
+          "linear forms $mt+r$ and $nt+s$"
+        ],
+        "purpose": "use Bezout linear combinations to show common divisors divide $D=ms-nr$, then sharpen to $\\gcd(mt+r,nt+s)=\\gcd(mt+r,D)$ under $\\gcd(m,D)=1$",
+        "outputs": [
+          "constant-bound reduction of $\\gcd(mt+r,nt+s)$"
+        ]
+      },
+      {
+        "name": "order_arguments_mod_prime_power",
+        "inputs": [
+          "modulus $p^k$ and base $a$ with $\\gcd(a,p)=1$"
+        ],
+        "purpose": "characterize $p^k\\mid a^t-1$ via $\\mathrm{ord}_{p^k}(a)\\mid t$ and compute $\\mathrm{ord}_{p^k}(a)$ from $a\\equiv 1+p\\pmod{p^k}$",
+        "outputs": [
+          "explicit order $\\mathrm{ord}_{p^k}(a)=p^{k-1}$"
+        ]
+      },
+      {
+        "name": "order_to_Bezout_bridge",
+        "inputs": [
+          "condition $p^k\\mid \\gcd(a^{mt+r}-1,a^{nt+s}-1)$"
+        ],
+        "purpose": "link the ORDER step ($\\mathrm{ord}_{p^k}(a)\\mid\\gcd(mt+r,nt+s)$) with the LIN step (Bezout reduction of $\\gcd(mt+r,nt+s)$ to a linear congruence in $t$)",
+        "outputs": [
+          "a single congruence $mt\\equiv -r\\pmod{p^{k-1}}$ whose least positive solution is $t_0$"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "gcd(a,b)=gcd(a,b-ka)",
+        "role": "Euclid step used to transfer gcd invariance"
+      },
+      {
+        "name": "gcd(a,b)=gcd(a, b_mod_a)",
+        "role": "remainder form of the Euclid step, transferred to exponents"
+      },
+      {
+        "name": "gcd(a^u-1,a^v-1)=a^{gcd(u,v)}-1",
+        "role": "closed-form gcd identity from Euclid on exponents"
+      },
+      {
+        "name": "multiplicative_order_divisibility_criterion",
+        "role": "for $\\gcd(a,M)=1$, $M\\mid a^t-1$ iff $\\mathrm{ord}_M(a)\\mid t$"
+      },
+      {
+        "name": "order_of_1_plus_p_mod_p^k",
+        "role": "for odd prime $p$, $\\mathrm{ord}_{p^k}(1+p)=p^{k-1}$"
+      },
+      {
+        "name": "linear_congruence_uniqueness_when_invertible",
+        "role": "if $\\gcd(m,p)=1$ then $mt\\equiv -r\\pmod{p^{k-1}}$ has a unique residue class modulo $p^{k-1}$"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Divisibility $M\\mid a^t-1$ is controlled by periodicity of $a^t$ modulo $M$ (multiplicative order).",
+      "Any common divisor of two integers divides any integer linear combination (Bezout), enabling determinant reductions for gcds of linear forms."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use Euclid on exponents to rewrite $\\gcd(a^{mt+r}-1,a^{nt+s}-1)$ as $a^{\\gcd(mt+r,nt+s)}-1$.",
+      "Compute/force $\\mathrm{ord}_{p^k}(a)=p^{k-1}$ from $a\\equiv 1+p\\pmod{p^k}$, turning $p^k$-divisibility into the exponent condition $p^{k-1}\\mid\\gcd(mt+r,nt+s)$.",
+      "(Interaction kernel) Apply Bezout with the determinant $D=ms-nr$ to reduce $\\gcd(mt+r,nt+s)$ to a single linear congruence in $t$, then take the least positive solution and normalize it modulo $1000$."
+    ],
+    "finish_type": "extremal_argument"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, lcm, modular exponentiation scaffolding."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional symbolic/number theory utilities: factorint, primerange, mod_inverse, crt; useful for verification tasks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, crt, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "structural_sanity_check_small_bounds",
+        "reason": "For small admissible tuples $(p,k,a,m,n,r,s)$, brute-force compute $G_t$ for $1\\le t\\le p^{k-1}$ and confirm $p^k\\mid G_t \\iff p^{k-1}\\mid (mt+r)$ and the minimality of $t_0$."
+      },
+      {
+        "name": "order_verification_prime_power",
+        "reason": "Verify numerically that $\\mathrm{ord}_{p^k}(a)=p^{k-1}$ for sample admissible parameters (compute the smallest $t$ with $a^t\\equiv 1\\pmod{p^k}$)."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 341,
+      "normalized": 341
+    }
+  }
+}

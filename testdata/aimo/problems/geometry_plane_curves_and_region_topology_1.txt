@@ -1,0 +1,119 @@
+Ray-intersection-defined region (4 hits): area and normalized arctan/\sqrt2 expression
+
+Define three functions on (0,∞) by
+  f(x) = 1/2,            g(x) = 1/(1+9x^2),            h(x) = 2,
+and consider also the vertical line
+  L = {(1,t) : t \in ℝ}.
+Let B be the union of these boundary pieces:
+  B = {(t,f(t)) : t>0} ∪ {(t,g(t)) : t>0} ∪ {(t,h(t)) : t>0} ∪ L.
+
+For a point (x,y) with 0 \leq x \leq 1 and y \geq \sqrt2/24, call it "admissible" if there exists a ray of strictly positive slope issuing from (x,y) (i.e., a set {(x,y)+s(1,m) : s\geq0} with m>0) that intersects B in exactly 4 distinct points.
+
+Let R be the set of admissible points, and let A be the (Euclidean) area of R.
+Compute the integer
+  E = 2 / ( A - (1/3) \cdot arctan(1/2) + \sqrt2/24 ).
+
+Solution.
+Step 1 (bound_intersections_per_curve; eliminate_impossible_cases).
+Fix a point (x0,y0) with x0\geq0 and consider a ray of slope m>0:
+  \ell_m : y = y0 + m(x-x0),  x \geq x0.
+
+Lemma (monotone line intersection bound).
+If u is differentiable and nonincreasing on (0,∞), then \ell_m intersects the graph {(x,u(x)) : x>0} in at most one point for x \geq x0, and it intersects it at exactly one point iff y0 < u(x0).
+
+Proof.
+Define F(x)=y0+m(x-x0)-u(x). Since u'(x)\leq0 and m>0,
+  F'(x)=m-u'(x) \geq m > 0,
+so F is strictly increasing on [x0,∞). Thus F has at most one zero.
+If F(x0)=y0-u(x0)<0, then F(x)\to+∞ as x\to∞, so there is exactly one zero, hence exactly one intersection.
+If F(x0)\geq0, then F(x)\geq0 for all x\geqx0, hence no intersection. ∎
+
+Apply this to each boundary graph:
+- f is constant (nonincreasing), so \ell_m hits y=1/2 iff y0<1/2.
+- g is strictly decreasing on (0,∞), so \ell_m hits y=g(x) iff y0<g(x0).
+- h is constant, so \ell_m hits y=2 iff y0<2.
+Also, if x0<1 then \ell_m meets the vertical line x=1 exactly once (at x=1). If x0=1, it meets x=1 at the start point (still a single intersection unless it coincides with another boundary point, a measure-zero degeneracy irrelevant to area).
+
+Because each of the three graphs can contribute at most 1 intersection and the vertical line contributes at most 1 intersection, any positive-slope ray intersects B at most 4 times. Therefore, to have exactly 4 intersections, the ray must intersect each of the four pieces exactly once, which (by the lemma) forces the inequalities
+  y0 < 1/2,   y0 < g(x0),   y0 < 2,
+and x0 \leq 1 (already in the base constraint). Since y0<1/2 automatically implies y0<2, the h-inequality is redundant.
+
+Conversely, if y0 < 1/2 and y0 < g(x0) and x0<1, then every m>0 yields exactly one intersection with each of f,g,h and exactly one with x=1; choosing m to avoid finitely many exceptional slopes that would make two intersection points coincide (e.g. passing through the single crossing point of f and g) guarantees 4 distinct intersections. Hence the "exists ray with 4 distinct intersections" condition is equivalent (up to boundary-measure-zero issues) to
+  y0 < min(1/2, g(x0)).
+
+Thus the region R is exactly
+  R = { (x,y) : 0 \leq x \leq 1,  \sqrt2/24 \leq y < min(1/2, 1/(1+9x^2)) }.
+
+Step 2 (derive_region_inequalities; compute_switch_point).
+Determine where the minimum switches by solving
+  1/2 = 1/(1+9x^2).
+This gives
+  1+9x^2 = 2  \Rightarrow  9x^2 = 1  \Rightarrow  x = 1/3  (since x\geq0).
+
+Because g is decreasing:
+- For 0 \leq x \leq 1/3, we have g(x) \geq 1/2, so min(1/2,g(x)) = 1/2.
+- For 1/3 \leq x \leq 1, we have g(x) \leq 1/2, so min(1/2,g(x)) = g(x).
+
+Therefore R splits into two subregions:
+  R1 = {0 \leq x \leq 1/3,  \sqrt2/24 \leq y < 1/2},
+  R2 = {1/3 \leq x \leq 1,  \sqrt2/24 \leq y < 1/(1+9x^2)}.
+
+Step 3 (compute_area; substitution_to_arctan).
+Compute A = area(R) = area(R1)+area(R2).
+
+Rectangle-like part:
+  area(R1) = ∫_0^{1/3} (1/2 - \sqrt2/24) dx
+           = (1/3)(1/2 - \sqrt2/24)
+           = 1/6 - \sqrt2/72.
+
+Curved part:
+  area(R2) = ∫_{1/3}^{1} ( 1/(1+9x^2) - \sqrt2/24 ) dx
+           = ∫_{1/3}^{1} 1/(1+9x^2) dx  - (\sqrt2/24)(1 - 1/3).
+
+Use the standard arctan antiderivative:
+  ∫ dx/(1+9x^2) = (1/3) arctan(3x).
+So
+  ∫_{1/3}^{1} 1/(1+9x^2) dx
+  = (1/3)(arctan(3) - arctan(1)),
+and
+  (\sqrt2/24)(1 - 1/3) = (\sqrt2/24)(2/3) = \sqrt2/36.
+Hence
+  area(R2) = (1/3)(arctan(3) - arctan(1)) - \sqrt2/36.
+
+Add:
+  A = (1/6 - \sqrt2/72) + ((1/3)(arctan(3) - arctan(1)) - \sqrt2/36)
+    = 1/6 + (1/3)(arctan(3) - arctan(1)) - (\sqrt2/72 + \sqrt2/36)
+    = 1/6 + (1/3)(arctan(3) - arctan(1)) - \sqrt2/24.
+
+Now simplify the arctan difference:
+Since arctan(3), arctan(1) \in (0,\pi/2) and arctan(3) > arctan(1),
+  arctan(3) - arctan(1) = arctan( (3-1)/(1+3 \cdot 1) ) = arctan(1/2).
+Therefore
+  A = 1/6 - \sqrt2/24 + (1/3) arctan(1/2).
+
+Step 4 (simplify_expression_E).
+Compute the denominator:
+  A - (1/3) arctan(1/2) + \sqrt2/24
+= (1/6 - \sqrt2/24 + (1/3) arctan(1/2)) - (1/3) arctan(1/2) + \sqrt2/24
+= 1/6.
+Thus
+  E = 2 / (1/6) = 12.
+
+Uniqueness Test
+(Using the uniqueness_certificate(s): once the viable intersection-pattern is identified, R is uniquely determined by inequalities; therefore A and E are unique.)
+
+1) Maximum-intersection rigidity:
+Each boundary piece in B is either a nonincreasing graph (f,g,h) or the vertical line x=1. Any positive-slope ray can intersect each graph at most once (monotone line intersection bound) and the vertical line at most once. Hence a ray has at most 4 intersections with B. Therefore "exactly 4 intersections" forces the unique intersection-pattern case: the ray must meet all four boundary pieces, each exactly once.
+
+2) Equivalence to inequalities:
+For nonincreasing u, the ray meets the graph of u iff the start point lies strictly below u at its x-coordinate (proved via strict monotonicity of F(x)=line-u). This yields the unique inequality description
+  y < min(1/2, 1/(1+9x^2)),
+together with the base constraints 0\leqx\leq1 and y\geq\sqrt2/24. No other points can satisfy the ray condition because no curve can contribute extra intersections to compensate for missing one.
+
+3) Unique area:
+The inequality description makes R a uniquely determined measurable set. The switch point where 1/2 equals 1/(1+9x^2) is uniquely x=1/3, so the decomposition R=R1∪R2 is unique. Hence A is uniquely determined by a single explicit rectangle area plus a single explicit definite integral.
+
+4) Unique final integer:
+With A uniquely determined, the expression defining E is a single real number. The simplification shows the denominator equals 1/6 \neq 0, so E is uniquely defined and equals 12.
+
+12

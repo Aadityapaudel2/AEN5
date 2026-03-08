@@ -1,0 +1,204 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "green_function_laplacian__delta_reduction__graph_surface__sqrt_grad_norm_from_Z",
+    "instance_id": "laplacian3d_defect_delta_Z_sqrt_grad_sine_sine_eval_2026_02_13",
+    "short_name": "Delta reduction gives Z; compute \\sqrt(Z-1) from |∇ψ| at a point",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "analysis",
+    "subdomain(s)": [
+      "partial differential equations (Green functions for Laplacian)",
+      "distributions (Dirac delta and pullbacks)",
+      "induced metric / surface integration"
+    ],
+    "topic_path": [
+      "analysis",
+      "distributions and PDE",
+      "delta-function reduction on a defect surface"
+    ],
+    "tags": [
+      "green_function",
+      "laplacian",
+      "dirac_delta",
+      "induced_metric",
+      "determinant",
+      "gradient",
+      "evaluation"
+    ]
+  },
+  "problem_spec": {
+    "summary": "A delta-supported defect-surface term collapses an integral and yields Z equal to the induced-metric determinant on a graph surface; compute \\sqrt(Z-1) at a specified point from a given ψ(x₀,x₁).",
+    "object(s)": [
+      {
+        "name": "G0",
+        "type": "function",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "psi",
+        "type": "function",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "Sigma",
+        "type": "set",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "F",
+        "type": "other",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "Z",
+        "type": "real",
+        "role": "output",
+        "dependency": "dependent"
+      },
+      {
+        "name": "S",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      },
+      {
+        "name": "x0_eval",
+        "type": "real",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "x1_eval",
+        "type": "real",
+        "role": "given",
+        "dependency": "independent"
+      }
+    ],
+    "givens": [
+      "A 3D Euclidean Laplacian Green function G0(x,y) and a defect surface Σ given by x₂ = ψ(x₀,x₁).",
+      "The delta-supported term F collapses the y-integral so that Z(x_i) = (1/δ(0)) ∬ F(x_i,y_i) dy₀ dy₁ equals det(g_ab(x_i)) after δ(0) cancellation.",
+      "ψ(x₀,x₁) = 9 sin(x₀ - 1) + 12 sin(x₁ + 2).",
+      "Evaluation point: (x₀,x₁) = (1, -2)."
+    ],
+    "ask": [
+      "Compute S = \\sqrt(Z - 1) at the evaluation point."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "psi",
+        "type": "function",
+        "domain": "sufficiently_smooth_surface_graph",
+        "purpose": "defines the defect surface and its induced metric via gradients"
+      },
+      {
+        "name": "evaluation_point",
+        "type": "other",
+        "domain": "specified_point_in_(x0,x1)",
+        "purpose": "point where Z is evaluated (here (1,-2))"
+      },
+      {
+        "name": "amplitude_pair",
+        "type": "other",
+        "domain": "(A,B) in psi(x0,x1)=A sin(x0-c0)+B sin(x1-c1)",
+        "purpose": "supplies explicit gradient values at the evaluation point"
+      },
+      {
+        "name": "output_transform",
+        "type": "other",
+        "domain": "sqrt_of_Z_minus_1",
+        "purpose": "requests \\sqrt(Z-1), i.e. the gradient magnitude"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "delta_pullback_collapse",
+        "depends_on": [
+          "F",
+          "Sigma"
+        ],
+        "statement": "The F-term reduces to det(g_ab(x)) \\cdot δ^(2)(x_i-y_i) \\cdot δ(ψ(x)-ψ(y)); integrating over y_i yields det(g_ab(x)) \\cdot δ(0), which cancels in Z by definition."
+      },
+      {
+        "name": "induced_metric_determinant",
+        "depends_on": [
+          "psi"
+        ],
+        "statement": "For a graph surface in Euclidean space, g_ab = δ_ab + (∂_aψ)(∂_bψ), hence det(g_ab)=1+|∇ψ|² in (x₀,x₁)."
+      },
+      {
+        "name": "nonnegativity_for_sqrt",
+        "depends_on": [
+          "Z"
+        ],
+        "statement": "Z=det(g_ab)\\geq1, so Z-1\\geq0 and \\sqrt(Z-1) is well-defined as the nonnegative root."
+      }
+    ],
+    "operator(s)": [
+      "restriction_to_surface",
+      "dirac_delta_contraction",
+      "determinant",
+      "gradient",
+      "evaluation_at_point",
+      "square_root"
+    ],
+    "essential_assumption(s)": [
+      "The δ(0) renormalization cancels exactly as specified in the definition of Z.",
+      "ψ is differentiable so ∇ψ exists at the evaluation point.",
+      "The principal (nonnegative) square root is used for \\sqrt(Z-1)."
+    ],
+    "uniqueness_certificate(s)": [
+      "After the delta-function reduction, Z is uniquely determined by det(g_ab) at the evaluation point, which is uniquely determined by ∇ψ at that point; hence S=\\sqrt(Z-1) is unique."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "integrate_using_delta_functions",
+        "inputs": [
+          "Z definition as an integral of F"
+        ],
+        "purpose": "collapse the y-integral and cancel the δ(0) factor",
+        "outputs": [
+          "Z = det(g_ab(x))"
+        ]
+      },
+      {
+        "name": "compute_induced_metric_determinant_for_graph",
+        "inputs": [
+          "psi(x0,x1)"
+        ],
+        "purpose": "compute det(g_ab)=1+|∇psi|^2 for a graph surface",
+        "outputs": [
+          "Z-1 = (∂₀ψ)² + (∂₁ψ)²"
+        ]
+      },
+      {
+        "name": "evaluate_gradient_at_point",
+        "inputs": [
+          "explicit psi and evaluation point"
+        ],
+        "purpose": "obtain |∇ψ|² numerically at the point",
+        "outputs": null
+      }
+    ]
+  },
+  "instance_snapshot": {
+    "final_answer": {
+      "value": "15",
+      "normalized": "15"
+    }
+  }
+}

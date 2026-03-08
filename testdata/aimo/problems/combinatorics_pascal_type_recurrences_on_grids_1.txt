@@ -1,0 +1,65 @@
+Sum of mixed-boundary Pascal-grid entries for n=27 mod 1000
+
+Let n=27. Define an n×n array of integers a(i,j) (1\leqi,j\leqn) by
+- Top row: a(1,j)=j for j=1,2,...,n.
+- Left column: a(i,1)=1 for i=1,2,...,n.
+- Interior recurrence: a(i,j)=a(i-1,j)+a(i,j-1) for i,j\geq2.
+
+Let
+  S(n) = \sum_{i=1}^n \sum_{j=1}^n a(i,j).
+Compute S(27) modulo 1000 (as the residue in {0,1,...,999}).
+
+Solution.
+Step 1 (derive_closed_form_entry via binomial/Pascal identity)
+Claim: for all i,j\geq1,
+  a(i,j) = C(i+j-1, i) = C(i+j-1, j-1).
+Verification:
+- Boundary checks:
+  - If i=1: a(1,j)=C(j,1)=j.
+  - If j=1: a(i,1)=C(i, i)=1.
+- Recurrence check (Pascal identity):
+  C(i+j-1,i) = C(i+j-2,i-1) + C(i+j-2,i),
+and the right-hand side equals a(i-1,j)+a(i,j-1) under the claimed formula.
+Thus the formula matches the boundary and satisfies the recurrence, hence equals the uniquely determined array.
+
+Step 2 (evaluate inner sum by hockey-stick)
+Using the closed form,
+  S(n) = \sum_{i=1}^n \sum_{j=1}^n C(i+j-1, i).
+Fix i and sum over j. Let t=i+j-1, so as j runs 1..n, t runs i..i+n-1:
+  \sum_{j=1}^n C(i+j-1,i) = \sum_{t=i}^{i+n-1} C(t,i).
+By the hockey-stick identity,
+  \sum_{t=i}^{i+n-1} C(t,i) = C(i+n, i+1).
+So
+  S(n) = \sum_{i=1}^n C(i+n, i+1).
+
+Step 3 (evaluate outer sum by hockey-stick again)
+Rewrite C(i+n,i+1)=C(i+n,n-1). Let t=i+n, so t runs from n+1 to 2n:
+  S(n) = \sum_{t=n+1}^{2n} C(t, n-1).
+Apply hockey-stick to the longer sum:
+  \sum_{t=n-1}^{2n} C(t, n-1) = C(2n+1, n).
+Subtract the missing first two terms t=n-1 and t=n:
+  C(n-1,n-1)=1,  C(n,n-1)=n.
+Hence
+  S(n) = C(2n+1, n) - (n+1).
+
+Step 4 (substitute n=27 and reduce mod 1000)
+For n=27:
+  S(27) = C(55,27) - 28.
+Compute the binomial coefficient modulo 1000 (e.g., by exact arithmetic or a CRT-based routine):
+  C(55,27) \equiv 220 (mod 1000).
+Therefore
+  S(27) \equiv 220 - 28 \equiv 192 (mod 1000).
+
+So the required residue is 192.
+
+Uniqueness Test
+1) Deterministic grid uniqueness:
+Given the first row and first column, the recurrence a(i,j)=a(i-1,j)+a(i,j-1) uniquely determines every interior entry by filling cells in increasing i+j order. Hence the entire array A is unique.
+
+2) Closed-form uniqueness:
+Any candidate closed form that matches the boundary values and satisfies the recurrence everywhere must equal the unique array from (1). Since C(i+j-1,i) satisfies both, it must equal a(i,j) for all i,j.
+
+3) Sum and modular uniqueness:
+S(27)=\sum\suma(i,j) is therefore uniquely determined as an integer, and reducing modulo 1000 yields a unique residue in {0,...,999}. Thus 192 is the unique correct output.
+
+192

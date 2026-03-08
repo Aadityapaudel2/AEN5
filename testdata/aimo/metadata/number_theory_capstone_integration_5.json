@@ -1,0 +1,240 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "capstone__reciprocity_to_norm_representation__sum_of_two_squares",
+    "instance_id": "imocompendium:Thm2.134_quadratic_reciprocity_and_Thm2.117_Z[i]_norms",
+    "short_name": "Capstone: reciprocity decides representability, norms construct it",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "capstone integration",
+      "quadratic residues + algebraic integers"
+    ],
+    "topic_path": [
+      "capstone",
+      "reciprocity_to_norm_representation",
+      "sum_of_two_squares"
+    ],
+    "tags": [
+      "CHAIN_reciprocity_then_norm_descent",
+      "Legendre_symbol",
+      "constructive_factorization",
+      "cyclotomic_factorization_light",
+      "descent_via_norms_optional",
+      "gcd_invariant",
+      "interface_T_Legendre_symbol",
+      "mod_invariant",
+      "mod_p_obstructions_for_Diophantine",
+      "norms",
+      "quadratic_reciprocity",
+      "representation_by_quadratic_forms_light_optional",
+      "roots_of_unity_filter_light",
+      "sum_of_two_squares_criterion",
+      "supplementary_laws"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Capstone CHAIN: (1) Use Legendre symbols and quadratic reciprocity to decide a local representability condition (e.g., whether $-1$ is a quadratic residue mod $p$). This produces an interface quantity $T$. (2) Conditional on $T=1$, construct a normalized integer solution of a norm equation such as $x^2+y^2=p$ via Gaussian integer descent / quadratic form methods.",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "T",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "(x,y)",
+        "type": "other",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$p$ is an odd prime",
+      "Goal norm equation is fixed by mode (default: $x^2+y^2=p$) with normalization $x\\ge y\\ge 0$."
+    ],
+    "ask": [
+      "Compute $T=(\\!-1/p)$ using quadratic reciprocity and supplementary laws. If $T=1$, output the unique normalized pair $(x,y)$ with $x^2+y^2=p$. (Instances are chosen so that $T=1$ holds; otherwise the output is undefined and the instance is outside the family domain.)"
+    ]
+  },
+  "answer_spec": {
+    "type": "object",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime $p$",
+        "purpose": "prime whose representability is tested and then represented"
+      },
+      {
+        "name": "mode",
+        "type": "enum",
+        "domain": "{sum_of_two_squares}",
+        "purpose": "fixes the norm form (default: Gaussian norm)"
+      },
+      {
+        "name": "normalization_rule",
+        "type": "enum",
+        "domain": "{x_ge_y_ge_0}",
+        "purpose": "removes unit/order symmetries to make the representation unique"
+      },
+      {
+        "name": "CRT_optional_glue_switch",
+        "type": "enum",
+        "domain": "{off, on}",
+        "purpose": "optional: first construct a prime with desired residue class conditions using CRT, then apply the chain"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "interface_T",
+        "depends_on": [
+          "p"
+        ],
+        "statement": "Stage (1) outputs $T=(\\!-1/p)\\in\\{\\pm 1\\}$, which decides whether $p$ splits in $\\mathbb{Z}[i]$ and hence whether the norm equation $x^2+y^2=p$ is solvable."
+      },
+      {
+        "name": "norm_solution_uses_T",
+        "depends_on": [
+          "T",
+          "p"
+        ],
+        "statement": "Stage (2) (Gaussian descent / quadratic forms) is invoked only when $T=1$; it constructs $(x,y)$ from the splitting information guaranteed by $T=1$."
+      }
+    ],
+    "operator(s)": [
+      "reciprocity_to_norm_representation_capstone",
+      "quadratic_reciprocity",
+      "Legendre_symbol",
+      "sum_of_two_squares_criterion",
+      "local_obstruction_to_representation",
+      "Gaussian_integer_descent_optional",
+      "representation_by_quadratic_forms_light_optional",
+      "norm_equation_solving",
+      "CRT_optional_glue",
+      "uniqueness_certificate_global"
+    ],
+    "essential_assumption(s)": [
+      "Instances must satisfy the representability condition (e.g., $p\\equiv 1\\pmod 4$, equivalently $(\\!-1/p)=1$) so that a solution exists.",
+      "Uniqueness relies on a normalization rule fixing sign/unit symmetries (e.g., $x\\ge y\\ge 0$).",
+      "If CRT_optional_glue is used, the constructed prime must meet both primality and residue constraints; the CRT stage outputs a candidate progression, and primality is ensured by the instance design (olympiad-style)."
+    ],
+    "uniqueness_certificate(s)": [
+      "The coupling is global: $T$ computed in stage (1) determines solvability and is required for stage (2). When $T=1$, the norm method yields representations unique up to units; normalization fixes a single pair. Thus the final output is uniquely determined by the chain, not by independent subtasks."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Legendre_symbol",
+        "inputs": [
+          "$p$"
+        ],
+        "purpose": "define $T=(\\!-1/p)$ as the interface quantity",
+        "outputs": [
+          "$T\\in\\{\\pm 1\\}$"
+        ]
+      },
+      {
+        "name": "quadratic_reciprocity",
+        "inputs": [
+          "symbol $(\\!-1/p)$ or general $(a/p)$"
+        ],
+        "purpose": "evaluate the symbol using congruence class data",
+        "outputs": [
+          "explicit value of $T$ from $p\\bmod 4$"
+        ]
+      },
+      {
+        "name": "Gaussian_integer_descent_optional",
+        "inputs": [
+          "a nontrivial square root of $-1$ modulo $p$"
+        ],
+        "purpose": "convert local data into an exact representation $p=x^2+y^2$ by descent on norms",
+        "outputs": [
+          "integer pair $(x,y)$ with $x^2+y^2=p$"
+        ]
+      },
+      {
+        "name": "norm_equation_solving",
+        "inputs": [
+          "prime $p$ with $T=1$"
+        ],
+        "purpose": "solve $N(z)=p$ in $\\mathbb{Z}[i]$ and extract $(x,y)$",
+        "outputs": [
+          "normalized representation"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "sum_of_two_squares_criterion",
+        "role": "links $T=(\\!-1/p)$ to representability as $x^2+y^2$"
+      },
+      {
+        "name": "quadratic_reciprocity",
+        "role": "computes $T$ efficiently and provides the local obstruction when $T=-1$"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Local quadratic-residue data determines splitting of primes in quadratic integer rings; norms then turn splitting into explicit representations."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Compute the interface symbol $T=(\\!-1/p)$ using reciprocity (essentially $p\\bmod 4$).",
+      "When $T=1$, use a square root of $-1$ modulo $p$ and run Gaussian descent (or UFD factorization) to produce $x^2+y^2=p$, then normalize."
+    ],
+    "finish_type": "existence_uniqueness"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, lcm, modular exponentiation scaffolding."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional symbolic/number theory utilities: factorint, primerange, mod_inverse, crt; useful for verification tasks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, crt, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Validate that the produced object(s) satisfy all defining congruences/divisibility/Diophantine constraints for randomly sampled parameters within the declared domain."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Cross-check the main result via an alternative computation (e.g., brute force for small bounds, or an independent formula such as factorization vs. valuation, or CRT reconstruction vs. direct search)."
+      },
+      {
+        "name": "end_to_end_capstone_check",
+        "reason": "For sample primes $p\\equiv 1\\pmod 4$, compute $T$ by Euler criterion/reciprocity and brute force a representation $x^2+y^2=p$ to confirm consistency and normalization uniqueness."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 215,
+      "normalized": 215
+    }
+  }
+}

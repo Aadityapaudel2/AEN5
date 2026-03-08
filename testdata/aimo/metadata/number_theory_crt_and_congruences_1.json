@@ -1,0 +1,366 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "capstone__CRT_defined_T__mixed_prime_powers__valuation_order_forcing__noninvertible_divisor_quotient_mod_1000",
+    "instance_id": "nt_19_forged_gen4_nt_19_4",
+    "short_name": "CRT-defined $T$ with odd prime-power and $2$-power components; valuation/order forcing; quotient sum mod $1000$ with a noninvertible divisor",
+    "generation": 4
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "CRT and congruences",
+      "p-adic valuations",
+      "multiplicative order modulo prime powers",
+      "order lifting from $p$ to $p^2$",
+      "modular inverses",
+      "exponent reduction (Euler/Carmichael style)",
+      "mixed-modulus reconstruction for noninvertible divisors"
+    ],
+    "topic_path": [
+      "capstone",
+      "CRT_plus_orders",
+      "valuation_plus_order_lifting",
+      "mixed_division_mod_1000"
+    ],
+    "tags": [
+      "Chinese_remainder_theorem",
+      "p_adic_valuation",
+      "multiplicative_order",
+      "order_lifting_prime_square",
+      "modular_inverse",
+      "Euler_totient",
+      "fast_modular_exponentiation",
+      "CRT_mixed_moduli",
+      "normalization_mod_1000"
+    ]
+  },
+  "problem_spec": {
+    "summary": "A CRT-defined integer $T$ is constrained modulo $11^5$, $19^2$, and $2^{10}$. The minimal exponent $t$ with $T^t\\equiv 1$ simultaneously is forced by (i) a valuation formula near $1$ at $11^5$, (ii) order lifting from $19$ to $19^2$, and (iii) the exact order of $3$ modulo $2^{10}$. A sum of three integer quotients is then computed modulo $1000$, including a quotient by $2^{10}$ handled via residues mod $8$ and $125$.",
+    "object(s)": [
+      {
+        "name": "M",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "T",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "t",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "A",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$M=11^5\\cdot 19^2\\cdot 2^{10}$.",
+      "$T$ is the unique integer with $0\\le T<M$ such that $T\\equiv 1+4\\cdot 11^2\\pmod{11^5}$, $T\\equiv 2\\pmod{19^2}$, and $T\\equiv 3\\pmod{2^{10}}$.",
+      "$t$ is the smallest positive integer such that $11^5\\mid (T^t-1)$, $19^2\\mid (T^t-1)$, and $2^{10}\\mid (T^t-1)$.",
+      "$A\\equiv \\frac{T^t-1}{11^5}+\\frac{T^t-1}{19^2}+\\frac{T^t-1}{2^{10}}\\pmod{1000}$, with integer division.",
+      "$N$ is the unique integer in $\\{0,1,\\dots,999\\}$ with $N\\equiv A\\pmod{1000}$."
+    ],
+    "ask": [
+      "Determine $N$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "odd_prime_power_1",
+        "type": "other",
+        "domain": "an odd prime power $p^5$ with a residue $T\\equiv 1+u p^2\\pmod{p^5}$ and $p\\nmid u$",
+        "purpose": "forces a large exact order via a valuation formula"
+      },
+      {
+        "name": "odd_prime_square",
+        "type": "other",
+        "domain": "an odd prime square $q^2$ with a residue class $T\\equiv g\\pmod{q^2}$ where $\\operatorname{ord}_q(g)=q-1$ and $g^{q-1}\\not\\equiv 1\\pmod{q^2}$",
+        "purpose": "forces full order $q(q-1)$ by order lifting"
+      },
+      {
+        "name": "two_power",
+        "type": "other",
+        "domain": "a $2$-power modulus $2^k$ with $k\\ge 3$ and residue $T\\equiv 3\\pmod{2^k}$",
+        "purpose": "forces a precise $2$-power order via $2$-adic valuation growth"
+      },
+      {
+        "name": "output_modulus",
+        "type": "int",
+        "domain": "fixed as $1000$",
+        "purpose": "final normalization modulus for the quotient sum"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "CRT_uniqueness_three_moduli",
+        "depends_on": [
+          "M",
+          "T"
+        ],
+        "statement": "The moduli $p^5$, $q^2$, and $2^k$ are pairwise coprime, so CRT gives a unique class modulo $M$, and $0\\le T<M$ fixes the representative."
+      },
+      {
+        "name": "valuation_order_forcing_at_p5",
+        "depends_on": [
+          "T"
+        ],
+        "statement": "If $T\\equiv 1+u p^2\\pmod{p^5}$ with $p\\nmid u$ and $p$ odd, then $v_p(T^n-1)=2+v_p(n)$, forcing $\\operatorname{ord}_{p^5}(T)=p^3$."
+      },
+      {
+        "name": "order_lift_q_to_q2",
+        "depends_on": [
+          "T"
+        ],
+        "statement": "If $\\operatorname{ord}_q(T)=q-1$ and $T^{q-1}\\not\\equiv 1\\pmod{q^2}$, then $\\operatorname{ord}_{q^2}(T)=q(q-1)$."
+      },
+      {
+        "name": "two_adic_order_of_3",
+        "depends_on": [
+          "T"
+        ],
+        "statement": "If $T\\equiv 3\\pmod{2^k}$ with $k\\ge 3$, then $\\operatorname{ord}_{2^k}(T)=2^{k-2}$."
+      },
+      {
+        "name": "coupled_minimal_exponent",
+        "depends_on": [
+          "T",
+          "t"
+        ],
+        "statement": "$t$ is uniquely forced as $\\operatorname{lcm}(\\operatorname{ord}_{p^5}(T),\\operatorname{ord}_{q^2}(T),\\operatorname{ord}_{2^k}(T))$."
+      },
+      {
+        "name": "invertible_divisors_mod_1000",
+        "depends_on": [
+          "T"
+        ],
+        "statement": "$\\gcd(p^5,1000)=\\gcd(q^2,1000)=1$, so the quotients by $p^5$ and $q^2$ reduce modulo $1000$ via modular inverses."
+      },
+      {
+        "name": "mixed_division_for_two_power",
+        "depends_on": [
+          "T",
+          "t"
+        ],
+        "statement": "For $K=(T^t-1)/2^k$, compute $K\\bmod 8$ from $T^t\\bmod 2^{k+3}$ and compute $K\\bmod 125$ from $T^t\\bmod 125$ (since $2^k$ is invertible mod $125$); CRT uniquely determines $K\\bmod 1000$."
+      }
+    ],
+    "operator(s)": [
+      "Chinese_remainder_theorem",
+      "p_adic_valuation_v_p",
+      "multiplicative_order",
+      "least_common_multiple",
+      "modular_inverse",
+      "Euler_totient_exponent_reduction",
+      "fast_modular_exponentiation",
+      "CRT_recombination_mod_8_125"
+    ],
+    "essential_assumption(s)": [
+      "The three moduli are pairwise coprime (CRT well-posedness).",
+      "$p\\nmid u$ so $v_p(T-1)=2$ and valuation forcing is nondegenerate.",
+      "$\\operatorname{ord}_q(g)=q-1$ and $g^{q-1}\\not\\equiv 1\\pmod{q^2}$ to ensure full order $q(q-1)$.",
+      "$k\\ge 3$ and $T\\equiv 3\\pmod{2^k}$ to ensure exact order $2^{k-2}$.",
+      "$\\gcd(T,1000)=1$ so exponent reduction modulo $100$ is valid."
+    ],
+    "uniqueness_certificate(s)": [
+      "CRT and $0\\le T<M$ give a unique $T$.",
+      "Valuation forcing at $p^5$, order lifting at $q^2$, and the $2$-adic order lemma uniquely determine local orders and thus uniquely force $t$ as an $\\operatorname{lcm}$.",
+      "Odd-denominator quotient residues are unique via modular inverses; the $2^k$-denominator quotient residue is uniquely determined via residues mod $8$ and $125$ and CRT.",
+      "Normalization $0\\le N<1000$ makes the final answer unique."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Chinese_remainder_theorem_construction",
+        "inputs": [
+          "a congruence system modulo three pairwise coprime prime powers"
+        ],
+        "purpose": "construct and normalize $T$",
+        "outputs": [
+          "a unique $T$ modulo $M$ and residues of $T$ modulo smaller moduli"
+        ]
+      },
+      {
+        "name": "valuation_formula_for_a_to_order",
+        "inputs": [
+          "$v_p(T^n-1)=v_p(T-1)+v_p(n)$ for $p\\mid (T-1)$"
+        ],
+        "purpose": "force the exact order modulo $p^5$",
+        "outputs": [
+          "$\\operatorname{ord}_{p^5}(T)=p^3$"
+        ]
+      },
+      {
+        "name": "order_lifting_prime_to_square",
+        "inputs": [
+          "a unit with $\\operatorname{ord}_q(T)=q-1$ and a check of $T^{q-1}\\not\\equiv 1\\pmod{q^2}$"
+        ],
+        "purpose": "lift maximal order from $q$ to $q^2$",
+        "outputs": [
+          "$\\operatorname{ord}_{q^2}(T)=q(q-1)$"
+        ]
+      },
+      {
+        "name": "two_adic_order_via_valuation_growth",
+        "inputs": [
+          "the valuation identity $v_2(3^{2^k}-1)=k+2$"
+        ],
+        "purpose": "deduce $\\operatorname{ord}_{2^k}(3)=2^{k-2}$",
+        "outputs": [
+          "exact $2$-power order constraint on $t$"
+        ]
+      },
+      {
+        "name": "lcm_forcing_for_exponent",
+        "inputs": [
+          "local orders modulo coprime moduli"
+        ],
+        "purpose": "obtain the unique minimal $t$",
+        "outputs": [
+          "$t=\\operatorname{lcm}(\\cdots)$"
+        ]
+      },
+      {
+        "name": "exponent_reduction_mod_1000",
+        "inputs": [
+          "$U^{100}\\equiv 1\\pmod{1000}$ for $\\gcd(U,1000)=1$"
+        ],
+        "purpose": "reduce $t$ modulo $100$ before computing $T^t\\pmod{1000}$",
+        "outputs": [
+          "a small-exponent modular computation"
+        ]
+      },
+      {
+        "name": "quotient_reduction_via_modular_inverse",
+        "inputs": [
+          "$D\\mid (T^t-1)$ and $\\gcd(D,1000)=1$"
+        ],
+        "purpose": "compute $\\frac{T^t-1}{D}\\pmod{1000}$ by inverses",
+        "outputs": [
+          "odd-denominator quotient residues modulo $1000$"
+        ]
+      },
+      {
+        "name": "quotient_mod_1000_with_two_power_denominator",
+        "inputs": [
+          "$K=(T^t-1)/2^k$ with $1000=8\\cdot 125$"
+        ],
+        "purpose": "compute $K\\bmod 1000$ via $K\\bmod 8$ and $K\\bmod 125$ and CRT",
+        "outputs": [
+          "the $2^k$-denominator quotient residue modulo $1000$"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Chinese_remainder_theorem",
+        "role": "existence and uniqueness of $T$ modulo $M$"
+      },
+      {
+        "name": "Euler_totient_theorem",
+        "role": "exponent reduction modulo $125$ and modulo $2^{13}$"
+      },
+      {
+        "name": "basic_group_order_divisibility",
+        "role": "order divides $\\varphi(m)$ and lifts by divisibility under reduction maps"
+      },
+      {
+        "name": "extended_Euclidean_algorithm",
+        "role": "computes modular inverses"
+      },
+      {
+        "name": "CRT_mod_8_125",
+        "role": "recombines residues modulo $8$ and $125$ into a unique residue modulo $1000$"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "local multiplicative order controls divisibility of $T^t-1$ by prime powers"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "force $t$ by combining three different order computations (valuation forcing, order lifting to a prime square, and $2$-adic order)",
+      "handle division by $2^{10}$ modulo $1000$ via mixed residues modulo $8$ and $125$"
+    ],
+    "finish_type": "constructive"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "sympy",
+        "reason": "CRT, modular inverses, multiplicative orders, and independent checks"
+      },
+      {
+        "name": "math",
+        "reason": "gcd/lcm and sanity checks"
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "import sympy as sp",
+      "from sympy.ntheory.modular import crt",
+      "from sympy.ntheory.residue_ntheory import n_order"
+    ],
+    "task(s)": [
+      {
+        "name": "CRT_and_order_verification",
+        "reason": "Verify $T$ satisfies the three congruences and confirm the three local multiplicative orders."
+      },
+      {
+        "name": "quotient_sum_mod_1000_check",
+        "reason": "Verify the three quotient residues modulo $1000$ via modular arithmetic, including the noninvertible $2^{10}$ case by using modulus $1024\\cdot 1000$."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "p": 11,
+      "q": 19,
+      "k": 10,
+      "residues": {
+        "mod_11_5": 485,
+        "mod_19_2": 2,
+        "mod_2_10": 3
+      }
+    },
+    "derived_value(s)": {
+      "M": 59534756864,
+      "T": 57482645507,
+      "ord_11_5": 1331,
+      "ord_19_2": 342,
+      "ord_2_10": 256,
+      "t": 58265856,
+      "Tt_mod_1000": 601,
+      "final_N": 725
+    },
+    "final_answer": {
+      "value": 725,
+      "normalized": 725
+    }
+  }
+}

@@ -1,0 +1,314 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "finite_field__matrix_polynomial_constraint__forced_jordan_chain__count_with_prescribed_generalized_vector",
+    "instance_id": "f3_m3_A3eqA2_trace1_rank2_chain_v_w_2026_02_13",
+    "short_name": "Count F3 3x3 matrices with fixed nilpotent Jordan chain",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "linear_algebra",
+    "subdomain(s)": [
+      "linear algebra over finite fields",
+      "minimal polynomial and Jordan canonical form",
+      "orbit-stabilizer counting with flagged vectors"
+    ],
+    "topic_path": [
+      "linear algebra",
+      "finite fields",
+      "Jordan form with constrained chain counting"
+    ],
+    "tags": [
+      "finite_field",
+      "matrix_polynomial",
+      "trace",
+      "rank_nullity",
+      "jordan_chain",
+      "centralizer",
+      "orbit_stabilizer"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Count 3x3 matrices over a finite field satisfying a matrix polynomial identity and trace/rank constraints that force a unique Jordan form, with extra linear constraints fixing both a kernel generator and a specific generalized eigenvector mapping to it.",
+    "object(s)": [
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "A",
+        "type": "matrix",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "v",
+        "type": "other",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "w",
+        "type": "other",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "Work in M_3(𝔽_3).",
+      "Matrix constraint: A^3 = A^2 (equivalently A^2(A-I)=0).",
+      "Trace constraint: tr(A)=1 in 𝔽_3.",
+      "Rank constraint: rank(A)=2.",
+      "Chain constraints: Av=0 and Aw=v for v=(1,1,1)^T, w=(1,0,0)^T."
+    ],
+    "ask": [
+      "Count the number of matrices A satisfying all constraints."
+    ]
+  },
+  "answer_spec": {
+    "type": "count",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "prime_power",
+        "purpose": "sets the finite-field arithmetic and counts of subspaces"
+      },
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "sets matrix size (here 3)"
+      },
+      {
+        "name": "annihilating_polynomial",
+        "type": "other",
+        "domain": "polynomial_in_A_over_F_q",
+        "purpose": "restricts possible eigenvalues and Jordan block sizes"
+      },
+      {
+        "name": "trace_value",
+        "type": "int",
+        "domain": "element_of_F_q",
+        "purpose": "forces eigenvalue multiplicities once eigenvalues are restricted"
+      },
+      {
+        "name": "rank_value",
+        "type": "int",
+        "domain": "integer_in_[0,n]",
+        "purpose": "forces a nontrivial Jordan block rather than diagonalizability"
+      },
+      {
+        "name": "kernel_vector_v",
+        "type": "other",
+        "domain": "nonzero_vector_in_F_q^n",
+        "purpose": "fixes the 1D kernel line when dim ker(A)=1"
+      },
+      {
+        "name": "generalized_vector_w",
+        "type": "other",
+        "domain": "vector_in_F_q^n_not_in_span(v)",
+        "purpose": "fixes a specific generalized eigenvector in the forced Jordan chain"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "eigenvalue_set_from_polynomial",
+        "depends_on": [
+          "annihilating_polynomial",
+          "q"
+        ],
+        "statement": "From A^2(A-I)=0, the minimal polynomial divides x^2(x-1), so eigenvalues lie in {0,1} and 0-block sizes are \\leq2."
+      },
+      {
+        "name": "multiplicities_from_trace",
+        "depends_on": [
+          "trace_value",
+          "n"
+        ],
+        "statement": "With eigenvalues in {0,1} and n=3, tr(A)=1 forces algebraic multiplicities (n_1,n_0)=(1,2)."
+      },
+      {
+        "name": "non_diagonalizable_forced_by_rank",
+        "depends_on": [
+          "rank_value"
+        ],
+        "statement": "With (n_1,n_0)=(1,2), diagonalizability would give rank 1; rank(A)=2 forces a size-2 Jordan block at eigenvalue 0."
+      },
+      {
+        "name": "chain_is_fixed",
+        "depends_on": [
+          "kernel_vector_v",
+          "generalized_vector_w"
+        ],
+        "statement": "If dim ker(A)=1 and Av=0, then ker(A)=⟨v⟩; adding Aw=v fixes the length-2 Jordan chain (w\\tov\\to0) inside the generalized 0-eigenspace."
+      }
+    ],
+    "operator(s)": [
+      "trace",
+      "rank",
+      "matrix_polynomial_evaluation",
+      "jordan_canonical_form",
+      "centralizer",
+      "conjugacy_action",
+      "orbit_stabilizer",
+      "linear_map_on_vectors"
+    ],
+    "essential_assumption(s)": [
+      "All arithmetic and ranks are over 𝔽_3.",
+      "The vectors v and w are linearly independent (w ∉ ⟨v⟩), ensuring the chain constraint is consistent with rank(A)=2.",
+      "Similarity is via GL_3(𝔽_3), preserving the polynomial identity, rank, and trace."
+    ],
+    "uniqueness_certificate(s)": [
+      "The constraints A^3=A^2, tr(A)=1, and rank(A)=2 force a unique Jordan form up to similarity: diag(1,J_2(0)).",
+      "The constraints Av=0 and Aw=v fix the nilpotent Jordan chain; remaining freedom is exactly the choice of the 1-eigenline complementary to span(v,w), yielding a finite, uniquely determined count."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "polynomial_to_minimal_polynomial_bound",
+        "inputs": [
+          "matrix_polynomial constraint"
+        ],
+        "purpose": "restrict eigenvalues and allowable Jordan block sizes",
+        "outputs": [
+          "eigenvalues in {0,1}, 0-block size \\leq2"
+        ]
+      },
+      {
+        "name": "trace_to_multiplicity",
+        "inputs": [
+          "trace constraint and eigenvalue set"
+        ],
+        "purpose": "determine algebraic multiplicities",
+        "outputs": [
+          "fixed characteristic polynomial (x-1)x^2"
+        ]
+      },
+      {
+        "name": "rank_forces_nondiagonalizable_at_zero",
+        "inputs": [
+          "rank(A) and forced multiplicities"
+        ],
+        "purpose": "force a size-2 Jordan block (rule out diagonalizable projection)",
+        "outputs": [
+          "unique Jordan type"
+        ]
+      },
+      {
+        "name": "enforce_fixed_jordan_chain",
+        "inputs": [
+          "Av=0 and Aw=v with dim ker(A)=1"
+        ],
+        "purpose": "fix a specific generalized eigenvector chain within the nilpotent part",
+        "outputs": [
+          "fixed ordered pair (kernel generator, preimage)"
+        ]
+      },
+      {
+        "name": "orbit_stabilizer_with_flag",
+        "inputs": [
+          "canonical Jordan form and fixed chain"
+        ],
+        "purpose": "count matrices via stabilizers/centralizers respecting the fixed vectors",
+        "outputs": [
+          "exact count N"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Minimal polynomial divides an annihilating polynomial",
+        "role": "eigenvalue/Jordan-size restriction from A^2(A-I)=0"
+      },
+      {
+        "name": "Rank-Nullity Theorem",
+        "role": "translate rank(A)=2 into dim ker(A)=1"
+      },
+      {
+        "name": "Jordan Canonical Form (split characteristic polynomial)",
+        "role": "classify the unique Jordan type consistent with constraints"
+      },
+      {
+        "name": "Orbit-Stabilizer Theorem",
+        "role": "count flagged conjugacy realizations via group actions"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Linear Independence and Dimension (basis/line counting)"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use A^3=A^2 to pin eigenvalues to {0,1} and bound nilpotent block sizes.",
+      "Use tr(A)=1 to force characteristic polynomial (x-1)x^2.",
+      "Use rank(A)=2 to force a nontrivial Jordan block at eigenvalue 0.",
+      "Interpret Av=0 and Aw=v as fixing an ordered Jordan chain; count remaining freedom by stabilizers or by counting complement eigenlines."
+    ],
+    "finish_type": "counting_argument"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "itertools",
+        "reason": "enumerate all 3^9 matrices over 𝔽_3 for brute-force verification"
+      },
+      {
+        "name": "numpy",
+        "reason": "fast matrix multiplication mod 3 and vector checks"
+      }
+    ],
+    "import_hint(s)": [
+      "from itertools import product",
+      "import numpy as np"
+    ],
+    "task(s)": [
+      {
+        "name": "brute_force_verify_count",
+        "reason": "enumerate all A\\inM_3(𝔽_3), filter by constraints, and confirm the count"
+      },
+      {
+        "name": "structural_sanity_checks",
+        "reason": "confirm rank and polynomial identity for found matrices; optionally verify similarity invariants (e.g., characteristic polynomial)"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "q": 3,
+      "n": 3,
+      "annihilating_polynomial": "x^2(x-1)",
+      "trace_value": 1,
+      "rank_value": 2,
+      "kernel_vector_v": [
+        1,
+        1,
+        1
+      ],
+      "generalized_vector_w": [
+        1,
+        0,
+        0
+      ]
+    },
+    "final_answer": {
+      "value": 9,
+      "normalized": 9
+    }
+  }
+}

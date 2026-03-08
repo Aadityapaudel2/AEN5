@@ -1,54 +1,154 @@
-Drawing:
+Status note: 2026-03-07 (America/New_York)
+Purpose: execution-biased planning after the desktop-first rebuild.
+
+This file is intentionally current-state and practical. It should answer:
+- what already works
+- what should be built next
+- what should explicitly wait
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------
+1) Current Foundation
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
-[Athena Agent System]
-  [Core Runtime]                                  [NOW]
-    [Athena 1.7B local model via LocalStreamer]   [NOW]
-    [Prompt builder + short history window]       [NOW]
-    [Stream generation + manual stop]             [NOW]
-    [Think-mode toggle / hide-thought filter]     [NOW]
+Canonical runtime:
+- `desktop_engine/runtime.py`
+- `desktop_engine/session.py`
+- `desktop_engine/tools.py`
+- `desktop_engine/events.py`
 
-  [UI Layer]                                      [NOW]
-    [Qt UI (primary)]                             [NOW]
-      [Markdown + LaTeX transcript render]        [NOW]
-      [Model proof + runtime config display]      [NOW]
-    [Tk UI fallback]                              [NOW]
-    [FastAPI Portal /AthenaV5]                    [NOW]
-      [Smoke mode (no model load)]                [NOW]
-      [Live model mode]                           [NOW]
+Canonical product surface:
+- `desktop_app/main.py`
 
-  [Agentic Layer]
-    [Tool Router]                                 [NEXT]
-      [python calculator tool]                    [NEXT]
-      [sympy solve/check tool]                    [NEXT]
-      [numpy/data helper tool]                    [NEXT]
-    [Plan -> Act -> Verify loop]                  [NEXT]
-    [Session memory (structured state)]           [NEXT]
-    [Long-term memory store + retrieval]          [LATER]
+Secondary surface:
+- `browser/portal_server.py`
+- `browser/portal/*`
 
+Current model baseline:
+- `Qwen3.5-4B` multimodal
 
+Current strengths:
+- one shared engine contract for desktop and browser
+- no-CoT filtering is enforced in the engine, not the UI
+- tool traces remain visible and exact
+- desktop is local and direct, not a wrapped portal
+- browser remains usable without owning orchestration
 
-  [Voice Stack]
-    [STT (mic -> text)]                           [NEXT]~at a time.
-- Every branch should have a feature flag so failures do not break core chat.
-- Tool branch should be verified (execute + check + report), not just text imitation.
-- Voice branch should be split services (LLM process separate from STT/TTS process).
-- Vision branch should start with image upload before any live camera stream.
+---------------------------------------------------------------------------------------------------------------------------------------------------
+2) What Is Still Missing
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
-Currently brainstorming: 
-  - SWARM concept: a mixture of 1.7b models talking to each other all simultaneously helping to solve one math problem. 
+Not implemented yet:
+- deterministic AIMO solver orchestration beyond single chat turns
+- verifier-specific deterministic math tool layer
+- fixed-budget router/scout/verifier/judge policy engine
+- evaluation harness for rerun determinism and penalized score
+- adapter diversity manager or simultaneous multi-model scheduler
 
+Important correction:
+- the next step is not "many agents at once"
+- the next step is a deterministic single-solver pipeline that is good enough to deserve orchestration
 
-What is not implemented yet:
-- Native tool-calling execution loop (python/sympy/numpy router).
-- STT/TTS realtime voice pipeline.
-- Vision/camera agent.
-- Persistent memory + retrieval.
+---------------------------------------------------------------------------------------------------------------------------------------------------
+3) Build Order That Maximizes Results Per Complexity
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
-Immediate next build (small, practical):
-1) Tool router v1: python calculator + sympy checker.
-2) Verification trace in response: "tool input -> output -> final answer".
-3) TTS output-only bridge from model stream.
-4) STT push-to-talk endpoint.
-5) Full duplex interrupt after stability checks.
+Phase 1: deterministic single-solver baseline
+- add `desktop_engine/agentic/orchestrator.py`
+- add strict schema extraction and deterministic generation presets
+- return one final integer plus one trace log
+- measure accuracy and repeatability first
+
+Phase 2: verifier loop
+- add exact arithmetic, polynomial, and modular verification helpers
+- verify candidate answers before commit
+- keep one solving model and one repair action maximum
+
+Phase 3: small swarm only
+- move from `N_scouts = 1` to `N_scouts = 2` or `3`
+- keep `M_verifiers` small
+- compare under fixed token budget and fixed wallclock
+- stop if correlation is high and gains are not real
+
+Phase 4: diversity only if justified
+- prompt-diversified scouts
+- then adapter-diversified scouts
+- then simultaneous multi-model loading only if ablations prove the lift is worth the complexity
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+4) Code Targets
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+Add under `desktop_engine/agentic/`:
+- `orchestrator.py`
+- `policies.py`
+- `schemas.py`
+- `deterministic_tools.py`
+- `verifier.py`
+- `eval_harness.py`
+- `kaggle_entry.py`
+
+Extend existing core:
+- `desktop_engine/runtime.py`
+  - deterministic generation preset
+  - strict JSON extraction
+  - role-aware prompting helpers
+- `desktop_engine/session.py`
+  - worker-facing abstractions for router/scout/verifier/judge roles
+  - fixed-budget accounting
+
+Keep product surfaces thin:
+- `desktop_app/main.py`
+  - render traces and status only
+- `browser/portal_server.py`
+  - translate shared engine events only
+
+Training and data:
+- `Finetune/`
+  - only after the deterministic baseline is measured
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+5) Hard Rules
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+Do not do these wrong:
+- do not put orchestration logic in browser code
+- do not create a second runtime path separate from `desktop_engine/`
+- do not depend on invisible reasoning or hidden CoT
+- do not depend on native model tool-calling parsers for core correctness
+- do not use variable global-time heuristics that break rerun determinism
+- do not scale swarm size before proving small-swarm lift
+
+Do these consistently:
+- fixed seeds
+- deterministic decode
+- fixed per-problem budgets
+- explicit commit rules
+- exact visible tool traces
+- strict result schemas
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+6) What Should Wait
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+Later, not now:
+- simultaneous multi-model loading
+- PEFT adapter swapping at runtime
+- long-term memory and retrieval
+- voice stack
+- camera / live vision agent
+
+Reason:
+- each of these adds complexity faster than it adds confirmed accuracy right now
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+7) Success Criteria
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+The next build is acceptable only if:
+- repeated deterministic runs return the same answer and the same trace
+- desktop remains the canonical execution surface
+- browser renders the same event order without special solver logic
+- verifier tools catch bad candidates more often than they reject good ones
+- a small swarm beats the single-solver baseline under fixed budget before any larger architecture expansion
+
+If these are not true, simplify the system instead of adding more agents.

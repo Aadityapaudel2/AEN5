@@ -1,0 +1,162 @@
+CRT order forcing with a $2^m$ component and valuation-sum normalization
+
+Let $v_\ell(x)$ denote the exponent of a prime $\ell$ in the prime factorization of a nonzero integer $x$. For $\gcd(a,M)=1$, let $\operatorname{ord}_M(a)$ be the multiplicative order of $a$ modulo $M$.
+
+Fix $p=17$, $q=41$, $r=2q+1=83$, $k=4$, $h=2$, $m=6$, and $n=2^m p^k q^3 r$.
+
+Let $a$ be an integer satisfying
+(1) $a\equiv 1+p^h \pmod{p^k}$,
+(2) $a\equiv 1+q \pmod{q^3}$,
+(3) $a\equiv 5 \pmod{2^m}$,
+(4) $a\equiv 2 \pmod r$.
+
+For $j\ge 0$ define $u_j\equiv a^j\pmod n$. Let $t$ be the least positive integer such that $u_{j+t}=u_j$ for all $j\ge 0$.
+
+Define the integer
+$V=\frac{t}{4}\bigl(v_2(a^t-1)+v_p(a^t-1)+v_q(a^t-1)\bigr)$.
+
+Let $N$ be the unique integer in $\{0,1,\dots,999\}$ such that $N\equiv V\pmod{1000}$.
+Determine $N$.
+
+Solution.
+Step 1 (Chinese_remainder_theorem): CRT existence and immediate valuations.
+The moduli $2^m=64$, $p^k=17^4$, $q^3=41^3$, and $r=83$ are pairwise coprime, so by the Chinese Remainder Theorem there exists an integer $a$ satisfying (1)-(4).
+
+From (1), $a-1\equiv p^h\pmod{p^k}$, so $a-1=p^h+p^k c=p^h(1+p^{k-h}c)$ for some integer $c$. Since $k-h\ge 1$, the factor $1+p^{k-h}c$ is not divisible by $p$, hence $v_p(a-1)=h=2$.
+
+From (2), $a-1\equiv q\pmod{q^3}$, so $a-1=q+q^3 d=q(1+q^2 d)$ for some integer $d$. Since $q\nmid (1+q^2 d)$, we have $v_q(a-1)=1$.
+
+From (3), $a\equiv 5\pmod{64}$, so $a$ is odd, $a-1\equiv 4\pmod{64}$, and $a+1\equiv 6\pmod{64}$. Hence $v_2(a-1)=2$ and $v_2(a+1)=1$.
+
+Also, (3) implies $2\nmid a$, (1) implies $p\nmid a$, (2) implies $q\nmid a$, and (4) implies $r\nmid a$, so $\gcd(a,n)=1$.
+
+Step 2 (multiplicative_order, order_mod_n, lcm_of_local_orders): Reduce the period to local orders.
+Since $\gcd(a,n)=1$, the condition $u_{j+t}=u_j$ for all $j\ge 0$ is equivalent to $a^t\equiv 1\pmod n$. Thus the asked period is $t=\operatorname{ord}_n(a)$.
+
+Lemma. If $\gcd(M_1,M_2)=1$ and $\gcd(a,M_1M_2)=1$, then
+$\operatorname{ord}_{M_1M_2}(a)=\operatorname{lcm}(\operatorname{ord}_{M_1}(a),\operatorname{ord}_{M_2}(a))$.
+
+Proof.
+Let $t_1=\operatorname{ord}_{M_1}(a)$ and $t_2=\operatorname{ord}_{M_2}(a)$.
+If $a^t\equiv 1\pmod{M_1M_2}$, then $a^t\equiv 1\pmod{M_1}$ and $a^t\equiv 1\pmod{M_2}$, so $t_1\mid t$ and $t_2\mid t$, hence $\operatorname{lcm}(t_1,t_2)\mid t$.
+Conversely, $a^{\operatorname{lcm}(t_1,t_2)}\equiv 1\pmod{M_1}$ and $a^{\operatorname{lcm}(t_1,t_2)}\equiv 1\pmod{M_2}$, so by the Chinese Remainder Theorem $a^{\operatorname{lcm}(t_1,t_2)}\equiv 1\pmod{M_1M_2}$.
+This proves the lemma.
+
+Applying this repeatedly to the pairwise coprime factors of $n$, we get
+$t=\operatorname{lcm}(\operatorname{ord}_{2^m}(a),\operatorname{ord}_{p^k}(a),\operatorname{ord}_{q^3}(a),\operatorname{ord}_r(a))$.
+
+Step 3 (LTE_v_p_valuation): Odd-prime lifting lemma for $x^n-1$ when $x\equiv 1$.
+Lemma 1. Let $\ell$ be an odd prime, and let $x$ be an integer with $\ell\mid (x-1)$ and $\ell\nmid x$. Then for every integer $n\ge 1$,
+$v_\ell(x^n-1)=v_\ell(x-1)+v_\ell(n)$.
+
+Proof.
+Write $n=\ell^e m$ where $e=v_\ell(n)$ and $\ell\nmid m$.
+
+First, $x^m-1=(x-1)(x^{m-1}+x^{m-2}+\cdots+1)$, and since $x\equiv 1\pmod\ell$ we have $x^{m-1}+\cdots+1\equiv m\pmod\ell$. Because $\ell\nmid m$, the factor $x^{m-1}+\cdots+1$ is not divisible by $\ell$, so $v_\ell(x^m-1)=v_\ell(x-1)$.
+
+Now set $s=v_\ell(x^m-1)\ge 1$ and write $x^m=1+\ell^s u$ with $\ell\nmid u$.
+Then
+$(x^m)^\ell-1=(1+\ell^s u)^\ell-1=\sum_{j=1}^{\ell}\binom{\ell}{j}\ell^{sj}u^j$.
+The $j=1$ term equals $\ell^{s+1}u$ and has $\ell$-adic valuation $s+1$.
+For $2\le j\le \ell$, $\binom{\ell}{j}$ is divisible by $\ell$, so those terms have $\ell$-adic valuation at least $1+sj\ge 1+2s\ge s+2$.
+Therefore $v_\ell((x^m)^\ell-1)=s+1=v_\ell(x^m-1)+1$.
+
+Iterating this $e$ times gives $v_\ell(x^{\ell^e m}-1)=v_\ell(x^m-1)+e=v_\ell(x-1)+e=v_\ell(x-1)+v_\ell(n)$.
+Lemma 1 is proved.
+
+Step 4 (principal_unit_order, LTE_v_p_valuation): Compute $\operatorname{ord}_{p^k}(a)$.
+Apply Lemma 1 with $\ell=p=17$ and $x=a$. Step 1 gives $v_p(a-1)=2$, so for all $n\ge 1$,
+$v_p(a^n-1)=2+v_p(n)$.
+
+We have $a^n\equiv 1\pmod{p^k}$ if and only if $v_p(a^n-1)\ge k$, equivalently $2+v_p(n)\ge 4$, equivalently $v_p(n)\ge 2$.
+The least positive $n$ with $v_p(n)\ge 2$ is $n=p^2=17^2=289$, hence $\operatorname{ord}_{17^4}(a)=289$.
+
+Step 5 (principal_unit_order, LTE_v_p_valuation): Compute $\operatorname{ord}_{q^3}(a)$.
+Apply Lemma 1 with $\ell=q=41$ and $x=a$. Step 1 gives $v_q(a-1)=1$, so $v_q(a^n-1)=1+v_q(n)$.
+
+We have $a^n\equiv 1\pmod{q^3}$ if and only if $1+v_q(n)\ge 3$, equivalently $v_q(n)\ge 2$.
+The least positive $n$ with $v_q(n)\ge 2$ is $n=q^2=41^2=1681$, hence $\operatorname{ord}_{41^3}(a)=1681$.
+
+Step 6 (LTE_v2_valuation): 2-adic lifting lemma for $x^n-1$ when $x$ is odd.
+Lemma 2. Let $x$ be odd and let $n$ be even. Then
+$v_2(x^n-1)=v_2(x-1)+v_2(x+1)+v_2(n)-1$.
+
+Proof.
+Write $n=2^s m$ with $s\ge 1$ and $m$ odd.
+Since $m$ is odd, $x^m-1=(x-1)(x^{m-1}+\cdots+1)$ and the second factor is a sum of $m$ odd integers, hence odd, so $v_2(x^m-1)=v_2(x-1)$.
+Similarly, $x^m+1=(x+1)(x^{m-1}-x^{m-2}+\cdots-x+1)$ and the second factor is a sum of $m$ odd integers, hence odd, so $v_2(x^m+1)=v_2(x+1)$.
+
+Let $X_0=x^m$ and for $i\ge 1$ let $X_i=X_{i-1}^2=x^{2^i m}$.
+Then $X_i-1=(X_{i-1}-1)(X_{i-1}+1)$, so $v_2(X_i-1)=v_2(X_{i-1}-1)+v_2(X_{i-1}+1)$.
+
+For $i=1$, we have $X_1-1=x^{2m}-1=(x^m-1)(x^m+1)$, so
+$v_2(X_1-1)=v_2(x^m-1)+v_2(x^m+1)=v_2(x-1)+v_2(x+1)$.
+
+For $i\ge 2$, $X_{i-1}=x^{2^{i-1}m}$ is an even power of an odd integer, so $X_{i-1}\equiv 1\pmod 8$, hence $X_{i-1}+1\equiv 2\pmod 8$ and $v_2(X_{i-1}+1)=1$.
+Therefore each further squaring increases $v_2(X_i-1)$ by exactly $1$.
+
+After $s-1$ such further steps, we obtain
+$v_2(x^{2^s m}-1)=v_2(x-1)+v_2(x+1)+(s-1)=v_2(x-1)+v_2(x+1)+v_2(n)-1$.
+Lemma 2 is proved.
+
+Step 7 (order_mod_2_power, LTE_v2_valuation): Compute $\operatorname{ord}_{2^m}(a)$.
+Since $a\equiv 5\pmod{2^m}$ and $m=6$, we have $\operatorname{ord}_{2^m}(a)=\operatorname{ord}_{64}(5)$.
+
+Lemma 3. For every integer $M\ge 3$, $\operatorname{ord}_{2^M}(5)=2^{M-2}$.
+
+Proof.
+Apply Lemma 2 with $x=5$ and $n=2^{M-2}$.
+We get $v_2(5^{2^{M-2}}-1)=v_2(5-1)+v_2(5+1)+v_2(2^{M-2})-1=2+1+(M-2)-1=M$.
+Thus $5^{2^{M-2}}\equiv 1\pmod{2^M}$, so the order divides $2^{M-2}$.
+
+For the smaller exponent $2^{M-3}$, Lemma 2 gives $v_2(5^{2^{M-3}}-1)=2+1+(M-3)-1=M-1$, so $5^{2^{M-3}}\not\equiv 1\pmod{2^M}$.
+Therefore the order is exactly $2^{M-2}$.
+Lemma 3 is proved.
+
+With $M=6$, Lemma 3 gives $\operatorname{ord}_{64}(5)=2^4=16$, hence $\operatorname{ord}_{2^m}(a)=16$.
+
+Step 8 (quadratic_reciprocity, Euler_criterion, order_mod_n): Compute $\operatorname{ord}_r(a)$.
+Let $\bigl(\frac{2}{r}\bigr)$ denote the Legendre symbol.
+Since $r=83\equiv 3\pmod 8$, the supplement to quadratic reciprocity for $2$ gives $\bigl(\frac{2}{83}\bigr)=-1$.
+By Euler's criterion, $2^{(83-1)/2}=2^{41}\equiv \bigl(\frac{2}{83}\bigr)\equiv -1\pmod{83}$.
+Using $a\equiv 2\pmod{83}$, we have $a^{41}\equiv -1\pmod{83}$, hence $a^{82}\equiv 1\pmod{83}$ but $a^{41}\not\equiv 1\pmod{83}$.
+Since the divisors of $82$ are $1,2,41,82$, this forces $\operatorname{ord}_{83}(a)=82$.
+
+Step 9 (lcm_of_local_orders): Compute the global period $t$.
+By Step 2,
+$t=\operatorname{lcm}(16,289,1681,82)$.
+Since $82=2\cdot 41$ and $1681=41^2$, we have $\operatorname{lcm}(1681,82)=2\cdot 41^2=3362$.
+Then $\operatorname{lcm}(16,3362)=2^4\cdot 41^2=26896$.
+Also $17\nmid 26896$, so $\gcd(26896,289)=1$ and $t=26896\cdot 289=7772944$.
+In particular $16\mid t$, so $4\mid t$ and $V$ is an integer.
+
+Step 10 (LTE_v_p_valuation, LTE_v2_valuation, modular_reduction): Compute $V$ and reduce modulo $1000$.
+By Lemma 1 with $\ell=p$, we have $v_p(a^t-1)=v_p(a-1)+v_p(t)$.
+Step 1 gives $v_p(a-1)=2$ and Step 9 gives $v_p(t)=2$, hence $v_p(a^t-1)=4$.
+
+By Lemma 1 with $\ell=q$, we have $v_q(a^t-1)=v_q(a-1)+v_q(t)$.
+Step 1 gives $v_q(a-1)=1$ and Step 9 gives $v_q(t)=2$, hence $v_q(a^t-1)=3$.
+
+Since $t$ is even, Lemma 2 gives $v_2(a^t-1)=v_2(a-1)+v_2(a+1)+v_2(t)-1$.
+Step 1 gives $v_2(a-1)=2$ and $v_2(a+1)=1$, and Step 9 gives $v_2(t)=4$, hence $v_2(a^t-1)=2+1+4-1=6$.
+
+Therefore $v_2(a^t-1)+v_p(a^t-1)+v_q(a^t-1)=6+4+3=13$, and $t/4=7772944/4=1943236$.
+So $V=1943236\cdot 13$.
+Reducing modulo $1000$, we have $1943236\equiv 236\pmod{1000}$ and $236\cdot 13=3068\equiv 68\pmod{1000}$.
+Hence $N=68$.
+
+Uniqueness Test
+1) The moduli $2^m$, $p^k$, $q^3$, and $r$ are pairwise coprime, so the system (1)-(4) determines a unique residue class of $a$ modulo $n$.
+
+2) The local orders are forced by the residue conditions.
+From (1), $v_p(a-1)=h=2$, so Lemma 1 forces $\operatorname{ord}_{p^k}(a)=p^{k-h}=17^2$.
+From (2), $v_q(a-1)=1$, so Lemma 1 forces $\operatorname{ord}_{q^3}(a)=q^2=41^2$.
+From (3), $a\equiv 5\pmod{2^m}$ forces $\operatorname{ord}_{2^m}(a)=2^{m-2}=16$ by Lemma 3.
+From (4) and $r\equiv 3\pmod 8$, quadratic reciprocity and Euler's criterion force $a^{(r-1)/2}\equiv -1\pmod r$, hence $\operatorname{ord}_r(a)=r-1=82$.
+
+3) By Step 2, $t=\operatorname{ord}_n(a)$ is the least common multiple of these four forced local orders, so $t$ is forced to be $7772944$, and in particular $4\mid t$ is forced by the $2^m$ component.
+
+4) With this forced $t$, Lemma 1 forces $v_p(a^t-1)=4$ and $v_q(a^t-1)=3$, and Lemma 2 forces $v_2(a^t-1)=6$.
+Hence $V=\frac{t}{4}(v_2+v_p+v_q)$ has a uniquely determined residue modulo $1000$, so the normalization rule gives a unique $N\in\{0,1,\dots,999\}$.
+
+68

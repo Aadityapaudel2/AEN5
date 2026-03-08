@@ -1,0 +1,342 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "exponential_Diophantine__modular_obstructions__growth_bounds__buffed",
+    "instance_id": "imocompendium:3.38_IMO1997_P5_exponential_equation_x^y=y^x",
+    "short_name": "Exponential Diophantine systems (modular + growth + LTE) - Buffed Seed",
+    "generation": 2
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "Diophantine equations",
+      "exponential equations"
+    ],
+    "topic_path": [
+      "diophantine",
+      "exponential_Diophantine",
+      "modular_and_size_method"
+    ],
+    "tags": [
+      "Catalan_Mihailescu_style_light_optional",
+      "bounding_then_check",
+      "constructive_factorization",
+      "exponent_comparison",
+      "growth_bounds_for_exponents",
+      "inequality_bounds_for_integers",
+      "lexicographically_minimal_solution",
+      "lifting_exponents_LTE",
+      "minimal_counterexample",
+      "mixed_modular_and_size_constraints",
+      "modular_obstructions",
+      "modulo_cycles",
+      "order_arguments",
+      "simultaneous_Diophantine",
+      "size_growth_contradiction",
+      "sterilized",
+      "buffed",
+      "gymnasium_ready",
+      "two_regime_interaction"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Find the least index in a difference-of-powers sequence whose exponent is forced simultaneously by a nontrivial multiplicative-order cycle modulo an odd prime and by an exact p-adic valuation constraint via LTE; report the resulting least index modulo 1000.",
+    "object(s)": [
+      {
+        "name": "a",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "b",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "k",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "(u_n)_{n\\ge 1}",
+        "type": "sequence",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$a,b\\in\\mathbb{N}$ with $a>b>1$ and $\\gcd(a,b)=1$",
+      "$p,q$ are distinct odd primes with $\\gcd(ab,pq)=1$",
+      "$p\\mid(a-b)$, $v_p(a-b)=1$, and $p\\equiv 3\\pmod 8$",
+      "$q\\nmid(a-b)$ and $q\\nmid ab$; let $t=\\operatorname{ord}_q(a\\cdot b^{-1}\\bmod q)$ (well-defined)",
+      "The order profile is nontrivial: $p\\mid t$ but $p^2\\nmid t$, and $t$ has at least one prime divisor different from $p$",
+      "The modulus-visibility guards hold: $\\gcd(t,1000)=1$ and $\\frac{t}{p}\\not\\equiv 1\\pmod 8$",
+      "$k\\in\\mathbb{N}$ is even with $k\\ge 4$",
+      "Define the integer sequence $u_n=a^n-b^n$ for $n\\ge 1$"
+    ],
+    "ask": [
+      "With $u_n=a^n-b^n$, consider the set of indices\n\\[\n  S=\\{n\\in\\mathbb{N}: \\ q\\mid u_n \\ \\text{and}\\ v_p(u_n)=v_p(a-b)+k\\}.\n\\]\nProve that $S$ is nonempty, let $N=\\min S$, and report the final answer as the unique integer in $\\{0,1,\\dots,999\\}$ congruent to $N \\pmod{1000}$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "a",
+        "type": "int",
+        "domain": "$a>b>1,\\ \\gcd(a,b)=1$",
+        "purpose": "first base defining the exponential sequence"
+      },
+      {
+        "name": "b",
+        "type": "int",
+        "domain": "$a>b>1,\\ \\gcd(a,b)=1$",
+        "purpose": "second base defining the exponential sequence"
+      },
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime $p\\ge 3$ with $p\\equiv 3\\pmod 8$, $\\gcd(p,ab)=1$, and $v_p(a-b)=1$",
+        "purpose": "valuation prime enabling a sharp LTE constraint on $v_p(a^n-b^n)$"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "odd prime $q\\ge 3$ with $q\\ne p$, $q\\nmid ab(a-b)$, and $p\\mid \\operatorname{ord}_q(a b^{-1})$ but $p^2\\nmid \\operatorname{ord}_q(a b^{-1})$",
+        "purpose": "modulus for the multiplicative-order cycle that forces a nontrivial congruence class for the exponent"
+      },
+      {
+        "name": "k",
+        "type": "int",
+        "domain": "even integer $k\\ge 4$",
+        "purpose": "prescribed valuation lift amount beyond $v_p(a-b)$, ensuring a genuinely nontrivial $p$-adic constraint on the exponent"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "modulo_cycle_interface",
+        "depends_on": [
+          "a",
+          "b",
+          "q"
+        ],
+        "statement": "Let $t=\\operatorname{ord}_q(a b^{-1}\\bmod q)$. Then $q\\mid(a^n-b^n)$ holds if and only if $t\\mid n$, so the congruence condition forces $n$ into a fixed arithmetic progression (multiples of $t$)."
+      },
+      {
+        "name": "order_profile_forced_divisor_and_nondivisor",
+        "depends_on": [
+          "a",
+          "b",
+          "p",
+          "q"
+        ],
+        "statement": "The order $t=\\operatorname{ord}_q(a b^{-1}\\bmod q)$ satisfies $p\\mid t$ but $p^2\\nmid t$, and $t$ is not a pure $p$-power (it has a prime factor $\\neq p$); this forbids trivial order cases ($t=1,2,p$) and forces a genuine order-structure step."
+      },
+      {
+        "name": "p_adic_nontriviality_interface",
+        "depends_on": [
+          "a",
+          "b",
+          "p",
+          "k"
+        ],
+        "statement": "With $p$ odd, $p\\mid(a-b)$, $v_p(a-b)=1$, and $p\\nmid ab$, LTE gives $v_p(a^n-b^n)=v_p(a-b)+v_p(n)=1+v_p(n)$ for all $n\\ge 1$; since $k\\ge 4$, the constraint $v_p(a^n-b^n)=v_p(a-b)+k$ forces $v_p(n)=k$ and hence cannot be met by the order condition alone."
+      },
+      {
+        "name": "mod1000_visibility_guards",
+        "depends_on": [
+          "a",
+          "b",
+          "p",
+          "q",
+          "k"
+        ],
+        "statement": "Writing $t=\\operatorname{ord}_q(a b^{-1})$, we have $\\gcd(t,1000)=1$, $p\\equiv 3\\pmod 8$, $k$ is even, and $\\frac{t}{p}\\not\\equiv 1\\pmod 8$. These guards ensure the reported residue $N\\bmod 1000$ changes if either the order constraint ($t\\mid n$) or the valuation constraint ($v_p(n)=k$) is removed."
+      },
+      {
+        "name": "growth_gap_interface",
+        "depends_on": [
+          "a",
+          "b"
+        ],
+        "statement": "Since $a>b>1$, the sequence $u_n=a^n-b^n$ is strictly increasing in $n$, so an extremal index defined by simultaneous congruence and valuation conditions is intrinsically rigid once the admissible congruence classes for $n$ are pinned down."
+      }
+    ],
+    "operator(s)": [
+      "simultaneous_Diophantine",
+      "modular_obstructions",
+      "mixed_modular_and_size_constraints",
+      "size_growth_contradiction",
+      "inequality_bounds_for_integers",
+      "growth_bounds_for_exponents",
+      "modulo_cycles",
+      "order_arguments",
+      "lifting_exponents_LTE",
+      "Catalan_Mihailescu_style_light_optional",
+      "bounding_then_check",
+      "minimal_counterexample",
+      "constructive_factorization",
+      "order_valuation_coupling"
+    ],
+    "essential_assumption(s)": [
+      "The order constraint is not handed as $t\\mid n$; it must be derived from the definition of multiplicative order in $(\\mathbb{Z}/q\\mathbb{Z})^\\times$, while the valuation constraint must be derived from LTE. The extremal index $N$ is therefore forced only by combining ORDER and VP reasoning, not by a single template step.",
+      "The visibility guards ($\\gcd(t,1000)=1$, $p\\equiv 3\\pmod 8$, $k$ even, and $(t/p)\\not\\equiv 1\\pmod 8$) are enforced so that the normalized output modulo $1000$ genuinely depends on both regimes (dropping either constraint changes the reported residue)."
+    ],
+    "uniqueness_certificate(s)": [
+      "By the order invariant, $q\\mid(a^n-b^n)$ is equivalent to $t\\mid n$, so every admissible $n$ has the form $n=t\\cdot m$. By LTE and $v_p(a-b)=1$, the valuation condition becomes $v_p(n)=k$. Using $p\\mid t$ but $p^2\\nmid t$ gives $v_p(n)=1+v_p(m)$, hence $v_p(m)=k-1$, whose least solution is $m=p^{k-1}$. Therefore $S$ is nonempty and has a unique least element $N=t\\cdot p^{k-1}$; the reported output is the unique residue class $N\\bmod 1000$ in $\\{0,1,\\dots,999\\}$."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "modular_obstructions",
+        "inputs": [
+          "the sequence values $u_n=a^n-b^n$ reduced modulo $q$"
+        ],
+        "purpose": "translate the divisibility condition $q\\mid u_n$ into a constraint on $n$ via multiplicative periodicity, excluding all $n$ outside a fixed cycle class",
+        "outputs": [
+          "a forced divisibility condition $t\\mid n$ where $t=\\operatorname{ord}_q(a b^{-1})$"
+        ]
+      },
+      {
+        "name": "order_arguments",
+        "inputs": [
+          "the residue class $a b^{-1}\\bmod q$ in $(\\mathbb{Z}/q\\mathbb{Z})^\\times$"
+        ],
+        "purpose": "compute/characterize the cycle length $t=\\operatorname{ord}_q(a b^{-1})$ and use the forced divisor/nondivisor profile ($p\\mid t$, $p^2\\nmid t$) to control $v_p(n)$ once $n$ is restricted to multiples of $t$",
+        "outputs": [
+          "the structural constraint $n=t\\cdot m$ with $v_p(t)=1$ and $t$ not a pure $p$-power"
+        ]
+      },
+      {
+        "name": "lifting_exponents_LTE",
+        "inputs": [
+          "the difference-of-powers form $a^n-b^n$ with $p\\mid(a-b)$ and $p\\nmid ab$"
+        ],
+        "purpose": "convert the exact valuation constraint $v_p(a^n-b^n)=v_p(a-b)+k$ into an exact condition on $v_p(n)$",
+        "outputs": [
+          "the equivalence $v_p(a^n-b^n)=1+v_p(n)$ and hence the requirement $v_p(n)=k$"
+        ]
+      },
+      {
+        "name": "order_LTE_interaction_step",
+        "inputs": [
+          "the decomposition $n=t\\cdot m$ from order arguments and the valuation identity from LTE"
+        ],
+        "purpose": "enforce two-regime coupling by substituting the order-forced form of $n$ into the LTE valuation identity to solve for the minimal admissible multiplier $m$",
+        "outputs": [
+          "a closed-form expression for the extremal index $N=t\\cdot p^{k-1}$ and a minimality/uniqueness argument"
+        ]
+      },
+      {
+        "name": "growth_bounds_for_exponents",
+        "inputs": [
+          "monotonicity of $u_n=a^n-b^n$ for $a>b>1$"
+        ],
+        "purpose": "support extremality discipline (no hidden secondary minima) and provide a sanity-check bound window for computational verification if desired",
+        "outputs": [
+          "confirmation that the least admissible index is the unique extremal object"
+        ]
+      },
+      {
+        "name": "bounding_then_check",
+        "inputs": [
+          "the explicit formula for $N$ and the defining constraints"
+        ],
+        "purpose": "optionally verify (for sampled parameters) that no smaller $n$ satisfies both constraints by checking $n<t\\cdot p^{k-1}$ within the forced residue classes",
+        "outputs": [
+          "independent confirmation of minimality for audit/verification"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "multiplicative_order_characterization",
+        "role": "$q\\mid(a^n-b^n)\\iff (a b^{-1})^n\\equiv 1\\pmod q \\iff \\operatorname{ord}_q(a b^{-1})\\mid n$"
+      },
+      {
+        "name": "mod_prime_obstructions",
+        "role": "use reductions modulo an odd prime to impose cycle constraints on exponents"
+      },
+      {
+        "name": "LTE_difference_of_powers",
+        "role": "for odd $p\\mid(a-b)$ with $p\\nmid ab$, deduce $v_p(a^n-b^n)=v_p(a-b)+v_p(n)$"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Exponential sequences simultaneously exhibit rigid periodicity modulo primes (via multiplicative order) and rigid valuation growth at primes dividing a base difference (via LTE); forcing both at once pins down the least admissible exponent."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use the order condition modulo $q$ to write every candidate as $n=t\\cdot m$, where $t=\\operatorname{ord}_q(a b^{-1})$ has $p\\mid t$ but $p^2\\nmid t$ (forced divisor/nondivisor).",
+      "Apply LTE to rewrite the valuation constraint as $v_p(n)=k$, then combine with $v_p(t)=1$ to force $v_p(m)=k-1$, giving the unique minimal multiplier $m=p^{k-1}$.",
+      "Use the visibility guards (especially $\\gcd(t,1000)=1$ and $p^{k-1}\\not\\equiv 1\\pmod 8$) to ensure the normalized residue modulo $1000$ genuinely changes if either the ORDER or the VP condition is removed."
+    ],
+    "finish_type": "closed_form"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, lcm, modular exponentiation scaffolding."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional symbolic/number theory utilities: factorint, primerange, mod_inverse, crt; useful for verification tasks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, crt, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "For sampled admissible parameters, compute $t=\\operatorname{ord}_q(a b^{-1})$, form $N=t\\cdot p^{k-1}$, and verify $q\\mid(a^N-b^N)$ and $v_p(a^N-b^N)=v_p(a-b)+k$."
+      },
+      {
+        "name": "mod1000_visibility_check",
+        "reason": "Check the guards $\\gcd(t,1000)=1$, $p\\equiv 3\\pmod 8$, $k$ even, and $(t/p)\\not\\equiv 1\\pmod 8$, then confirm $N\\not\\equiv t\\pmod{1000}$ and $N\\not\\equiv p^k\\pmod{1000}$ to prevent degenerate instances where one regime becomes invisible after normalization."
+      },
+      {
+        "name": "bounded_search_verification",
+        "reason": "When parameters are small, brute force all $n$ in the forced residue class $n\\equiv 0\\pmod t$ with $n<N$ to confirm extremality and catch degenerate instances violating invariants."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 643,
+      "normalized": 643
+    }
+  }
+}

@@ -1,0 +1,114 @@
+Minimize a convex slope-energy under a kinked obstacle; compute minimizer and J_min
+
+Let A be the set of piecewise continuously differentiable functions y:[0,5]\toℝ satisfying
+  y(0)=0,  y(5)=10,
+and the obstacle constraint
+  y(x) \leq 3        for all x\in[1,2],
+  y(x) \leq 2x-1     for all x\in[2,3].
+
+Define the energy functional
+  J(y) = ∫_0^5 4 (y'(x) - 2)^2 dx.
+
+(a) Find the minimum value J_min of J over A.
+(b) Exhibit a minimizing function y*(x).
+
+Solution.
+Step 1 (straight_line_minimizes_convex_energy; piecewise_linearization).
+The integrand 4(y'-2)^2 is strictly convex in y'. On any interval [α,β] where we only fix endpoint values y(α),y(β),
+Jensen/convexity implies the integral of (y'-2)^2 is minimized when y' is constant, i.e. when y is linear on that interval.
+
+Because the obstacle is piecewise linear with a "kink" at x=2 and is only imposed on [1,3], we may partition [0,5] into
+  [0,1], [1,2], [2,3], [3,5].
+Given any feasible y, replacing y by its linear interpolant on each subinterval keeps the same endpoint values and cannot increase J.
+It also preserves feasibility:
+- On [1,2], the obstacle is y\leq3 (constant), and a line segment between endpoints stays between endpoint values.
+- On [2,3], the obstacle is y\leq2x-1 (linear), and for a linear y the difference y-(2x-1) is linear, so if it is \leq0 at endpoints it is \leq0 everywhere.
+
+Hence it suffices to minimize J over functions that are linear on each of the four subintervals.
+
+Step 2 (enforce_obstacle_via_endpoint_check; reduce_constraints_to_breakpoint_inequalities).
+Let
+  y1 = y(1),  y2 = y(2),  y3 = y(3).
+For a piecewise linear y:
+- The constraint y\leq3 on [1,2] is equivalent to y1\leq3 and y2\leq3.
+- The constraint y\leq2x-1 on [2,3] is equivalent to y2\leq3 and y3\leq5 (since 2 \cdot 2-1=3 and 2 \cdot 3-1=5).
+
+So the feasible region in (y1,y2,y3) is the convex polyhedron
+  y1 \leq 3,  y2 \leq 3,  y3 \leq 5.
+
+Step 3 (compute_energy_as_quadratic_program_in_break_values).
+On each subinterval, the slope is constant:
+  s0 = (y1-0)/1 = y1,
+  s1 = (y2-y1)/1 = y2-y1,
+  s2 = (y3-y2)/1 = y3-y2,
+  s3 = (10-y3)/2.
+
+Therefore
+  J(y) = 4[(s0-2)^2 \cdot 1 + (s1-2)^2 \cdot 1 + (s2-2)^2 \cdot 1 + (s3-2)^2 \cdot 2].
+
+Equivalently, minimizing J is the same as minimizing the strictly convex quadratic
+  F(y1,y2,y3) := (y1-2)^2 + (y2-y1-2)^2 + (y3-y2-2)^2 + (6-y3)^2/2
+over the constraints y1\leq3, y2\leq3, y3\leq5, since J=4F.
+
+Step 4 (KKT_active_set_solver; rank-1 endpoint optimization inside the active set).
+Because F is strictly convex and the constraints are linear, the unique minimizer is characterized by KKT conditions.
+Let λ1,λ2,λ3\geq0 be multipliers for (y1-3)\leq0, (y2-3)\leq0, (y3-5)\leq0.
+
+Compute the gradient:
+  ∂F/∂y1 = 4y1 - 2y2,
+  ∂F/∂y2 = 4y2 - 2y1 - 2y3,
+  ∂F/∂y3 = 3y3 - 2y2 - 10.
+
+KKT stationarity is:
+  4y1 - 2y2 + λ1 = 0,
+  4y2 - 2y1 - 2y3 + λ2 = 0,
+  3y3 - 2y2 - 10 + λ3 = 0,
+together with complementary slackness λi(gi)=0.
+
+The unconstrained solution is (y1,y2,y3)=(2,4,6), which violates y2\leq3 and y3\leq5, so constraints (2) and (3) must be active.
+Assume y2=3 and y3=5 are active, while y1<3 is inactive (so λ1=0). Then stationarity becomes:
+  4y1 - 2 \cdot 3 = 0  \Rightarrow  y1 = 3/2,
+  4 \cdot 3 - 2 \cdot (3/2) - 2 \cdot 5 + λ2 = 0  \Rightarrow  12 - 3 - 10 + λ2 = 0  \Rightarrow  λ2=1,
+  3 \cdot 5 - 2 \cdot 3 - 10 + λ3 = 0      \Rightarrow  15 - 6 - 10 + λ3 = 0  \Rightarrow  λ3=1.
+All multipliers are \geq0 and y1=3/2<3, so all KKT conditions hold.
+
+Thus the unique minimizer in break values is
+  y(1)=3/2,  y(2)=3,  y(3)=5.
+
+Step 5 (construct_minimizer_and_compute_energy).
+With these break values, the minimizing function y* is the unique piecewise linear function through the points
+  (0,0), (2,3), (3,5), (5,10),
+i.e.
+  y*(x) = (3/2)x                    for 0 \leq x \leq 2,
+  y*(x) = 2x - 1                    for 2 \leq x \leq 3,
+  y*(x) = (5/2)x - (5/2)            for 3 \leq x \leq 5.
+
+Compute J(y*) from slopes:
+- On [0,2], y*' = 3/2, so 4(y'-2)^2 = 4(-1/2)^2 = 1, contributing 1 \cdot 2 = 2.
+- On [2,3], y*' = 2, so contribution 0.
+- On [3,5], y*' = 5/2, so 4(y'-2)^2 = 4(1/2)^2 = 1, contributing 1 \cdot 2 = 2.
+
+Hence
+  J_min = J(y*) = 2 + 0 + 2 = 4.
+
+Answer:
+(a) J_min = 4.
+(b) A minimizer is y*(x) as above.
+
+3) Uniqueness Test
+(Independent of the main solution; closes ambiguity using the uniqueness_certificate(s).)
+
+Uniqueness certificate: strict convexity + convex feasible set.
+The functional J(y)=∫_0^5 4(y'-2)^2 dx is strictly convex in y' (hence strictly convex on the affine space of functions with fixed endpoints).
+The feasible set A is convex because it is defined by linear endpoint equalities and pointwise linear inequality constraints (obstacles).
+Therefore, if a minimizer exists, it is unique (up to changes on a measure-zero set).
+
+Sufficiency of KKT in a convex quadratic program.
+Steps 1-3 reduce the infinite-dimensional minimization to a finite-dimensional strictly convex quadratic program F(y1,y2,y3) over a convex polyhedron.
+For such problems, any point satisfying the KKT conditions is the unique global minimizer.
+We exhibited a feasible point (y1,y2,y3)=(3/2,3,5) with nonnegative multipliers (λ1,λ2,λ3)=(0,1,1) satisfying stationarity and complementary slackness.
+Hence it is the unique minimizer of F, and thus the unique minimizer y* of J over A.
+
+Therefore the minimum value J_min is uniquely determined and equals 4.
+
+4

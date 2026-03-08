@@ -1,8 +1,8 @@
 {
   "paths": {
-    "model_path": "models/Qwen3-1.7B",
-    "train_file": "Finetune/aimo_sft_final.jsonl",
-    "output_dir": "models/tuned/AthenaV8_AIMO_fast"
+    "model_path": "models/Qwen3.5-2B",
+    "train_file": "Finetune/neohm_identity_adapter_v2.jsonl",
+    "output_dir": "models/tuned/NeohmIdentityV2_fast"
   },
   "accelerate": {
     "num_processes": 1,
@@ -11,19 +11,19 @@
     "dynamo_backend": "no"
   },
   "train": {
-    "max_seq_length": 2048,
-    "expected_samples": 207,
-    "strict_no_truncation": false,
+    "max_seq_length": 1024,
+    "expected_samples": 20,
+    "strict_no_truncation": true,
     "per_device_train_batch_size": 1,
     "gradient_accumulation_steps": 8,
-    "learning_rate": 3e-6,
-    "num_train_epochs": 2.0,
+    "learning_rate": 5e-6,
+    "num_train_epochs": 6.0,
     "warmup_ratio": 0.03,
     "lr_scheduler_type": "constant_with_warmup",
     "weight_decay": 0.01,
     "max_grad_norm": 1.0,
     "logging_steps": 5,
-    "save_steps": 20,
+    "save_steps": 10,
     "save_total_limit": 2,
     "save_only_model": true,
     "bf16": true,

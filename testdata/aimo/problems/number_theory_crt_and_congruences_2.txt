@@ -1,0 +1,145 @@
+CRT-defined $T$, local orders modulo $7^4$ and $17^2$, and a mod $1000$ quotient sum
+
+Let $M=7^4\cdot 17^2$.
+Let $T$ be the unique integer such that $0\le T<M$ and
+$T\equiv 1+2\cdot 7^2\pmod{7^4}$ and $T\equiv 23\pmod{17^2}$.
+Let $t$ be the smallest positive integer such that $7^4\mid T^t-1$ and $17^2\mid T^t-1$.
+
+Define $A$ by $A\equiv \frac{T^t-1}{7^4}+\frac{T^t-1}{17^2}\pmod{1000}$, where the divisions are taken in the integers.
+Let $N$ be the unique integer in $\{0,1,\dots,999\}$ such that $N\equiv A\pmod{1000}$.
+Determine $N$.
+
+Solution.
+Step 1. Since $\gcd(7^4,17^2)=1$, the Chinese Remainder Theorem gives a unique residue class modulo $M=7^4\cdot 17^2$ satisfying the two congruences, and the condition $0\le T<M$ selects a unique integer $T$.
+
+Step 2. The first congruence is $T\equiv 1+2\cdot 7^2=99\pmod{7^4}$, so write $T=99+2401k$.
+Impose $T\equiv 23\pmod{289}$.
+Since $2401\equiv 89\pmod{289}$, this is $99+89k\equiv 23\pmod{289}$, hence $89k\equiv -76\equiv 213\pmod{289}$.
+Compute the inverse of $89$ modulo $289$:
+$289=3\cdot 89+22$ and $89=4\cdot 22+1$, so $1=89-4\cdot 22=89-4(289-3\cdot 89)=13\cdot 89-4\cdot 289$, hence $89^{-1}\equiv 13\pmod{289}$.
+Therefore $k\equiv 213\cdot 13=2769\equiv 168\pmod{289}$.
+Taking $k=168$ gives $T=99+2401\cdot 168=403467$.
+
+Step 3. We compute $\operatorname{ord}_{7^4}(T)$.
+From Step 2, $T\equiv 99\equiv 1+2\cdot 7^2\pmod{7^4}$, so it suffices to compute the order of $x=1+2\cdot 7^2$ modulo $7^4$.
+
+Lemma 1. If $p$ is an odd prime and $u$ is an integer with $p\nmid u$, then $x=1+u p^2$ satisfies $\operatorname{ord}_{p^4}(x)=p^2$.
+
+Proof. By the binomial theorem,
+$x^p=(1+u p^2)^p=1+\binom{p}{1}u p^2+\sum_{k=2}^{p}\binom{p}{k}(u p^2)^k$.
+The $k=1$ term equals $p\cdot u p^2=u p^3$.
+For $k\ge 2$, the factor $(u p^2)^k$ contains $p^{2k}\ge p^4$, hence those terms are $0$ modulo $p^4$.
+Thus $x^p\equiv 1+u p^3\pmod{p^4}$, which is not congruent to $1$ modulo $p^4$ because $p\nmid u$.
+Now set $y=1+u p^3$. Again,
+$y^p=(1+u p^3)^p\equiv 1+\binom{p}{1}u p^3=1+u p^4\equiv 1\pmod{p^4}$,
+since every term with $k\ge 2$ contains $(p^3)^2=p^6$.
+Therefore $x^{p^2}=(x^p)^p\equiv 1\pmod{p^4}$ but $x^p\not\equiv 1\pmod{p^4}$, so the order of $x$ modulo $p^4$ divides $p^2$ and is not a divisor of $p$, hence equals $p^2$.
+
+Applying Lemma 1 with $p=7$ and $u=2$ gives $\operatorname{ord}_{7^4}(T)=49$.
+
+Step 4. We compute $\operatorname{ord}_{17^2}(T)$.
+From Step 2, $T\equiv 23\pmod{289}$ and $\gcd(23,289)=1$, so by Euler's theorem $23^{\varphi(289)}\equiv 1\pmod{289}$ and $\operatorname{ord}_{289}(23)$ divides $\varphi(289)=289-17=272$.
+
+Lemma 2. Let $a$ be a unit modulo $m$, and suppose $\operatorname{ord}_m(a)$ divides a positive integer $N$.
+If for every prime $r$ dividing $N$ one has $a^{N/r}\not\equiv 1\pmod{m}$, then $\operatorname{ord}_m(a)=N$.
+
+Proof. Let $d=\operatorname{ord}_m(a)$, so $d\mid N$.
+If $d<N$, then $N/d>1$ and has a prime divisor $r$.
+Then $r\mid N/d$ implies $d\mid N/r$, hence $a^{N/r}\equiv 1\pmod{m}$, contradicting the hypothesis.
+So $d$ cannot be a proper divisor of $N$, and therefore $d=N$.
+
+We apply Lemma 2 with $m=289$, $a=23$, and $N=272=2^4\cdot 17$.
+It suffices to show $23^{272/2}=23^{136}\not\equiv 1\pmod{289}$ and $23^{272/17}=23^{16}\not\equiv 1\pmod{289}$.
+
+Compute by repeated squaring modulo $289$:
+$23^2=529\equiv 240$,
+$23^4\equiv 240^2=57600\equiv 89$,
+$23^8\equiv 89^2=7921\equiv 118$,
+$23^{16}\equiv 118^2=13924\equiv 52$,
+so $23^{16}\not\equiv 1\pmod{289}$.
+Continue:
+$23^{32}\equiv 52^2=2704\equiv 103$,
+$23^{64}\equiv 103^2=10609\equiv 205$,
+$23^{128}\equiv 205^2=42025\equiv 120$.
+Then $23^{136}=23^{128}\cdot 23^8\equiv 120\cdot 118=14160\equiv -1\pmod{289}$, so $23^{136}\not\equiv 1\pmod{289}$.
+Therefore Lemma 2 yields $\operatorname{ord}_{289}(23)=272$, hence $\operatorname{ord}_{17^2}(T)=272$.
+
+Step 5. The condition $7^4\mid T^t-1$ is equivalent to $T^t\equiv 1\pmod{7^4}$, which holds exactly when $\operatorname{ord}_{7^4}(T)\mid t$, i.e. $49\mid t$.
+Similarly, $17^2\mid T^t-1$ holds exactly when $272\mid t$.
+Therefore $t$ is the smallest positive integer divisible by both $49$ and $272$, namely $t=\operatorname{lcm}(49,272)$.
+Since $\gcd(49,272)=1$, we get $t=49\cdot 272=13328$.
+
+Step 6. If $t'$ is any positive integer with $7^4\mid (T^{t'}-1)$ and $17^2\mid (T^{t'}-1)$, then Step 5 forces $49\mid t'$ and $272\mid t'$, hence $\operatorname{lcm}(49,272)=13328\mid t'$.
+Thus $t=13328$ is the unique smallest admissible exponent.
+
+Step 7. Since $7^4\mid T^t-1$ and $17^2\mid T^t-1$, the quotients in $A$ are integers.
+Also $\gcd(7^4,1000)=\gcd(17^2,1000)=1$, so both $7^4$ and $17^2$ have inverses modulo $1000$.
+
+Lemma 3. Let $D$ and $m$ be integers with $\gcd(D,m)=1$.
+If $D\mid N$, then $\frac{N}{D}\equiv N\cdot D^{-1}\pmod{m}$.
+
+Proof. Write $N=DQ$ with $Q=\frac{N}{D}\in\mathbb{Z}$.
+Reducing modulo $m$ gives $N\equiv DQ\pmod{m}$.
+Multiplying by the inverse $D^{-1}$ modulo $m$ yields $N\cdot D^{-1}\equiv Q\pmod{m}$.
+
+Applying Lemma 3 with $m=1000$ shows
+$\frac{T^t-1}{7^4}\equiv (T^t-1)(7^4)^{-1}\pmod{1000}$ and $\frac{T^t-1}{17^2}\equiv (T^t-1)(17^2)^{-1}\pmod{1000}$.
+Hence
+$A\equiv (T^t-1)\big((7^4)^{-1}+(17^2)^{-1}\big)\pmod{1000}$.
+
+Step 8. We compute $(7^4)^{-1}$ and $(17^2)^{-1}$ modulo $1000$.
+
+First, $7^4=2401\equiv 401\pmod{1000}$.
+Apply the Euclidean algorithm:
+$1000=2\cdot 401+198$,
+$401=2\cdot 198+5$,
+$198=39\cdot 5+3$,
+$5=1\cdot 3+2$,
+$3=1\cdot 2+1$.
+Back-substitution gives $1=-399\cdot 401+160\cdot 1000$, hence $401^{-1}\equiv -399\equiv 601\pmod{1000}$.
+So $(7^4)^{-1}\equiv 601\pmod{1000}$.
+
+Next, $17^2=289$.
+Euclid gives $1000=3\cdot 289+133$, $289=2\cdot 133+23$, $133=5\cdot 23+18$, $23=1\cdot 18+5$, $18=3\cdot 5+3$, $5=1\cdot 3+2$, $3=1\cdot 2+1$.
+Back-substitution gives $1=-391\cdot 289+113\cdot 1000$, hence $289^{-1}\equiv -391\equiv 609\pmod{1000}$.
+So $(17^2)^{-1}\equiv 609\pmod{1000}$.
+
+Step 9. We reduce $T^t$ modulo $1000$.
+From Step 2, $T=403467$, so $\gcd(T,1000)=1$ because $T$ is odd and not divisible by $5$.
+We claim $T^{100}\equiv 1\pmod{1000}$.
+
+Lemma 4. If $\gcd(U,1000)=1$, then $U^{100}\equiv 1\pmod{1000}$.
+
+Proof. Since $1000=8\cdot 125$ with $\gcd(8,125)=1$, it suffices to prove the congruence modulo $8$ and modulo $125$.
+Modulo $8$, any unit is odd, so $U\equiv 1,3,5,$ or $7\pmod{8}$ and hence $U^2\equiv 1\pmod{8}$, so $U^{100}=(U^2)^{50}\equiv 1\pmod{8}$.
+Modulo $125$, Euler's theorem gives $U^{\varphi(125)}=U^{100}\equiv 1\pmod{125}$ because $\varphi(125)=125-25=100$.
+By the Chinese Remainder Theorem, these two congruences imply $U^{100}\equiv 1\pmod{1000}$.
+
+Applying Lemma 4 to $U=T$ gives $T^{100}\equiv 1\pmod{1000}$.
+Therefore $T^t\equiv T^{t\bmod 100}\pmod{1000}$.
+Since $t=13328\equiv 28\pmod{100}$, we have $T^t\equiv T^{28}\pmod{1000}$.
+
+Step 10. Reduce $T$ modulo $1000$: from Step 2, $T\equiv 467\pmod{1000}$, so $T^{28}\equiv 467^{28}\pmod{1000}$.
+Compute by repeated squaring:
+$467^2=218089\equiv 89$,
+$467^4\equiv 89^2=7921\equiv 921$,
+$467^8\equiv 921^2=848241\equiv 241$,
+$467^{16}\equiv 241^2=58081\equiv 81\pmod{1000}$.
+Thus $467^{28}=467^{16}\cdot 467^8\cdot 467^4\equiv 81\cdot 241\cdot 921\pmod{1000}$.
+Now $81\cdot 241=19521\equiv 521\pmod{1000}$ and $521\cdot 921=479841\equiv 841\pmod{1000}$.
+So $T^t\equiv 841\pmod{1000}$.
+
+Step 11. From Step 10, $T^t-1\equiv 840\pmod{1000}$.
+From Step 8, $(7^4)^{-1}+(17^2)^{-1}\equiv 601+609=1210\equiv 210\pmod{1000}$.
+By Step 7,
+$A\equiv 840\cdot 210=176400\equiv 400\pmod{1000}$.
+
+Step 12. The unique $N\in\{0,1,\dots,999\}$ with $N\equiv A\pmod{1000}$ is $N=400$.
+
+Uniqueness Test
+The integer $T$ is unique because $\gcd(7^4,17^2)=1$ and CRT gives a unique residue class modulo $M=7^4\cdot 17^2$, and $0\le T<M$ selects a unique representative.
+The integer $t$ is unique because $T^t\equiv 1\pmod{7^4}$ holds exactly when $\operatorname{ord}_{7^4}(T)\mid t$ and $T^t\equiv 1\pmod{17^2}$ holds exactly when $\operatorname{ord}_{17^2}(T)\mid t$.
+Steps 3 and 4 fix these orders as $49$ and $272$, so the admissible exponents are exactly the multiples of $\operatorname{lcm}(49,272)=13328$, and therefore the smallest positive admissible exponent is uniquely $t=13328$.
+With $(T,t)$ fixed, the integer $A$ is fixed, and reduction modulo $1000$ has exactly one representative in $\{0,1,\dots,999\}$, so $N$ is unique.
+
+400

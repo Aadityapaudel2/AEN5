@@ -1,0 +1,242 @@
+Status note: 2026-03-07 (America/New_York)
+Scope: current research direction for AthenaV5 after the desktop-first rebuild.
+
+Title:
+AthenaV5 Verified SWARM Research Direction
+
+Summary:
+- desktop is the canonical product surface
+- `desktop_engine/` is the canonical runtime
+- browser is a thin adapter, not the orchestration center
+- the next serious target is a deterministic, tool-verified math solver
+- swarm behavior is justified only if it beats a strong deterministic single-solver baseline under fixed budget
+
+--------------------------------------------------------------------
+0) Hard Constraints
+--------------------------------------------------------------------
+
+0.1 No guessing
+- final answers must be grounded by at least one checkable anchor
+- fallback guessing is forbidden
+
+0.2 Determinism matters
+- repeated runs must return the same final answer for the same problem
+- fixed seeds, deterministic decode, and deterministic tool policies are required
+- any policy that depends on "time remaining" or mutable global ordering is suspect
+
+0.3 Browser is not the engine
+- agent orchestration belongs in `desktop_engine/`
+- desktop and browser must consume the same engine contract
+
+0.4 Visible tool traces are part of correctness
+- tool request code must stay visible
+- tool results must stay visible
+- no hidden reasoning should be required to trust a final answer
+
+--------------------------------------------------------------------
+1) Working Thesis
+--------------------------------------------------------------------
+
+The repo should not jump directly to "many agents talking to each other."
+
+The practical path is:
+1. deterministic single-solver baseline
+2. deterministic verifier loop
+3. small swarm only if the verifier baseline is strong
+4. larger swarm or multi-model loading only if ablations prove a real lift
+
+Reason:
+- most agent systems fail from correlation, orchestration overhead, and unverifiable traces
+- a strong single-solver plus verifier often dominates a weak swarm under the same budget
+
+--------------------------------------------------------------------
+2) Research Gates
+--------------------------------------------------------------------
+
+Gate G1: single-solver competence
+- a deterministic solver with verification tools must show strong dev-set performance before swarm scaling
+
+Gate G2: small-swarm lift
+- `N_scouts in {2,3}` must beat the single-solver baseline under the same fixed budget
+
+Gate G3: rerun stability
+- repeated runs and order permutations must keep outputs stable enough that penalized-score loss is negligible
+
+If a gate fails:
+- do not add more agents
+- fix the bottleneck directly
+
+--------------------------------------------------------------------
+3) Minimal Role Set
+--------------------------------------------------------------------
+
+R0 Router
+- deterministic
+- chooses domain hint, complexity bin, and fixed budget policy
+
+R1 Scout
+- proposes one candidate answer with a strict structured record
+
+R2 Verifier
+- checks candidate claims with deterministic tools and/or an alternate derivation
+
+R3 Judge
+- commits only when evidence clears an explicit threshold and margin rule
+
+Important:
+- this role split is conceptual first
+- the first implementation can run all roles on one base model with different prompts and policies
+
+--------------------------------------------------------------------
+4) Structured State
+--------------------------------------------------------------------
+
+Per-problem state should be loggable and replayable:
+
+`S = {`
+- `problem_id`
+- `problem_text`
+- `policy`
+- `candidates`
+- `tool_traces`
+- `verifier_outcomes`
+- `commit_rule`
+- `final_answer`
+- `latency_metrics`
+`}`
+
+This must be NDJSON-friendly and safe to emit from local evaluation or Kaggle-style offline runs.
+
+--------------------------------------------------------------------
+5) Repo-Native Implementation Plan
+--------------------------------------------------------------------
+
+Stay inside the current seams:
+- shared runtime: `desktop_engine/`
+- native product: `desktop_app/`
+- browser adapter: `browser/`
+- training utilities: `Finetune/`
+
+Add under `desktop_engine/agentic/`:
+- `orchestrator.py`
+- `policies.py`
+- `schemas.py`
+- `deterministic_tools.py`
+- `verifier.py`
+- `eval_harness.py`
+- `kaggle_entry.py`
+
+Extend `desktop_engine/runtime.py`:
+- deterministic generation preset
+- strict JSON extraction
+- role-aware prompt assembly
+- non-streaming `generate_once(...)` path for offline evaluation
+
+Extend `desktop_engine/session.py`:
+- worker-facing abstractions for router/scout/verifier/judge roles
+- fixed per-problem budget accounting
+- cancellation and snapshot hooks that stay UI-agnostic
+
+Do not:
+- move orchestration into browser code
+- make desktop UI own solver logic
+- depend on native model tool-calling parsers for core correctness
+
+--------------------------------------------------------------------
+6) Tooling Plan
+--------------------------------------------------------------------
+
+Phase 1 tool set:
+- exact arithmetic checks
+- polynomial identity checks
+- modular arithmetic helpers
+- bounded brute-force sanity checks
+
+SymPy is allowed when:
+- results stay exact
+- execution stays bounded
+- outputs remain easy to audit
+
+Avoid:
+- float-heavy search
+- unbounded loops
+- opaque solver behavior with no visible trace
+
+--------------------------------------------------------------------
+7) Build Order That Actually Works
+--------------------------------------------------------------------
+
+Stage A:
+- deterministic single-solver baseline
+- strict output schema
+- visible tool trace
+
+Stage B:
+- one verifier loop over the baseline
+- one repair action maximum
+
+Stage C:
+- two-scout plus one-verifier orchestration
+- fixed token and wallclock budget
+
+Stage D:
+- ablate `N_scouts`, `M_verifiers`, thresholds, and prompt diversity
+
+Stage E:
+- only after proven lift, consider adapter diversity or simultaneous multi-model loading
+
+--------------------------------------------------------------------
+8) Test Plan
+--------------------------------------------------------------------
+
+Unit tests:
+- JSON extraction rejects malformed output
+- no-CoT sanitation strips hidden reasoning from raw generations
+- deterministic tools return exact results and respect bounds
+
+Engine integration tests:
+- same problem twice => same answer, same visible trace, same commit rule
+- `turn_done` contains visible transcript only
+- cancellation does not corrupt session state
+
+Research ablations:
+- start small: `N_scouts in {1,2,3}`, `M_verifiers in {0,1,2}`
+- compare under fixed token budget and fixed wallclock
+- stop scaling if correlation stays high
+
+Acceptance rule:
+- no large swarm until small-swarm lift is proven
+
+--------------------------------------------------------------------
+9) Dependency Notes
+--------------------------------------------------------------------
+
+Current runtime does not need PEFT-style adapter dependencies yet.
+
+Add these only when that work becomes real:
+- `peft`
+- `datasets`
+- `bitsandbytes`
+- `trl`
+
+These are future dependencies, not blockers for the current deterministic solver phase.
+
+--------------------------------------------------------------------
+10) Final Verdict
+--------------------------------------------------------------------
+
+What works:
+- desktop-first shared runtime
+- visible tool traces
+- deterministic local evaluation path
+
+What should happen next:
+- build the deterministic solver and verifier loop inside `desktop_engine/agentic/`
+
+What should wait:
+- large swarms
+- multi-model fanout
+- voice, memory, and camera work
+
+The optimization target is not "more agents."
+The optimization target is "more correctness per unit complexity."

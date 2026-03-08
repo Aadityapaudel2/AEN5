@@ -1,0 +1,318 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "linear_algebra__signed_distance_power_toeplitz__skew_symmetric__rank_and_kernel_by_pfaffian_and_finite_differences",
+    "instance_id": "n5__p3_signed__rank4_kernel_binomial",
+    "short_name": "Rank and kernel of the 5x5 (i-j)^3 skew-symmetric Toeplitz matrix",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "linear_algebra",
+    "subdomain(s)": [
+      "matrix_rank",
+      "structured_matrices (Toeplitz)",
+      "skew_symmetric_matrices",
+      "finite_differences_and_polynomial_sequences"
+    ],
+    "topic_path": [
+      "linear_algebra",
+      "matrices",
+      "rank and nullspace of structured matrices"
+    ],
+    "tags": [
+      "rank",
+      "nullspace",
+      "skew_symmetric",
+      "toeplitz",
+      "signed_difference",
+      "polynomial_entries",
+      "pfaffian",
+      "finite_difference"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Determine the rank and a nullspace generator for a fixed finite skew-symmetric Toeplitz matrix whose entries are an odd power of the signed index difference (i-j)^p. Use skew-symmetry to bound rank, a nonzero 4x4 minor to certify rank, and a finite-difference identity to construct a kernel vector.\n",
+    "object(s)": [
+      {
+        "name": "A",
+        "type": "matrix",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "rank(A)",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      },
+      {
+        "name": "v",
+        "type": "matrix",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "A is a 5x5 matrix with entries A_{ij} = (i-j)^3 for i,j in {1,2,3,4,5}.",
+      "Computations are over a field of characteristic 0 (e.g., ℚ or ℝ)."
+    ],
+    "ask": [
+      "Compute rank(A) and exhibit a nonzero vector v with Av=0."
+    ]
+  },
+  "answer_spec": {
+    "type": "object",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "integer n >= 1",
+        "purpose": "matrix dimension (here n=5)"
+      },
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd_integer p >= 1",
+        "purpose": "odd exponent in signed distance power (i-j)^p (here p=3)"
+      },
+      {
+        "name": "distance_type",
+        "type": "enum",
+        "domain": {
+          "signed": null
+        },
+        "purpose": "uses (i-j) rather than |i-j|, forcing skew-symmetry when p is odd"
+      },
+      {
+        "name": "base_field_characteristic",
+        "type": "int",
+        "domain": "characteristic != 2 (instance uses characteristic 0)",
+        "purpose": "ensures skew-symmetric rank parity and Pfaffian determinant identities hold"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "toeplitz_structure",
+        "depends_on": [
+          "A"
+        ],
+        "statement": "A_{ij} depends only on (i-j), so A is Toeplitz."
+      },
+      {
+        "name": "skew_symmetry_for_odd_p",
+        "depends_on": [
+          "A",
+          "p"
+        ],
+        "statement": "For odd p, (i-j)^p = -(j-i)^p, hence A^T = -A."
+      },
+      {
+        "name": "even_rank_constraint",
+        "depends_on": [
+          "A",
+          "base_field_characteristic"
+        ],
+        "statement": "Over characteristic \\neq2, any skew-symmetric matrix has even rank; in odd dimension its determinant is 0."
+      },
+      {
+        "name": "polynomial_sequence_rows",
+        "depends_on": [
+          "A"
+        ],
+        "statement": "For fixed i, the row entries A_{i,j}=(i-j)^3 form a degree-3 polynomial sequence in j."
+      },
+      {
+        "name": "finite_difference_annihilator_vector",
+        "depends_on": [
+          "A"
+        ],
+        "statement": "The 4th forward difference of any degree \\leq3 polynomial is 0, yielding a kernel vector v=(1,-4,6,-4,1)^T satisfying Av=0 for n=5.\n"
+      }
+    ],
+    "operator(s)": [
+      "integer_power",
+      "gaussian_elimination",
+      "elementary_row_operations",
+      "pivot_count",
+      "determinant_minor_test",
+      "pfaffian",
+      "finite_difference_operator"
+    ],
+    "essential_assumption(s)": [
+      "Indices i,j range over consecutive integers 1..n.",
+      "Rank and nullspace are computed over a field with characteristic not equal to 2 (here characteristic 0)."
+    ],
+    "uniqueness_certificate(s)": [
+      {
+        "statement": "Skew-symmetry in odd dimension forces rank(A) \\leq n-1, and a nonzero (n-1)x(n-1) minor certifies rank(A) \\geq n-1. Together these force rank(A)=n-1 uniquely (here rank=4).\n"
+      },
+      {
+        "statement": "Once rank(A)=4 for a 5x5 matrix, nullity(A)=1 by rank-nullity, so any nonzero kernel vector spans ker(A), giving a unique kernel line.\n"
+      }
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "explicit_matrix_expansion",
+        "inputs": [
+          "entry rule A_{ij}=(i-j)^3"
+        ],
+        "purpose": "write A as an explicit integer matrix.",
+        "outputs": [
+          "concrete 5x5 matrix"
+        ]
+      },
+      {
+        "name": "skew_symmetry_rank_parity_bound",
+        "inputs": [
+          "skew-symmetric structure A^T=-A"
+        ],
+        "purpose": "constrain possible ranks (even rank; odd-size determinant 0).",
+        "outputs": [
+          "rank(A) \\leq 4"
+        ]
+      },
+      {
+        "name": "nonzero_minor_certificate_via_pfaffian",
+        "inputs": [
+          "a 4x4 skew-symmetric minor of A"
+        ],
+        "purpose": "certify rank(A) \\geq 4 by showing det(minor) \\neq 0 using Pfaffian^2 formula.",
+        "outputs": [
+          "rank(A) \\geq 4"
+        ]
+      },
+      {
+        "name": "conclude_rank_from_bounds",
+        "inputs": [
+          "upper and lower rank bounds"
+        ],
+        "purpose": "pin rank exactly.",
+        "outputs": [
+          "rank(A)=4"
+        ]
+      },
+      {
+        "name": "finite_difference_kernel_construction",
+        "inputs": [
+          "polynomial-in-j row structure"
+        ],
+        "purpose": "build a null vector using vanishing 4th finite differences for cubics.",
+        "outputs": [
+          "explicit v with Av=0"
+        ]
+      },
+      {
+        "name": "rank_nullity_finalize_kernel",
+        "inputs": [
+          "rank(A) and a nonzero kernel vector"
+        ],
+        "purpose": "deduce ker(A) is 1D and identify its span.",
+        "outputs": [
+          "ker(A)=span{v}"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Elementary row operations preserve rank",
+        "role": "Justifies rank certification via minors or row-reduction."
+      },
+      {
+        "name": "Skew-symmetric rank parity and odd-size determinant",
+        "role": "Over char \\neq2, skew-symmetric matrices have even rank; odd dimension implies determinant 0."
+      },
+      {
+        "name": "Pfaffian determinant identity (4x4 case)",
+        "role": "For 4x4 skew-symmetric matrices, det = (pfaffian)^2."
+      },
+      {
+        "name": "Finite difference vanishing",
+        "role": "The k-th forward difference of a polynomial of degree <k is identically 0."
+      },
+      {
+        "name": "Rank-Nullity Theorem",
+        "role": "nullity = n - rank, so a nonzero null vector spans when nullity=1."
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Linear independence and rank via certified minors.",
+      "Polynomial sequences annihilated by finite differences."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use skew-symmetry (odd size) to restrict rank to \\leq4.",
+      "Prove rank\\geq4 by a nonzero 4×4 principal minor, computed cleanly via a Pfaffian.",
+      "Construct a kernel vector using the vanishing 4th finite difference for cubic sequences."
+    ],
+    "finish_type": "closed_form"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "sympy",
+        "reason": "exact rank, determinant of minors, and nullspace computation over ℚ for verification."
+      },
+      {
+        "name": "numpy",
+        "reason": "optional floating-point cross-check of rank via SVD (not required for exactness)."
+      }
+    ],
+    "import_hint(s)": [
+      "import sympy as sp",
+      "import numpy as np"
+    ],
+    "task(s)": [
+      {
+        "name": "build_matrix_from_formula",
+        "reason": "generate A_{ij}=(i-j)^3 for i,j=1..5."
+      },
+      {
+        "name": "exact_rank_and_nullspace",
+        "reason": "compute rank(A) and a basis for ker(A) exactly."
+      },
+      {
+        "name": "minor_determinant_check",
+        "reason": "verify det of the 4x4 principal minor is nonzero."
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "n": 5,
+      "p": 3,
+      "distance_type": "signed",
+      "base_field_characteristic": 0
+    },
+    "final_answer": {
+      "value": {
+        "rank": 4,
+        "kernel_generator": [
+          1,
+          -4,
+          6,
+          -4,
+          1
+        ]
+      },
+      "normalized": {
+        "rank": 4,
+        "kernel_generator": [
+          1,
+          -4,
+          6,
+          -4,
+          1
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,297 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "truncated_polynomial_ring__automorphism_by_series_image__order_two_condition__finite_field_count",
+    "instance_id": "f7_trunc_x6_aut_order2_count_2026_02_13",
+    "short_name": "Count order-2 automorphisms of F7[x]/(x^6)",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "algebra",
+    "subdomain(s)": [
+      "finite rings and quotient rings",
+      "automorphisms of truncated polynomial rings",
+      "composition of truncated power series over finite fields"
+    ],
+    "topic_path": [
+      "algebra",
+      "rings and ideals",
+      "automorphisms of truncated polynomial rings"
+    ],
+    "tags": [
+      "finite_field",
+      "truncated_polynomial",
+      "ring_automorphism",
+      "power_series_composition",
+      "order_condition",
+      "coefficient_system",
+      "involution"
+    ]
+  },
+  "problem_spec": {
+    "summary": "In R=F7[x]/(x^6), every F7-algebra automorphism is determined by the image of x as a truncated power series with nonzero linear term; impose φ^2=id and count solutions by solving the induced coefficient constraints over F7.",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "R",
+        "type": "other",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "φ",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "a",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "b",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "c",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "d",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "e",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "I",
+        "type": "set",
+        "role": "output",
+        "dependency": "dependent"
+      },
+      {
+        "name": "count",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "R = F_7[x]/(x^6).",
+      "Every F_7-algebra automorphism φ of R is determined by φ(x)=a x + b x^2 + c x^3 + d x^4 + e x^5 (mod x^6), with a \\in F_7^× and b,c,d,e \\in F_7.",
+      "I = { φ \\in Aut_{F_7}(R) : φ^2 = id_R }."
+    ],
+    "ask": [
+      "Compute |I|."
+    ]
+  },
+  "answer_spec": {
+    "type": "count",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "prime",
+        "purpose": "base finite field size (here 7)"
+      },
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "integer_ge_2",
+        "purpose": "truncation degree in F_p[x]/(x^n) (here 6)"
+      },
+      {
+        "name": "k",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "order constraint φ^k=id (here 2)"
+      },
+      {
+        "name": "series_coefficients",
+        "type": "other",
+        "domain": "(a,b,c,d,e) with a nonzero",
+        "purpose": "parametrizes automorphisms via the image of x"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "automorphism_parameterization",
+        "depends_on": [
+          "R"
+        ],
+        "statement": "φ is an F_p-algebra automorphism iff φ(x)=a x + higher terms (mod x^n) with a\\inF_p^×."
+      },
+      {
+        "name": "composition_mod_truncation",
+        "depends_on": [
+          "n"
+        ],
+        "statement": "φ^k=id is equivalent to f^{∘k}(x) \\equiv x (mod x^n) where f(x)=φ(x) as a truncated series."
+      },
+      {
+        "name": "leading_coefficient_constraint",
+        "depends_on": [
+          "a",
+          "k"
+        ],
+        "statement": "From the x-coefficient in f^{∘k}(x)\\equivx, one gets a^k=1 in F_p^× (here a^2=1)."
+      },
+      {
+        "name": "triangular_coefficient_system",
+        "depends_on": [
+          "b",
+          "c",
+          "d",
+          "e"
+        ],
+        "statement": "Expanding f^{∘2}(x) mod x^n yields a (nearly) triangular system of polynomial equations in b,c,d,e solvable by casework on a."
+      }
+    ],
+    "operator(s)": [
+      "truncation_mod_xn",
+      "power_series_composition",
+      "coefficient_extraction",
+      "finite_field_equation_solving",
+      "case_split_on_a",
+      "solution_count"
+    ],
+    "essential_assumption(s)": [
+      "Automorphisms are F_7-algebra automorphisms (fix scalars in F_7).",
+      "Composition is computed in R, i.e., all series are truncated mod x^6."
+    ],
+    "uniqueness_certificate(s)": [
+      "Each automorphism corresponds to a unique coefficient tuple (a,b,c,d,e); the system f^{∘2}(x)\\equivx (mod x^6) has finitely many solutions in F_7, so |I| is uniquely determined once the coefficient system is solved."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "translate_order_condition_to_series_identity",
+        "inputs": [
+          "φ(x)=f(x) mod x^6"
+        ],
+        "purpose": "rewrite φ^2=id as f∘f(x)\\equivx (mod x^6)",
+        "outputs": [
+          "coefficient equations in F_7 for a,b,c,d,e"
+        ]
+      },
+      {
+        "name": "solve_linear_term_first",
+        "inputs": [
+          "x-coefficient of f^{∘2}(x)"
+        ],
+        "purpose": "restrict a to square roots of unity in F_7^×",
+        "outputs": [
+          "a \\in {1,6}"
+        ]
+      },
+      {
+        "name": "casework_by_a",
+        "inputs": [
+          "each admissible a"
+        ],
+        "purpose": "simplify the remaining coefficient equations (some factors vanish depending on a)",
+        "outputs": [
+          "per-case constraints on b,c,d,e"
+        ]
+      },
+      {
+        "name": "count_free_parameters",
+        "inputs": [
+          "per-case constraints"
+        ],
+        "purpose": "count solutions as powers of 7 when variables remain free",
+        "outputs": [
+          "solution count per case and total"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Units criterion for truncated polynomial automorphisms",
+        "role": "f(x) defines an automorphism iff its linear term is a unit in F_p"
+      },
+      {
+        "name": "Finite-field root counting for a^2=1",
+        "role": "determine the admissible a values in F_7^×"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Function composition as an algebraic constraint (coefficient comparison)"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Replace φ^2=id by the truncated series identity f∘f(x)\\equivx (mod x^6).",
+      "Use the linear-term equation a^2=1 to reduce to two cases a=1 and a=-1.",
+      "In each case, solve the coefficient equations sequentially and count the remaining free parameters over F_7."
+    ],
+    "finish_type": "finite_enumeration"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "sage",
+        "reason": "model R, compose series mod x^6, and count solutions over F_7 exactly (optional but convenient)"
+      },
+      {
+        "name": "itertools",
+        "reason": "brute-force iterate coefficients (6 \\cdot 7^4 possibilities) for verification"
+      }
+    ],
+    "import_hint(s)": [
+      "# sage: F = GF(7); PR.<x> = PolynomialRing(F); S = PR.quotient(x^6)",
+      "# sage: define f = a*x + b*x^2 + c*x^3 + d*x^4 + e*x^5 in S",
+      "from itertools import product"
+    ],
+    "task(s)": [
+      {
+        "name": "brute_force_verify_count",
+        "reason": "iterate all (a,b,c,d,e) with a\\neq0, test f∘f(x)=x in S, count matches |I|"
+      },
+      {
+        "name": "symbolic_expand_and_solve",
+        "reason": "expand f∘f(x) mod x^6 and solve the coefficient system to confirm the per-case counts"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "p": 7,
+      "n": 6,
+      "k": 2
+    },
+    "final_answer": {
+      "value": 50,
+      "normalized": 50
+    }
+  }
+}

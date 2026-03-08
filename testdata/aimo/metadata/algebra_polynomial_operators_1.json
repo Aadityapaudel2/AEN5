@@ -1,0 +1,127 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "quadratic__conjugated_differential_operator__complex_eval__mod1000_variant",
+    "instance_id": "Tpm__target_60x2_102x_43__z_2_plus_i__k25_mod1000",
+    "short_name": "Conjugated differential operator on a quadratic (variant)",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "algebra",
+    "subdomain(s)": [
+      "polynomial operators",
+      "differential-operator conjugation",
+      "complex numbers",
+      "modular arithmetic"
+    ],
+    "topic_path": [
+      "Algebra",
+      "Operators on polynomials",
+      "Conjugation of differential operators and coefficient matching"
+    ],
+    "tags": [
+      "differential operator",
+      "exponential conjugation",
+      "coefficient matching",
+      "complex evaluation",
+      "mod 1000"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Solve for quadratic polynomials P_± such that a linear differential operator with exponential conjugations maps P_± to a specified quadratic, then compare P_+(2+i) and P_-(2+i) via squared distance and reduce a scaled value modulo 1000.",
+    "object(s)": [
+      {
+        "name": "P(x)",
+        "type": "polynomial",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "T_{±}",
+        "type": "function",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "Q(x)",
+        "type": "polynomial",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "z",
+        "type": "other",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "S",
+        "type": "real",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "P(x)=ax^2+bx+c with a,b,c\\inℂ and deg(P)=2.",
+      "T_{±}P = e^{-2x}(d/dx+2)^2(e^{2x}P(x)) ± e^{x}(d/dx-3)(e^{-x}P(x)).",
+      "Q(x)=60x^2+102x+43 and T_{±}P_{±}=Q for all real x.",
+      "z=2+i; write P_{±}(z)=u_{±}+v_{±}i with u_{±},v_{±}\\in.",
+      "S=(u_+-u_-)^2+(v_+-v_-)^2.",
+      "N is the unique integer in {0,1,...,999} such that N\\equiv25S (mod 1000)."
+    ],
+    "ask": [
+      "Compute N."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer_mod_m",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "target_coeffs",
+        "type": "other",
+        "domain": "(A,B,C) with Q(x)=Ax^2+Bx+C",
+        "purpose": "varies the right-hand side polynomial and changes P_± and the final residue"
+      },
+      {
+        "name": "operator_shifts",
+        "type": "other",
+        "domain": "constants defining the conjugated operator blocks (here (D+2)^2 with e^{±2x} and (D-3) with e^{±x})",
+        "purpose": "controls the linear map on quadratic coefficients and its invertibility/triangularity"
+      },
+      {
+        "name": "eval_point",
+        "type": "other",
+        "domain": "complex number z",
+        "purpose": "changes S via complex evaluation"
+      },
+      {
+        "name": "scale_and_modulus",
+        "type": "other",
+        "domain": "(k,m) with k\\inℤ, m\\geq2; output N\\equivkS (mod m) with representative 0..m-1",
+        "purpose": "final modular postprocessing"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "exponential_conjugation_identity"
+      }
+    ]
+  },
+  "instance_snapshot": {
+    "final_answer": {
+      "value": "156",
+      "normalized": "156"
+    }
+  }
+}

@@ -1,0 +1,276 @@
+Mixed LTE count with prime-cube second digits and quadratic+quartic coupling
+
+Let $p=17$ and $q=97$. Let $A=B=4$, $d_p=8$, and $d_q=24$.
+Define
+$$
+M=p^{A+1}q^{B+1}=17^5\cdot 97^5,\qquad
+n=\operatorname{lcm}(d_p,d_q)\,p^{A-2}q^{B-2}=24\cdot 17^2\cdot 97^2.
+$$
+
+For an odd prime $r$ and a nonzero integer $t$, let $v_r(t)$ be the largest integer $e\ge 0$ such that $r^e\mid t$.
+For an odd prime $r$ and an integer $u$, let $\left(\frac{u}{r}\right)$ be the Legendre symbol.
+Say that $u$ is a fourth power modulo $r$ if there exists $t$ with $t^4\equiv u\pmod r$.
+
+For a prime $r\in\{17,97\}$ and a residue class $x\pmod M$ with $\gcd(x,M)=1$, write $\operatorname{ord}_r(x)$ for the multiplicative order of the reduction of $x$ modulo $r$.
+
+Let $S\subset(\mathbb{Z}/M\mathbb{Z})^\times$ be the set of residue classes $x\pmod M$ such that:
+
+1. $\operatorname{ord}_{17}(x)=8$.
+2. $\operatorname{ord}_{97}(x)=48$.
+3. $v_{17}(x^n-1)=4$ and $v_{97}(x^n+1)=4$.
+4. Writing
+   $$
+   x^8\equiv 1+17^2 a\pmod{17^3}\quad\text{with }a\in\{0,1,\dots,16\},
+   $$
+   $$
+   x^{24}\equiv -1+97^2 b\pmod{97^3}\quad\text{with }b\in\{0,1,\dots,96\},
+   $$
+   we have $\left(\frac{a}{17}\right)=\left(\frac{b}{97}\right)$.
+5. The integer $a$ is a fourth power modulo $17$ if and only if $b$ is a fourth power modulo $97$.
+
+Determine $|S|$, and output the unique integer $N$ with $0\le N<1000$ and $N\equiv |S|\pmod{1000}$.
+
+Solution.
+Step 1 (compute $n$ and the forced prime valuations of the exponents)
+We have $\operatorname{lcm}(d_p,d_q)=\operatorname{lcm}(8,24)=24$, hence
+$$
+n=24\cdot 17^2\cdot 97^2.
+$$
+Compute
+$$
+\frac{n}{8}=3\cdot 17^2\cdot 97^2,\qquad \frac{n}{24}=17^2\cdot 97^2.
+$$
+Therefore $v_{17}(n/8)=2$, $v_{97}(n/24)=2$, and $n/24$ is odd.
+
+Lemma 1 (exact-order counting modulo a prime)
+Let $r$ be an odd prime. For each divisor $d\mid(r-1)$, the number of residue classes $u\pmod r$ with $\operatorname{ord}_r(u)=d$ equals $\varphi(d)$.
+
+Proof.
+The group $(\mathbb{Z}/r\mathbb{Z})^\times$ is cyclic of order $r-1$. In any cyclic group, the number of elements of exact order $d$ (where $d$ divides the group order) is $\varphi(d)$.  $\square$
+
+Step 2 (count the allowed prime-layer residues)
+By Lemma 1:
+- modulo $17$, the number of residues of exact order $8$ is $\varphi(8)=4$;
+- modulo $97$, the number of residues of exact order $48$ is $\varphi(48)=16$.
+
+Lemma 2 (the order-$2$ element is $-1$)
+Let $r$ be an odd prime. In $(\mathbb{Z}/r\mathbb{Z})^\times$, the unique element of order $2$ is $-1$.
+
+Proof.
+If $u$ has order $2$, then $u^2\equiv 1\pmod r$, so $(u-1)(u+1)\equiv 0\pmod r$. Since $r$ is prime, $u\equiv 1\pmod r$ or $u\equiv -1\pmod r$. The class $1$ has order $1$, so the only order-$2$ class is $-1$.  $\square$
+
+Step 3 (force $x^{24}\equiv -1\pmod{97}$ from the order condition)
+If $\operatorname{ord}_{97}(x)=48$, then $(x^{24})^2=x^{48}\equiv 1\pmod{97}$, so $x^{24}$ has order $1$ or $2$ modulo $97$.
+It cannot have order $1$ because that would mean $x^{24}\equiv 1\pmod{97}$ and hence $\operatorname{ord}_{97}(x)$ divides $24$, contradicting $\operatorname{ord}_{97}(x)=48$.
+Thus $x^{24}$ has order $2$, and by Lemma 2 we get $x^{24}\equiv -1\pmod{97}$.
+In particular, $97\mid(x^{24}+1)$.
+
+Lemma 3 (LTE in the two forms needed)
+Let $r$ be an odd prime and let $u$ be an integer with $r\nmid u$.
+
+(a) If $r\mid(u-1)$, then for every positive integer $m$,
+$$
+v_r(u^m-1)=v_r(u-1)+v_r(m).
+$$
+
+(b) If $r\mid(u+1)$ and $m$ is odd, then
+$$
+v_r(u^m+1)=v_r(u+1)+v_r(m).
+$$
+
+Justification.
+These are standard lifting-the-exponent (LTE) identities for odd primes. In both parts, the hypotheses ensure that the usual LTE assumptions hold (odd prime, and $r\nmid u$; additionally $m$ odd in the "$+1$" case).  $\square$
+
+Step 4 (reduce $v_{17}(x^n-1)=4$ to an exact condition on $v_{17}(x^8-1)$)
+From $\operatorname{ord}_{17}(x)=8$ we have $17\mid(x^8-1)$ and $17\nmid x$.
+Also $8\mid n$, so $x^n-1=(x^8)^{n/8}-1$.
+Apply Lemma 3(a) with $r=17$, $u=x^8$, $m=n/8$:
+$$
+v_{17}(x^n-1)=v_{17}(x^8-1)+v_{17}(n/8)=v_{17}(x^8-1)+2.
+$$
+Thus $v_{17}(x^n-1)=4$ is equivalent to $v_{17}(x^8-1)=2$.
+
+Step 5 (reduce $v_{97}(x^n+1)=4$ to an exact condition on $v_{97}(x^{24}+1)$)
+From Step 3, $97\mid(x^{24}+1)$ and $97\nmid x$.
+Also $24\mid n$ and $n/24$ is odd (Step 1), so $x^n+1=(x^{24})^{n/24}+1$ with odd exponent $n/24$.
+Apply Lemma 3(b) with $r=97$, $u=x^{24}$, $m=n/24$:
+$$
+v_{97}(x^n+1)=v_{97}(x^{24}+1)+v_{97}(n/24)=v_{97}(x^{24}+1)+2.
+$$
+Thus $v_{97}(x^n+1)=4$ is equivalent to $v_{97}(x^{24}+1)=2$.
+
+Step 6 (define the prime-cube "second digits" $a$ and $b$ and note they are nonzero)
+The equalities in Steps 4-5 imply
+$$
+x^8\equiv 1\pmod{17^2}\ \text{but}\ x^8\not\equiv 1\pmod{17^3},
+$$
+$$
+x^{24}\equiv -1\pmod{97^2}\ \text{but}\ x^{24}\not\equiv -1\pmod{97^3}.
+$$
+Hence there are uniquely determined residues $a\in\{0,1,\dots,16\}$ and $b\in\{0,1,\dots,96\}$ such that
+$$
+x^8\equiv 1+17^2a\pmod{17^3},\qquad x^{24}\equiv -1+97^2b\pmod{97^3}.
+$$
+Moreover $a\not\equiv 0\pmod{17}$ and $b\not\equiv 0\pmod{97}$, because $v_{17}(x^8-1)=2$ and $v_{97}(x^{24}+1)=2$ mean $17^3\nmid(x^8-1)$ and $97^3\nmid(x^{24}+1)$.
+
+Lemma 4 (Hensel lifting to the prime square, simple-root case)
+Let $r$ be an odd prime, let $m\ge 1$ with $r\nmid m$, and let $s\in\{1,-1\}$.
+If $y_0$ satisfies $r\nmid y_0$ and $y_0^m\equiv s\pmod r$, then there exists a unique residue class $y_1\pmod{r^2}$ with $y_1\equiv y_0\pmod r$ and $y_1^m\equiv s\pmod{r^2}$.
+
+Proof.
+Write $y_1=y_0+rt$. Modulo $r^2$ the binomial theorem gives
+$$
+(y_0+rt)^m\equiv y_0^m + m y_0^{m-1}(rt)\pmod{r^2}.
+$$
+Write $y_0^m=s+rc$ for some $c\pmod r$. Then $(y_0+rt)^m\equiv s\pmod{r^2}$ is equivalent to
+$$
+c+m y_0^{m-1}t\equiv 0\pmod r.
+$$
+Since $r\nmid m$ and $r\nmid y_0$, the coefficient $m y_0^{m-1}$ is invertible modulo $r$, so there is a unique solution $t\pmod r$, hence a unique $y_1\pmod{r^2}$.  $\square$
+
+Lemma 5 (affine second-digit bijection at the prime cube)
+Let $r$ be an odd prime and let $m\ge 1$ with $r\nmid m$.
+Assume $y_1$ satisfies $r\nmid y_1$ and $y_1^m\equiv s\pmod{r^2}$ for some $s\in\{1,-1\}$.
+For each $t\in\{0,1,\dots,r-1\}$ define $y_t=y_1+r^2t$.
+Then there is a unique $D(t)\in\{0,1,\dots,r-1\}$ such that $y_t^m\equiv s+r^2D(t)\pmod{r^3}$, and the map $t\mapsto D(t)\pmod r$ is a bijection on $\mathbb{Z}/r\mathbb{Z}$.
+
+Proof.
+Modulo $r^3$, binomial expansion gives
+$$
+(y_1+r^2t)^m\equiv y_1^m + m y_1^{m-1}(r^2t)\pmod{r^3},
+$$
+because terms with $(r^2t)^j$ for $j\ge 2$ have a factor $r^4$.
+Write $y_1^m\equiv s+r^2D(0)\pmod{r^3}$. Then
+$$
+y_t^m\equiv s+r^2(D(0)+m y_1^{m-1}t)\pmod{r^3},
+$$
+so $D(t)\equiv D(0)+m y_1^{m-1}t\pmod r$.
+Since $r\nmid m y_1^{m-1}$, this affine map is a bijection mod $r$.  $\square$
+
+Lemma 6 (counting fourth powers modulo an odd prime)
+Let $r$ be an odd prime. The number of fourth powers in $(\mathbb{Z}/r\mathbb{Z})^\times$ equals $(r-1)/\gcd(4,r-1)$.
+If $4\mid(r-1)$, then among the $r-1$ nonzero residue classes modulo $r$:
+- exactly $(r-1)/4$ are fourth powers,
+- exactly $(r-1)/4$ are quadratic residues that are not fourth powers,
+- exactly $(r-1)/2$ are non-squares.
+
+Proof.
+Since $(\mathbb{Z}/r\mathbb{Z})^\times$ is cyclic of order $r-1$, the map $u\mapsto u^4$ is a group homomorphism.
+Its kernel has size $\gcd(4,r-1)$, so its image has size $(r-1)/\gcd(4,r-1)$, which is the number of fourth powers.
+If $4\mid(r-1)$, then the number of fourth powers is $(r-1)/4$.
+Quadratic residues are the image of $u\mapsto u^2$, which has size $(r-1)/2$; subtracting gives $(r-1)/4$ squares that are not fourth powers, and the remaining $(r-1)/2$ are non-squares.  $\square$
+
+Step 7 (local counting at $17^3$, split by the category of $a$)
+Fix a residue $y_0\pmod{17}$ with $\operatorname{ord}_{17}(y_0)=8$; there are $4$ choices (Step 2).
+
+Apply Lemma 4 with $(r,m,s)=(17,8,1)$: there is a unique lift $y_1\pmod{17^2}$ with $y_1\equiv y_0\pmod{17}$ and $y_1^8\equiv 1\pmod{17^2}$.
+
+Now lift further to $17^3$ by $y_t=y_1+17^2t$ for $t=0,1,\dots,16$.
+By Lemma 5, the digit $a(t)$ defined by $y_t^8\equiv 1+17^2a(t)\pmod{17^3}$ runs through all residues modulo $17$ bijectively as $t$ runs through $\mathbb{Z}/17\mathbb{Z}$.
+Exactly one $t$ gives $a(t)\equiv 0\pmod{17}$, i.e. $17^3\mid(y_t^8-1)$.
+The other $16$ values give $v_{17}(y_t^8-1)=2$, and their digits $a(t)$ run through $(\mathbb{Z}/17\mathbb{Z})^\times$ exactly once.
+
+Since $17\equiv 1\pmod 4$, Lemma 6 says among the $16$ nonzero residues modulo $17$:
+- $4$ are fourth powers (call this category Q4),
+- $4$ are squares but not fourth powers (SQ\Q4),
+- $8$ are non-squares (NS).
+
+Therefore, modulo $17^3$, the number of admissible classes with:
+- $a$ in Q4 is $4\cdot 4=16$,
+- $a$ in SQ\Q4 is $4\cdot 4=16$,
+- $a$ in NS is $4\cdot 8=32$.
+
+Step 8 (lift from $17^3$ to $17^5$)
+All $17$-local conditions used above depend only on $x\pmod{17^3}$:
+- $\operatorname{ord}_{17}(x)=8$ depends only on $x\pmod{17}$,
+- $v_{17}(x^8-1)=2$ is equivalent to $x^8\equiv 1+17^2a$ with $a\not\equiv 0\pmod{17}$, which is a condition modulo $17^3$,
+- the digit $a$ is defined modulo $17$ from the class modulo $17^3$.
+
+Hence every admissible class modulo $17^3$ has exactly $17^{5-3}=17^2$ lifts to a class modulo $17^5$ (adding multiples of $17^3$), and all such lifts preserve the category of $a$.
+
+Since $17^2=289$, the category counts modulo $17^5$ are:
+$$
+N_{17}(\text{Q4})=16\cdot 289=4624,\quad
+N_{17}(\text{SQ}\setminus\text{Q4})=16\cdot 289=4624,\quad
+N_{17}(\text{NS})=32\cdot 289=9248.
+$$
+
+Step 9 (local counting at $97^3$, split by the category of $b$)
+Fix a residue $z_0\pmod{97}$ with $\operatorname{ord}_{97}(z_0)=48$; there are $16$ choices (Step 2).
+Then $z_0^{24}\equiv -1\pmod{97}$ by the same argument as Step 3.
+
+Apply Lemma 4 with $(r,m,s)=(97,24,-1)$: there is a unique lift $z_1\pmod{97^2}$ with $z_1\equiv z_0\pmod{97}$ and $z_1^{24}\equiv -1\pmod{97^2}$.
+
+Now lift to $97^3$ by $z_t=z_1+97^2t$ for $t=0,1,\dots,96$.
+By Lemma 5, the digit $b(t)$ defined by $z_t^{24}\equiv -1+97^2b(t)\pmod{97^3}$ runs through all residues modulo $97$ bijectively.
+Exactly one lift has $b(t)\equiv 0\pmod{97}$ (i.e. $97^3\mid(z_t^{24}+1)$), and the remaining $96$ lifts have $v_{97}(z_t^{24}+1)=2$ with $b(t)\in(\mathbb{Z}/97\mathbb{Z})^\times$.
+
+Since $97\equiv 1\pmod 4$, Lemma 6 says among the $96$ nonzero residues modulo $97$:
+- $24$ are fourth powers (Q4),
+- $24$ are squares but not fourth powers (SQ\Q4),
+- $48$ are non-squares (NS).
+
+Therefore, modulo $97^3$, the number of admissible classes with:
+- $b$ in Q4 is $16\cdot 24=384$,
+- $b$ in SQ\Q4 is $16\cdot 24=384$,
+- $b$ in NS is $16\cdot 48=768$.
+
+Step 10 (lift from $97^3$ to $97^5$)
+As in Step 8, all $97$-local conditions depend only on $x\pmod{97^3}$, so each admissible class modulo $97^3$ has exactly $97^{5-3}=97^2$ lifts to modulo $97^5$ preserving the category of $b$.
+
+Since $97^2=9409$, the category counts modulo $97^5$ are:
+$$
+N_{97}(\text{Q4})=384\cdot 9409=3613056,\quad
+N_{97}(\text{SQ}\setminus\text{Q4})=384\cdot 9409=3613056,\quad
+N_{97}(\text{NS})=768\cdot 9409=7226112.
+$$
+
+Step 11 (rewrite the two coupling conditions as category matching)
+Because fourth powers are a subset of squares, every nonzero residue modulo a prime lies in exactly one of the three categories:
+Q4, SQ\Q4, or NS.
+
+Condition 4 is $\left(\frac{a}{17}\right)=\left(\frac{b}{97}\right)$, which is equivalent to "$a$ is a square iff $b$ is a square".
+Condition 5 is "$a$ is a fourth power iff $b$ is a fourth power".
+
+Together these are equivalent to requiring that $a$ and $b$ lie in the same one of the three categories:
+$$
+(a,b)\in(\text{Q4},\text{Q4})\ \text{or}\ (\text{SQ}\setminus\text{Q4},\text{SQ}\setminus\text{Q4})\ \text{or}\ (\text{NS},\text{NS}).
+$$
+
+Step 12 (CRT recombination)
+Since $\gcd(17^5,97^5)=1$, the Chinese remainder theorem gives a bijection between classes $x\pmod M$ and pairs $(x_{17}\pmod{17^5},x_{97}\pmod{97^5})$.
+All constraints except the coupling are local, and Step 11 shows the coupling is exactly "same category".
+Therefore
+$$
+|S|=N_{17}(\text{Q4})N_{97}(\text{Q4})+
+N_{17}(\text{SQ}\setminus\text{Q4})N_{97}(\text{SQ}\setminus\text{Q4})+
+N_{17}(\text{NS})N_{97}(\text{NS}).
+$$
+Substitute the values:
+$$
+|S|=4624\cdot 3613056+4624\cdot 3613056+9248\cdot 7226112.
+$$
+
+Step 13 (compute $|S|\bmod 1000$)
+Reduce modulo $1000$:
+- $4624\equiv 624$, $3613056\equiv 56$, so $4624\cdot 3613056\equiv 624\cdot 56=34944\equiv 944$.
+  The first two equal terms contribute $944+944\equiv 888$.
+- $9248\equiv 248$, $7226112\equiv 112$, so $9248\cdot 7226112\equiv 248\cdot 112=27776\equiv 776$.
+
+Thus $|S|\equiv 888+776=1664\equiv 664\pmod{1000}$.
+So the required output is $N=664$.
+
+Uniqueness Test
+1) Steps 4-5 show that the global valuation conditions $v_{17}(x^n-1)=4$ and $v_{97}(x^n+1)=4$ are equivalent to the exact local depth conditions $v_{17}(x^8-1)=2$ and $v_{97}(x^{24}+1)=2$, using Lemma 3 together with the forced values $v_{17}(n/8)=2$ and $v_{97}(n/24)=2$ from Step 1. There is no alternate LTE branch because $17$ and $97$ are odd primes and $n/24$ is forced odd.
+
+2) For each prime-layer choice modulo $17$ of order $8$, Lemma 4 produces a unique lift modulo $17^2$ satisfying $x^8\equiv 1\pmod{17^2}$, and Lemma 5 forces the prime-cube digit $a$ to run bijectively over $\mathbb{Z}/17\mathbb{Z}$ when lifting to modulo $17^3$. Exactly one lift has $a\equiv 0$, which is excluded by the depth condition. Therefore the $17$-local admissible classes are uniquely partitioned into the three categories Q4, SQ\Q4, NS with forced counts, and lifting to $17^5$ multiplies each count by $17^2$ without ambiguity.
+
+3) The same argument at $97$ forces the $97$-local admissible classes and their three-category counts, and lifting to $97^5$ multiplies each count by $97^2$.
+
+4) Lemma 6 fixes the sizes of the digit categories (fourth powers vs non-quartic squares vs non-squares) at both primes, so the category counts used in the CRT recombination are forced.
+
+5) The two coupling constraints (Legendre equality and fourth-power iff) are equivalent to "same category" (Step 11). This is essential: it forces exactly three disjoint matched-category blocks and excludes all cross-category pairs.
+
+6) CRT gives a bijection between global classes modulo $M$ and pairs of local classes modulo $17^5$ and $97^5$. Therefore $|S|$ is uniquely forced to be the sum of the three matched-category products in Step 12, giving a unique residue $|S|\pmod{1000}$ and hence a unique $N\in\{0,1,\dots,999\}$. The resulting $N$ is $664$.
+
+664

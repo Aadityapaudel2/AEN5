@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ request.url_for('portal-static', path='portal.css') }}?v={{ asset_version }}" />
+  </head>
+  <body>
+    <main class="login-shell">
+      <section class="login-card">
+        <h1 class="login-title">Welcome to Athena V5</h1>
+        <p class="login-copy">Sign in to use the public portal. Local development runs with auth disabled.</p>
+        <a class="btn primary login-btn" href="{{ path_prefix }}/auth/login">Sign in with Google</a>
+        <p class="login-note">Your session history is stored on this host under your workspace profile.</p>
+      </section>
+    </main>
+  </body>
+</html>

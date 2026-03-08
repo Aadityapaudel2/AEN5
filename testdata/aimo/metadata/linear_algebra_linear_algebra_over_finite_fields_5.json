@@ -1,0 +1,297 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "finite_field__centralizer_of_nilpotent_jordan__square_zero_rank_constrained_count",
+    "instance_id": "f2_jordan22_centralizer_squarezero_rank2_count_2026_02_13",
+    "short_name": "Count rank-2 square-zero elements in the centralizer of J(2,2) over F2",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "linear_algebra",
+    "subdomain(s)": [
+      "linear algebra over finite fields",
+      "Jordan form and centralizers (commutants)",
+      "rank-constrained matrix counting",
+      "square-zero and nilpotent matrices"
+    ],
+    "topic_path": [
+      "linear algebra",
+      "matrices over finite fields",
+      "centralizers and constrained cones"
+    ],
+    "tags": [
+      "finite_field",
+      "jordan_form",
+      "centralizer",
+      "commuting_matrices",
+      "square_zero_matrix",
+      "rank",
+      "finite_enumeration"
+    ]
+  },
+  "problem_spec": {
+    "summary": "For the nilpotent Jordan matrix J of type (2,2) over F2, describe the centralizer and count commuting matrices that are square-zero with a prescribed rank.",
+    "object(s)": [
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "J",
+        "type": "matrix",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "C(J)",
+        "type": "set",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "𝒵",
+        "type": "set",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "B",
+        "type": "matrix",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N_count",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "Work over the finite field $\\mathbb F_2$ (so $q=2$).",
+      "Let $J_2=\\begin{pmatrix}0&1\\\\0&0\\end{pmatrix}$ and $J=J_2\\oplus J_2\\in M_4(\\mathbb F_2)$ (nilpotent Jordan type $(2,2)$).",
+      "The centralizer is $C(J)=\\{B\\in M_4(\\mathbb F_2): BJ=JB\\}$.",
+      "Define $\\mathcal Z=\\{B\\in C(J): B^2=0\\}$ (square-zero cone inside the centralizer)."
+    ],
+    "ask": [
+      "Count matrices $B\\in\\mathcal Z$ such that $\\operatorname{rank}(B)=2$."
+    ]
+  },
+  "answer_spec": {
+    "type": "count",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "prime_power",
+        "purpose": "defines the finite-field arithmetic (here fixed to q=2 in the instance)"
+      },
+      {
+        "name": "block_partition",
+        "type": "enum",
+        "domain": {
+          "(2": null,
+          "2)": null
+        },
+        "purpose": "fixes the Jordan type of J and hence the structure of C(J)"
+      },
+      {
+        "name": "nilpotency_degree",
+        "type": "int",
+        "domain": {
+          "2": null
+        },
+        "purpose": "imposes the polynomial constraint $B^2=0$ (square-zero condition)"
+      },
+      {
+        "name": "target_rank",
+        "type": "int",
+        "domain": {
+          "0": null,
+          "1": null,
+          "2": null,
+          "3": null,
+          "4": null
+        },
+        "purpose": "selects the rank stratum to count within $\\mathcal Z$"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "commutation_constraint",
+        "depends_on": [
+          "B",
+          "J"
+        ],
+        "statement": "$BJ=JB$ forces $B$ to have a constrained $2\\times2$ block-Toeplitz form relative to the Jordan block decomposition."
+      },
+      {
+        "name": "centralizer_block_form",
+        "depends_on": [
+          "B",
+          "J"
+        ],
+        "statement": "With $J=J_2\\oplus J_2$, any $B\\in C(J)$ can be represented by $2\\times2$ blocks $B_{ij}$ that each commute with $J_2$, hence each $B_{ij}$ is upper-triangular Toeplitz over the field."
+      },
+      {
+        "name": "similarity_reduction",
+        "depends_on": [
+          "B"
+        ],
+        "statement": "A fixed permutation similarity transforms $B$ to $\\bar B=\\begin{pmatrix}M&N\\\\0&M\\end{pmatrix}$ with $M,N\\in M_2(\\mathbb F_q)$, preserving rank and polynomial identities such as $B^2=0$."
+      },
+      {
+        "name": "square_zero_reduction_to_MN",
+        "depends_on": [
+          "M",
+          "N",
+          "\\bar B"
+        ],
+        "statement": "For $\\bar B=\\begin{pmatrix}M&N\\\\0&M\\end{pmatrix}$, $\\bar B^2=\\begin{pmatrix}M^2&MN+NM\\\\0&M^2\\end{pmatrix}$; hence $\\bar B^2=0$ iff $M^2=0$ and $MN+NM=0$ (over $\\mathbb F_2$ this is $MN=NM$)."
+      }
+    ],
+    "operator(s)": [
+      "centralizer",
+      "block_decomposition",
+      "similarity_transform",
+      "square_zero_test (power_two_zero)",
+      "rank"
+    ],
+    "essential_assumption(s)": [
+      "$J$ is exactly the nilpotent Jordan form with partition $(2,2)$ over the stated field.",
+      "Rank and the equation $B^2=0$ are computed over the same field (here $\\mathbb F_2$).",
+      "Similarity transforms used are invertible, so rank and the condition $B^2=0$ are preserved."
+    ],
+    "uniqueness_certificate(s)": [
+      "The map $C(J)\\to M_2(\\mathbb F_2)\\times M_2(\\mathbb F_2)$ induced by the permutation similarity is a bijection.",
+      "The constraints $B^2=0$ and $\\operatorname{rank}(B)=2$ translate to explicit conditions on $(M,N)$ that split into disjoint cases ($M=0$ vs $M\\neq0$), each with a fixed finite count; therefore the final count is uniquely determined."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "centralizer_structure_via_commutation",
+        "inputs": [
+          "Jordan block $J_2$ and the equation $BJ=JB$ in $2\\times2$ block form"
+        ],
+        "purpose": "constrain the form of elements of $C(J)$",
+        "outputs": [
+          "each $2\\times2$ block commuting with $J_2$ is upper-triangular Toeplitz; overall centralizer parameterized by 8 scalars"
+        ]
+      },
+      {
+        "name": "similarity_to_separate_diagonal_offdiagonal",
+        "inputs": [
+          "block-Toeplitz parameterization of $B$"
+        ],
+        "purpose": "convert the centralizer into a simpler canonical form for counting",
+        "outputs": [
+          "representation $\\bar B=\\begin{pmatrix}M&N\\\\0&M\\end{pmatrix}$ with $M,N$ arbitrary in $M_2(\\mathbb F_2)$"
+        ]
+      },
+      {
+        "name": "square_zero_condition_in_block_form",
+        "inputs": [
+          "$\\bar B=\\begin{pmatrix}M&N\\\\0&M\\end{pmatrix}$"
+        ],
+        "purpose": "translate the square-zero constraint $B^2=0$ into conditions on $M$ and $N$",
+        "outputs": [
+          "conditions $M^2=0$ and $MN+NM=0$ (equivalently $MN=NM$ over $\\mathbb F_2$)"
+        ]
+      },
+      {
+        "name": "classify_square_zero_2x2_over_F2",
+        "inputs": [
+          "$M\\in M_2(\\mathbb F_2)$"
+        ],
+        "purpose": "enumerate all possibilities for $M$ with $M^2=0$",
+        "outputs": [
+          "$M=0$ or one of 3 nonzero rank-1 nilpotents"
+        ]
+      },
+      {
+        "name": "rank_count_by_cases_with_commuting_N",
+        "inputs": [
+          "fixed $M$ and the set of $N$ commuting with $M$"
+        ],
+        "purpose": "count $N$ yielding $\\operatorname{rank}(\\bar B)=\\text{target_rank}$",
+        "outputs": [
+          "if $M=0$: $N$ must be invertible (6 choices); if $M\\neq0$ nilpotent: $N$ must lie in $\\mathrm{Cent}(M)$ (4 choices) and then rank is automatically 2"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Similarity preserves rank and polynomial identities",
+        "role": "justify replacing $B$ by $\\bar B$ for both rank and $B^2=0$"
+      },
+      {
+        "name": "Centralizer of a $2\\times2$ Jordan block",
+        "role": "$\\mathrm{Cent}(J_2)$ consists of upper-triangular Toeplitz matrices; used both for describing $C(J)$ and for counting $\\mathrm{Cent}(M)$ when $M$ is nonzero nilpotent"
+      },
+      {
+        "name": "Nonzero nilpotent $2\\times2$ matrices have rank 1 and square to zero",
+        "role": "simplifies the classification of $M^2=0$ over $\\mathbb F_2$"
+      },
+      {
+        "name": "Row-reduction over $\\mathbb F_2$",
+        "role": "compute rank of a small explicit $4\\times4$ matrix in the canonical case"
+      }
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use commutation with $J_2$ to force Toeplitz block structure for $C(J)$.",
+      "Apply a permutation similarity to obtain $\\bar B=\\begin{pmatrix}M&N\\\\0&M\\end{pmatrix}$ where $M,N$ are free $2\\times2$ matrices.",
+      "Compute $\\bar B^2$ and exploit characteristic 2 to reduce $MN+NM=0$ to $MN=NM$.",
+      "Split into $M=0$ and $M\\neq0$; count $N$ in each case and evaluate rank."
+    ],
+    "finish_type": "finite_enumeration"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "itertools",
+        "reason": "brute-force enumeration of $4\\times4$ matrices over $\\mathbb F_2$ for verification"
+      },
+      {
+        "name": "numpy",
+        "reason": "implement matrix multiplication mod 2 and basic array operations"
+      }
+    ],
+    "import_hint(s)": [
+      "from itertools import product",
+      "import numpy as np"
+    ],
+    "task(s)": [
+      {
+        "name": "brute_force_enumerate_centralizer_and_square_zero",
+        "reason": "independently verify the symbolic count by filtering all $4\\times4$ matrices with $BJ=JB$, $B^2=0$, and rank 2"
+      },
+      {
+        "name": "verify_similarity_pair_parameterization",
+        "reason": "confirm that the permutation similarity gives a bijection $B\\leftrightarrow(M,N)$ and preserves constraints"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "q": 2,
+      "block_partition": "(2,2)",
+      "nilpotency_degree": 2,
+      "target_rank": 2
+    },
+    "final_answer": {
+      "value": 18,
+      "normalized": 18
+    }
+  }
+}

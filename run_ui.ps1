@@ -1,10 +1,10 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
-    [string]$ModelDir = "",
-    [switch]$LegacyTk,
+    [switch]$Tools,
     [switch]$NoAutoInstallDeps,
-    [switch]$NoMathJaxBootstrap,
-    [switch]$BootstrapVerbose
+    [int]$Port = 8000,
+    [string]$PathPrefix = "/AthenaV5",
+    [string]$PythonExe = ""
 )
 
 Set-StrictMode -Version Latest
@@ -12,115 +12,96 @@ $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $QtUi = Join-Path $ProjectRoot "qt_ui.py"
-$TkUi = Join-Path $ProjectRoot "ui.py"
-$BootstrapScript = Join-Path $ProjectRoot "scripts\bootstrap_mathjax.ps1"
 $Requirements = Join-Path $ProjectRoot "requirements.txt"
 
 function Resolve-PythonExe {
-    $Candidates = @(
+    param([string]$ExplicitPath)
+    if ($ExplicitPath -and (Test-Path -LiteralPath $ExplicitPath)) {
+        return (Resolve-Path -LiteralPath $ExplicitPath).Path
+    }
+    $candidates = @(
         (Join-Path $ProjectRoot ".venv\Scripts\python.exe"),
         (Join-Path (Split-Path -Parent $ProjectRoot) ".venv\Scripts\python.exe")
     )
-    foreach ($Candidate in $Candidates) {
-        if (Test-Path -LiteralPath $Candidate) {
-            return (Resolve-Path -LiteralPath $Candidate).Path
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath $candidate) {
+            return (Resolve-Path -LiteralPath $candidate).Path
         }
     }
-    $PythonCmd = Get-Command python -ErrorAction SilentlyContinue
-    if ($PythonCmd) {
-        return $PythonCmd.Source
-    }
+    $cmd = Get-Command python -ErrorAction SilentlyContinue
+    if ($cmd) { return $cmd.Source }
     throw "No Python runtime found. Activate/create a venv first."
 }
 
 function Test-QtDeps {
-    param([string]$PythonExe)
-    & $PythonExe -c "import PySide6; from PySide6.QtWebEngineWidgets import QWebEngineView" 1>$null 2>$null
+    param([string]$ResolvedPython)
+    & $ResolvedPython -c "import PySide6; from PySide6.QtWebEngineWidgets import QWebEngineView" 1>$null 2>$null
     return ($LASTEXITCODE -eq 0)
 }
 
 function Install-UiDeps {
-    param([string]$PythonExe)
+    param([string]$ResolvedPython)
     if (Test-Path -LiteralPath $Requirements) {
-        & $PythonExe -m pip install --disable-pip-version-check -r $Requirements
+        & $ResolvedPython -m pip install --disable-pip-version-check -r $Requirements
     } else {
-        & $PythonExe -m pip install --disable-pip-version-check PySide6 PySide6-Addons markdown-it-py
+        & $ResolvedPython -m pip install --disable-pip-version-check PySide6 PySide6-Addons
     }
     return ($LASTEXITCODE -eq 0)
 }
 
-function Invoke-MathJaxBootstrap {
-    if ($NoMathJaxBootstrap) { return }
-    if (-not (Test-Path -LiteralPath $BootstrapScript)) { return }
-    if ($BootstrapVerbose) { Write-Host "[bootstrap] running MathJax bootstrap..." }
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $BootstrapScript -ProjectRoot $ProjectRoot
+$ResolvedPython = Resolve-PythonExe -ExplicitPath $PythonExe
+if (-not (Test-Path -LiteralPath $QtUi)) {
+    throw "qt_ui.py not found: $QtUi"
 }
 
-$PythonExe = Resolve-PythonExe
-$LaunchTk = [bool]$LegacyTk
-$ExitCode = 0
-$ResolvedModelDir = ""
-if ($ModelDir -and $ModelDir.Trim().Length -gt 0) {
-    $Candidate = if ([System.IO.Path]::IsPathRooted($ModelDir)) { $ModelDir } else { Join-Path $ProjectRoot $ModelDir }
-    if (-not (Test-Path -LiteralPath $Candidate)) {
-        throw "Model path not found: $Candidate"
-    }
-    $ResolvedModelDir = (Resolve-Path -LiteralPath $Candidate).Path
+$QtReady = Test-QtDeps -ResolvedPython $ResolvedPython
+if (-not $QtReady -and -not $NoAutoInstallDeps) {
+    Write-Host "Installing desktop UI dependencies..."
+    $null = Install-UiDeps -ResolvedPython $ResolvedPython
+    $QtReady = Test-QtDeps -ResolvedPython $ResolvedPython
 }
-
-if (-not $LaunchTk) {
-    if (-not (Test-Path -LiteralPath $QtUi)) {
-        Write-Warning "qt_ui.py not found. Falling back to Tk UI."
-        $LaunchTk = $true
-    } else {
-        $QtReady = Test-QtDeps -PythonExe $PythonExe
-        if (-not $QtReady -and -not $NoAutoInstallDeps) {
-            Write-Host "Installing UI dependencies..."
-            $null = Install-UiDeps -PythonExe $PythonExe
-            $QtReady = Test-QtDeps -PythonExe $PythonExe
-        }
-        if (-not $QtReady) {
-            Write-Warning "Qt deps missing. Use -LegacyTk or install requirements."
-            $LaunchTk = $true
-        } else {
-            Invoke-MathJaxBootstrap
-        }
-    }
+if (-not $QtReady) {
+    throw "PySide6 + QtWebEngine is required. Install requirements or rerun without -NoAutoInstallDeps."
 }
 
 Set-Location -LiteralPath $ProjectRoot
 
-if (-not $LaunchTk) {
-    if (-not $env:QTWEBENGINE_DISABLE_SANDBOX) { $env:QTWEBENGINE_DISABLE_SANDBOX = "1" }
-    if (-not $env:QT_OPENGL) { $env:QT_OPENGL = "software" }
-    if (-not $env:QT_QUICK_BACKEND) { $env:QT_QUICK_BACKEND = "software" }
-
-    $QtArgs = @($QtUi)
-    if ($ResolvedModelDir) { $QtArgs += @("--model-dir", $ResolvedModelDir) }
-    Write-Host "Launching mode=qt-web with: $PythonExe"
-    & $PythonExe @QtArgs
-    $ExitCode = $LASTEXITCODE
-
-    if ($ExitCode -ne 0) {
-        Write-Warning "Qt UI failed (exit=$ExitCode). Falling back to Tk UI."
-        $LaunchTk = $true
+if (-not $env:QTWEBENGINE_DISABLE_SANDBOX) { $env:QTWEBENGINE_DISABLE_SANDBOX = "1" }
+if (-not $env:QT_LOGGING_RULES) {
+    $env:QT_LOGGING_RULES = "qt.webenginecontext.warning=false;qt.webenginecontext.info=false;qt.webenginecontext.debug=false;qt.qpa.gl=false"
+}
+if (-not $env:QT_OPENGL) { $env:QT_OPENGL = "software" }
+if (-not $env:QT_QUICK_BACKEND) { $env:QT_QUICK_BACKEND = "software" }
+$RequiredQtFlags = @(
+    "--no-sandbox",
+    "--disable-gpu-sandbox",
+    "--disable-gpu",
+    "--disable-gpu-compositing",
+    "--use-angle=swiftshader",
+    "--disable-logging",
+    "--log-level=3"
+)
+$ExistingQtFlags = @()
+if ($env:QTWEBENGINE_CHROMIUM_FLAGS) {
+    $ExistingQtFlags = $env:QTWEBENGINE_CHROMIUM_FLAGS -split "\s+" | Where-Object { $_ -and $_.Trim().Length -gt 0 }
+}
+foreach ($Flag in $RequiredQtFlags) {
+    if ($ExistingQtFlags -notcontains $Flag) {
+        $ExistingQtFlags += $Flag
     }
 }
+$env:QTWEBENGINE_CHROMIUM_FLAGS = ($ExistingQtFlags -join " ").Trim()
 
-if ($LaunchTk) {
-    if (-not (Test-Path -LiteralPath $TkUi)) {
-        throw "Tk UI entrypoint not found: $TkUi"
-    }
-    $TkArgs = @($TkUi)
-    if ($ResolvedModelDir) { $TkArgs += @("--model-dir", $ResolvedModelDir) }
-    Write-Host "Launching mode=legacy-tk with: $PythonExe"
-    & $PythonExe @TkArgs
-    $ExitCode = $LASTEXITCODE
-}
+$Args = @($QtUi)
+if ($Tools) { $Args += "--tools" }
+
+Write-Host "Launching Athena V5 desktop..."
+Write-Host "mode=desktop engine=local tools=$([int][bool]$Tools)"
+& $ResolvedPython @Args
+$ExitCode = $LASTEXITCODE
 
 if ($MyInvocation.InvocationName -eq ".") {
     $global:LASTEXITCODE = $ExitCode
     return
 }
 exit $ExitCode
-

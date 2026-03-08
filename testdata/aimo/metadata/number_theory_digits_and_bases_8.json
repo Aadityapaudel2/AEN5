@@ -1,0 +1,252 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "digits_in_base_b__divisibility_tests__repunit_palindrome",
+    "instance_id": "imocompendium:3.2_IMO1960_P1_three_digit_divisible_by_11_and_digit_squares",
+    "short_name": "Digits/base-$b$ representation with divisibility tests (mod $9$, $11$, repunits)",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "digits & bases",
+      "modular arithmetic"
+    ],
+    "topic_path": [
+      "digits_and_bases",
+      "divisibility_tests",
+      "base_b_expansion"
+    ],
+    "tags": [
+      "base_b_representation",
+      "base_change",
+      "casting_out_nines",
+      "constraints_on_representation",
+      "decimal_divisibility_rules",
+      "digit_constraints_solver",
+      "digit_sum",
+      "digital_root",
+      "divisibility_via_digits",
+      "mod_11_alternating_sum_optional",
+      "mod_3_mod_9_digits",
+      "mod_invariant",
+      "palindromes_in_base_b_optional",
+      "pigeonhole_on_digits",
+      "positional_value_expansion",
+      "repunit_representation",
+      "residue_classes"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Given digit constraints of an integer in base $b$ (including possible repunit/palindrome structure), determine a uniquely specified value derived from the number using digit-based divisibility tests (e.g., remainder modulo $b-1$ / $b+1$, or reconstruction of the number when combined with other constraints).",
+    "object(s)": [
+      {
+        "name": "b",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "digits",
+        "type": "sequence",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "task_mode",
+        "type": "other",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "out",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$b\\in\\mathbb{N},\\ b\\ge 2$ (base)",
+      "A digit vector $(d_0,\\dots,d_{L-1})$ with $0\\le d_i<b$ describing $N=\\sum_{i=0}^{L-1} d_i b^i$",
+      "Additional constraints may be imposed: fixed length $L$, palindrome condition, repunit condition, or congruence conditions like $N\\equiv 0\\pmod m$."
+    ],
+    "ask": [
+      "Compute the requested digit-derived quantity (e.g., $N\\bmod(b-1)$ via digit sum; $N\\bmod(b+1)$ via alternating sum; or recover $N$ uniquely from combined digit and congruence constraints)."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "b",
+        "type": "int",
+        "domain": "$b\\ge 2$",
+        "purpose": "sets the positional value system and the relevant moduli $b\\pm1$"
+      },
+      {
+        "name": "L",
+        "type": "int",
+        "domain": "$L\\ge 1$",
+        "purpose": "controls number of digits"
+      },
+      {
+        "name": "digits",
+        "type": "other",
+        "domain": "tuple $(d_0,\\dots,d_{L-1})$ with $0\\le d_i<b$ and $d_{L-1}\\ne 0$",
+        "purpose": "encodes the number in base $b$"
+      },
+      {
+        "name": "structure_mode",
+        "type": "enum",
+        "domain": "{free, repunit, palindrome_optional}",
+        "purpose": "adds structured digit constraints"
+      },
+      {
+        "name": "mod_test_mode",
+        "type": "enum",
+        "domain": "{mod_b_minus_1, mod_b_plus_1, mod_3_mod_9_digits, mod_11_alternating_sum_optional}",
+        "purpose": "selects which digit test is used"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "positional_expansion",
+        "depends_on": [
+          "b",
+          "digits"
+        ],
+        "statement": "$N=\\sum_{i=0}^{L-1} d_i b^i$ (positional value expansion) determines $N$ uniquely from its base-$b$ digits."
+      },
+      {
+        "name": "digit_sum_mod_b_minus_1",
+        "depends_on": [
+          "b",
+          "digits"
+        ],
+        "statement": "Because $b\\equiv 1\\pmod{b-1}$, we have $N\\equiv \\sum_i d_i\\pmod{b-1}$ (digit sum test)."
+      }
+    ],
+    "operator(s)": [
+      "base_b_representation",
+      "base_change",
+      "positional_value_expansion",
+      "digit_sum",
+      "digital_root",
+      "casting_out_nines",
+      "mod_3_mod_9_digits",
+      "mod_11_alternating_sum_optional",
+      "divisibility_via_digits",
+      "constraints_on_representation",
+      "repunit_representation",
+      "palindromes_in_base_b_optional",
+      "pigeonhole_on_digits",
+      "residue_classes",
+      "mod_invariant"
+    ],
+    "essential_assumption(s)": [
+      "Digit-based congruence tests rely on congruences like $b\\equiv 1\\pmod{b-1}$ and $b\\equiv -1\\pmod{b+1}$. For the classical decimal \"mod 11 alternating sum\" rule, the structural fact is $10\\equiv -1\\pmod{11}$.",
+      "If the task is \"recover $N$\", instances must impose enough independent constraints (digit relations + congruences) to make $N$ unique."
+    ],
+    "uniqueness_certificate(s)": [
+      "If the output is a remainder, it is normalized to the unique representative in $\\{0,1,\\dots,m-1\\}$. If the output is the reconstructed number $N$, uniqueness follows from the positional expansion together with the instance’s constraint system."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "positional_value_expansion",
+        "inputs": [
+          "digits $(d_i)$",
+          "base $b$"
+        ],
+        "purpose": "rewrite the integer in a form suitable for modular reduction",
+        "outputs": [
+          "expression $N=\\sum d_i b^i$"
+        ]
+      },
+      {
+        "name": "divisibility_via_digits",
+        "inputs": [
+          "positional expansion",
+          "chosen modulus"
+        ],
+        "purpose": "reduce $b^i$ modulo the modulus to get a digit-based test",
+        "outputs": [
+          "congruence linking $N$ to digit sum / alternating sum"
+        ]
+      },
+      {
+        "name": "pigeonhole_on_digits",
+        "inputs": [
+          "constraints on digit sequences (optional)"
+        ],
+        "purpose": "prove existence of repetitions or force a structured digit pattern",
+        "outputs": [
+          "a reduced finite set of candidate digit configurations"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "mod_3_mod_9_digits",
+        "role": "decimal special case of the $b-1$ digit-sum test"
+      },
+      {
+        "name": "mod_11_alternating_sum_optional",
+        "role": "decimal special case of the $b+1$ alternating-sum test"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "A base-$b$ number is a linear combination of powers of $b$; reducing those powers modulo a chosen modulus yields digit tests."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Reduce $b^i$ modulo a convenient modulus so that $b^i$ collapses to $\\pm 1$ (or another short cycle), turning the congruence into a digit-sum/alternating-sum condition.",
+      "When reconstruction is required, combine congruences with digit constraints to isolate a unique digit vector."
+    ],
+    "finish_type": "finite_enumeration"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, lcm, modular exponentiation scaffolding."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional symbolic/number theory utilities: factorint, primerange, mod_inverse, crt; useful for verification tasks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, crt, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Validate that the produced object(s) satisfy all defining congruences/divisibility/Diophantine constraints for randomly sampled parameters within the declared domain."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Cross-check the main result via an alternative computation (e.g., brute force for small bounds, or an independent formula such as factorization vs. valuation, or CRT reconstruction vs. direct search)."
+      },
+      {
+        "name": "digit_rule_bruteforce_small_L",
+        "reason": "Enumerate all digit vectors for small $(b,L)$ to confirm that the digit-sum / alternating-sum congruence matches direct computation of $N\\bmod m$."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 792,
+      "normalized": 792
+    }
+  }
+}

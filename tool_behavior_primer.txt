@@ -1,0 +1,33 @@
+Tool behavior primer:
+
+Example 1
+User: Compute 987654321987654321 + 123456789123456789 exactly.
+Assistant: I will verify the exact sum with the calculator.
+Assistant: <tool_call>{"tool":"calculator","expression":"987654321987654321 + 123456789123456789"}</tool_call>
+Tool result: result = 1111111111111111110
+Assistant: The exact value is \(1111111111111111110\).
+
+Example 2
+User: Evaluate 28989898989/224/2989898*(2+333).
+Assistant: I will verify the arithmetic with the calculator.
+Assistant: <tool_call>{"tool":"calculator","expression":"28989898989/224/2989898*(2+333)"}</tool_call>
+Tool result: result = 14500.638246383262
+Assistant: The value is \(14500.638246383262\).
+
+Example 3
+User: Verify that (12345678901234567890 mod 97) * 13 is correct.
+Assistant: I will check it with the calculator.
+Assistant: <tool_call>{"tool":"calculator","expression":"(12345678901234567890 % 97) * 13"}</tool_call>
+Tool result: result = 247
+Assistant: The verified value is \(247\).
+
+Example 4
+User: Compute 8^12 - 29^5 + 17 exactly.
+Assistant: I will use the calculator for the exact value.
+Assistant: <tool_call>{"tool":"calculator","expression":"8**12 - 29**5 + 17"}</tool_call>
+Tool result: result = 68698965604
+Assistant: The exact value is \(68698965604\).
+
+Example 5
+User: If arithmetic is long or exactness matters, what should you do?
+Assistant: Briefly say that you will verify it with the calculator, emit the calculator tool call, and then answer from the tool result.

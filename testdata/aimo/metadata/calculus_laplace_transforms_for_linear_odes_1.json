@@ -1,0 +1,298 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "laplace_transform_ode__denominator_roots__linear_re_im_map_set_sum_mod",
+    "instance_id": "ode_ypp_2yp_y__exp_cos_forcing__re_plus_2im_set_sum_mod1000",
+    "short_name": "Laplace ODE \\to denominator roots \\to set-sum of Re+2Im mod 1000",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "calculus",
+    "subdomain(s)": [
+      "Laplace transforms for linear ODEs",
+      "rational functions and partial fractions",
+      "complex roots and multiplicities",
+      "root-derived invariants (Re/Im mapping)"
+    ],
+    "topic_path": [
+      "calculus",
+      "differential_equations",
+      "Laplace_transform",
+      "rational_functions",
+      "complex_numbers"
+    ],
+    "tags": [
+      "initial_value_problem",
+      "constant_coefficient_ode",
+      "Laplace_transform",
+      "transfer_function_denominator",
+      "repeated_root",
+      "complex_conjugate_roots",
+      "set_deduplication",
+      "modular_arithmetic"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Solve a constant-coefficient IVP via Laplace transform to obtain f(s) as a rational function. Extract the denominator polynomial in lowest terms, list its complex roots with multiplicity, map each root to Re(r)+2Im(r), deduplicate to a set, sum, scale, take absolute value, and reduce mod 1000.\n",
+    "object(s)": [
+      {
+        "name": "y",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "ode",
+        "type": "differential_equation",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "y0",
+        "type": "complex_number",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "y1",
+        "type": "complex_number",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "f",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "P",
+        "type": "polynomial",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "roots",
+        "type": "multiset",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "S",
+        "type": "set",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "M",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "y satisfies y''(x)+2y'(x)+y(x)=e^{-3x}\\cos(2x) with y(0)=0 and y'(0)=0.",
+      "f(s)=L{y(x)}(s).",
+      "P(s) is the denominator of f(s) in lowest terms.",
+      "r_1,...,r_n are the complex roots of P(s) counted with multiplicity.",
+      "S={Re(r_i)+2Im(r_i) : i=1,...,n} (set, duplicates removed).",
+      "M=|50 * sum_{x in S} x|.",
+      "Compute M (mod 1000)."
+    ],
+    "ask": [
+      "Determine the residue class of M modulo 1000 (representative in {0,...,999})."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_1000_representative_in_0_to_999",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "forcing",
+        "type": "function_family",
+        "domain": "exponent_times_trig",
+        "purpose": "ensures Laplace transform yields shifted rational terms (here e^{-3x}cos(2x))"
+      },
+      {
+        "name": "characteristic_coeffs",
+        "type": "tuple",
+        "domain": "constant_coefficients",
+        "purpose": "determines the homogeneous factor of the denominator (here y''+2y'+y)"
+      },
+      {
+        "name": "scaling_factor",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "multiplies the set-sum before absolute value and mod reduction (here 50)"
+      },
+      {
+        "name": "set_map",
+        "type": "mapping",
+        "domain": "root -> Re(r)+2Im(r)",
+        "purpose": "defines the invariant extracted from each root"
+      },
+      {
+        "name": "modulus",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "final residue computation (here 1000)"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "denominator_from_transfer_and_forcing",
+        "depends_on": [
+          "ode",
+          "forcing"
+        ],
+        "statement": "For constant-coefficient IVPs solved by Laplace transform, f(s) is rational with denominator given by the characteristic polynomial factors times forcing-shift factors (after simplification).\n"
+      },
+      {
+        "name": "conjugate_pair_re_im_values",
+        "depends_on": [
+          "roots"
+        ],
+        "statement": "Non-real roots occur in conjugate pairs; applying Re(r)+2Im(r) typically yields distinct real values unless a collision occurs, which is removed by set-deduplication.\n"
+      }
+    ],
+    "operator(s)": [
+      "Laplace_transform",
+      "apply_initial_conditions",
+      "simplify_rational_function",
+      "extract_denominator_polynomial",
+      "root_multiset_with_multiplicity",
+      "map_root_to_Re_plus_linear_Im",
+      "set_deduplicate",
+      "sum_over_set",
+      "absolute_value",
+      "modular_reduction"
+    ],
+    "essential_assumption(s)": [
+      "The denominator is taken after full simplification (lowest terms).",
+      "Roots are counted with multiplicity before applying the set map.",
+      "Re(z), Im(z) are the usual real and imaginary parts over ℂ."
+    ],
+    "uniqueness_certificate(s)": [
+      "The IVP uniquely determines y, hence uniquely determines f(s). Lowest-terms reduction fixes P(s) uniquely up to a unit scalar, which does not change its roots. The multiset of roots with multiplicity is unique; applying the map Re+2Im, set-deduplication, summation, scaling, absolute value, and mod reduction yields a unique integer residue class mod 1000.\n"
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Laplace_IVP_to_rational",
+        "inputs": [
+          "ode",
+          "y0",
+          "y1"
+        ],
+        "purpose": "convert the IVP to an algebraic equation for f(s)",
+        "outputs": [
+          "f(s)"
+        ]
+      },
+      {
+        "name": "denominator_and_roots_extraction",
+        "inputs": [
+          "f(s)"
+        ],
+        "purpose": "compute P(s) in lowest terms and its roots with multiplicity",
+        "outputs": [
+          "roots"
+        ]
+      },
+      {
+        "name": "root_invariant_set_sum",
+        "inputs": [
+          "roots"
+        ],
+        "purpose": "compute S={Re(r)+2Im(r)} and its sum",
+        "outputs": [
+          "sum_S"
+        ]
+      },
+      {
+        "name": "scale_abs_mod",
+        "inputs": [
+          "sum_S",
+          "scaling_factor",
+          "modulus"
+        ],
+        "purpose": "compute M=|scaling_factor * sum_S| and reduce mod modulus",
+        "outputs": [
+          "M_mod"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Laplace_transform_of_derivatives",
+        "role": "L{y'}=s f(s)-y(0), L{y''}=s^2 f(s)-s y(0)-y'(0)"
+      },
+      {
+        "name": "Laplace_transform_of_e^{-ax}cos(bx)",
+        "role": "yields a shifted rational term (s+a)/((s+a)^2+b^2)"
+      },
+      {
+        "name": "roots_of_polynomial_with_real_coeffs",
+        "role": "complex roots occur in conjugate pairs"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "convert differential equations to algebra via Laplace transform, then read invariants from the denominator roots"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use Laplace transform plus initial-data substitution to isolate f(s) as a rational function.",
+      "Identify the denominator factors (including repeated roots) and list roots with multiplicity.",
+      "Apply the Re+2Im map and set-deduplication before summing, then scale/abs/mod."
+    ],
+    "finish_type": "explicit_computation_to_mod_residue"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "sympy",
+        "reason": "symbolic Laplace transforms, rational simplification, polynomial factorization, and exact root extraction"
+      }
+    ],
+    "import_hint(s)": [
+      "from sympy import symbols, laplace_transform, factor, Poly"
+    ],
+    "task(s)": [
+      {
+        "name": "symbolic_verify_f",
+        "reason": "compute f(s) from the IVP and simplify to lowest terms"
+      },
+      {
+        "name": "extract_P_and_roots",
+        "reason": "form P(s) from the denominator of f(s) and compute roots with multiplicity"
+      },
+      {
+        "name": "compute_set_sum_and_mod",
+        "reason": "map roots to Re+2Im, deduplicate, sum, scale, abs, and reduce mod 1000"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "scaling_factor": 50,
+      "modulus": 1000,
+      "forcing": "e^{-3x} cos(2x)",
+      "initial_conditions": {
+        "y0": 0,
+        "y1": 0
+      }
+    },
+    "final_answer": {
+      "value": 350,
+      "normalized": 350
+    }
+  }
+}

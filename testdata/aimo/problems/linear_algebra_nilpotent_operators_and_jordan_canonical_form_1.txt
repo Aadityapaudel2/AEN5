@@ -1,0 +1,108 @@
+Symmetric dimension of matrices commuting with both J and J^T from nullities
+
+Let n=100 and let J\inM_100(ℝ) be a nilpotent matrix in Jordan canonical form (all eigenvalues 0). You are told the nullities
+$$
+n_k=\dim\ker(J^k)\quad (k=1,2,3,4,5)
+$$
+are
+$$
+n_1=40,\; n_2=68,\; n_3=86,\; n_4=96,\; n_5=100.
+Define the "double centralizer" subspace
+W=\{X\in M_{100}(\mathbb R):\; XJ=JX\ \text{and}\ XJ^{T}=J^{T}X\}.
+$$
+Let S be the subspace of symmetric matrices S={X:X^T=X}. Compute
+$$
+d=\dim(W\cap S).
+$$
+
+Solution.
+Step 1 (difference_method_for_block_counts).
+For a nilpotent Jordan matrix, each Jordan block of size s contributes $\min(k,s)$ to $\dim\ker(J^k)$. Let $m_t$ be the number of Jordan blocks of size $\ge t$. Then
+$$
+m_t=n_t-n_{t-1}\quad (n_0:=0).
+$$
+Compute:
+- $m_1=n_1-n_0=40$,
+- $m_2=n_2-n_1=68-40=28$,
+- $m_3=n_3-n_2=86-68=18$,
+- $m_4=n_4-n_3=96-86=10$,
+- $m_5=n_5-n_4=100-96=4$,
+and since $n_5=100=n$, all blocks have size \leq5, so $m_6=0$.
+
+Let $k_t$ be the number of Jordan blocks of size exactly t. Then
+$$
+k_t=m_t-m_{t+1}.
+$$
+Hence
+$$
+k_1=40-28=12,\quad
+k_2=28-18=10,\quad
+k_3=18-10=8,\quad
+k_4=10-4=6,\quad
+k_5=4-0=4.
+$$
+
+Step 2 (double_commutation_block_vanish; W_decomposition).
+Reorder the Jordan basis so that J is block diagonal with blocks grouped by size. Then any $X\in M_{100}(\mathbb R)$ can be written in corresponding block form, where each block $X_{r,s}$ maps from an s-dimensional Jordan block to an r-dimensional Jordan block.
+
+The conditions $XJ=JX$ and $XJ^T=J^T X$ restrict each block $X_{r,s}$ to satisfy simultaneously
+$$
+J_r\,X_{r,s}=X_{r,s}\,J_s,\qquad
+J_r^T\,X_{r,s}=X_{r,s}\,J_s^T,
+$$
+where $J_r$ is the r×r nilpotent Jordan block.
+
+Key lemma.
+For any r,s\geq1, the space of real matrices $A\in M_{r\times s}(\mathbb R)$ satisfying
+$$
+J_rA=AJ_s\quad\text{and}\quad J_r^TA=AJ_s^T
+$$
+has dimension 1 if r=s (and then A is a scalar multiple of $I_r$), and has dimension 0 if r\neqs.
+
+(Reason: $J_rA=AJ_s$ forces A to be "upper Toeplitz," while $J_r^TA=AJ_s^T$ forces A to be "lower Toeplitz." A rectangular matrix cannot be both unless it is 0; when r=s, being both forces A to be constant on every diagonal and every anti-diagonal, hence A=cI_r.)
+
+Consequences for W:
+- If two Jordan blocks have different sizes, the corresponding off-diagonal block of X must be 0.
+- If two Jordan blocks both have size t, the corresponding block is $c\cdot I_t$.
+
+Therefore, on the direct sum of the $k_t$ blocks of size t, every $X\in W$ acts as
+$$
+X\big|_{\text{size }t\text{ part}} = C_t \otimes I_t,
+$$
+where $C_t\in M_{k_t}(\mathbb R)$ is arbitrary. Hence
+$$
+W \cong \bigoplus_{t=1}^5 M_{k_t}(\mathbb R),
+$$
+and under this identification, transpose corresponds to $C_t\mapsto C_t^T$.
+
+Step 3 (symmetric_dimension_sum).
+Now $X\in W\cap S$ iff each $C_t$ is symmetric. The dimension of symmetric k×k real matrices is $k(k+1)/2$. Therefore
+$$
+d=\sum_{t=1}^5 \frac{k_t(k_t+1)}{2}
+= \frac{12\cdot13}{2}+\frac{10\cdot11}{2}+\frac{8\cdot9}{2}+\frac{6\cdot7}{2}+\frac{4\cdot5}{2}.
+$$
+Compute:
+$$
+\frac{12\cdot13}{2}=78,\;
+\frac{10\cdot11}{2}=55,\;
+\frac{8\cdot9}{2}=36,\;
+\frac{6\cdot7}{2}=21,\;
+\frac{4\cdot5}{2}=10.
+$$
+So
+$$
+d=78+55+36+21+10=200.
+$$
+
+Uniqueness Test
+1) (Jordan type is uniquely determined by nullities.)
+For a nilpotent Jordan matrix, $\dim\ker(J^k)=\sum_{\text{blocks}}\min(k,s)$. The successive differences $m_t=n_t-n_{t-1}$ uniquely give the numbers of blocks of size \geqt, and then $k_t=m_t-m_{t+1}$ uniquely gives the multiplicity of blocks of each exact size. Thus the multiset of Jordan block sizes is uniquely determined by the given nullities.
+
+2) (W is uniquely determined from the Jordan type.)
+Once the block sizes are fixed, the blockwise constraints defining W reduce to the simultaneous intertwining conditions
+$J_rA=AJ_s$ and $J_r^TA=AJ_s^T$ on each r×s block. The lemma shows the solution space is uniquely forced: it is 0 when r\neqs and 1-dimensional (spanned by identity) when r=s. Hence W is uniquely (up to canonical isomorphism) $\bigoplus_t M_{k_t}(\mathbb R)$.
+
+3) (d is uniquely determined.)
+Within each $M_{k_t}(\mathbb R)$, transpose is the usual transpose, so the symmetric subspace has dimension $k_t(k_t+1)/2$. Summing over t gives a unique integer d. Therefore the computed value $d=200$ is the only possible answer.
+
+200

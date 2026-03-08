@@ -1,0 +1,220 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "Dirichlet_convolution__mobius_inversion__recover_arithmetic_function",
+    "instance_id": "imocompendium:3.30.2_Longlisted_TH A3_convolution_product_problem99",
+    "short_name": "Dirichlet convolution and Möbius inversion on arithmetic functions",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "arithmetic functions",
+      "inversion techniques"
+    ],
+    "topic_path": [
+      "arithmetic_functions",
+      "Dirichlet_convolution",
+      "mobius_inversion"
+    ],
+    "tags": [
+      "Dirichlet_convolution_optional",
+      "convolution_inverse",
+      "functional_equations_on_arith_functions_optional",
+      "inclusion_exclusion_on_divisors",
+      "lambda_carmichael_optional",
+      "mobius_inversion_optional",
+      "mu_mobius_optional",
+      "multiplicative_functions",
+      "parity_of_arith_functions"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Work with arithmetic functions under Dirichlet (divisor-sum) convolution. Given a relation such as $F = f * 1$ (i.e., $F(n)=\\sum_{d\\mid n} f(d)$), recover $f$ using Möbius inversion and evaluate $f(n_0)$ for a specified input $n_0$.",
+    "object(s)": [
+      {
+        "name": "F",
+        "type": "function",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n_0",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "f(n_0)",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$F:\\mathbb{N}\\to\\mathbb{Z}$ is explicitly specified (by formula or by values on the divisor lattice of $n_0$)",
+      "There exists an arithmetic function $f$ with $F = f * 1$, i.e. $F(n)=\\sum_{d\\mid n} f(d)$ for all $n$ in the relevant domain",
+      "$n_0\\in\\mathbb{N}$ is the evaluation point"
+    ],
+    "ask": [
+      "Compute $f(n_0)$ (and in variants: compute $f$ on all divisors of $n_0$) using Möbius inversion / convolution algebra."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "n_0",
+        "type": "int",
+        "domain": "$n_0\\ge 1$",
+        "purpose": "evaluation point; determines the divisor poset involved"
+      },
+      {
+        "name": "F_spec",
+        "type": "other",
+        "domain": "explicit rule for $F(n)$ on $n\\mid n_0$",
+        "purpose": "encodes the \"known\" function to be inverted"
+      },
+      {
+        "name": "relation_mode",
+        "type": "enum",
+        "domain": "{F_equals_f_convolved_with_1, F_equals_f_convolved_with_g}",
+        "purpose": "selects the convolution equation to invert"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "convolution_associativity",
+        "depends_on": [
+          "relation_mode"
+        ],
+        "statement": "Dirichlet convolution is associative and commutative; inversion is performed inside this algebra when the convolving function is invertible."
+      },
+      {
+        "name": "mobius_inverse_of_1",
+        "depends_on": [
+          "n_0"
+        ],
+        "statement": "The Möbius function $\\mu$ is the Dirichlet inverse of the constant-1 function: $\\mu * 1 = \\varepsilon$ (identity at $n=1$)."
+      }
+    ],
+    "operator(s)": [
+      "Dirichlet_convolution_optional",
+      "mobius_inversion_optional",
+      "mu_mobius_optional",
+      "lambda_carmichael_optional",
+      "functional_equations_on_arith_functions_optional",
+      "multiplicative_functions",
+      "parity_of_arith_functions"
+    ],
+    "essential_assumption(s)": [
+      "The relation_mode must specify a convolution equation where the right-hand convolving function is invertible in the Dirichlet convolution algebra (e.g., $1$ with inverse $\\mu$).",
+      "The instance supplies enough information about $F$ on the divisor lattice of $n_0$ to compute the divisor sums."
+    ],
+    "uniqueness_certificate(s)": [
+      "If $F=f*1$, then convolving both sides with $\\mu$ yields $f=F*\\mu$, so $f(n_0)=\\sum_{d\\mid n_0} \\mu(d)F(n_0/d)$; the right-hand side is uniquely determined, hence the output is unique."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Dirichlet_convolution_optional",
+        "inputs": [
+          "arithmetic functions $f,g$"
+        ],
+        "purpose": "encode divisor-sum identities as algebraic products",
+        "outputs": [
+          "convolution equation such as $F=f*g$"
+        ]
+      },
+      {
+        "name": "mobius_inversion_optional",
+        "inputs": [
+          "relation $F=f*1$"
+        ],
+        "purpose": "invert the divisor-sum transform",
+        "outputs": [
+          "explicit formula $f=F*\\mu$"
+        ]
+      },
+      {
+        "name": "mu_mobius_optional",
+        "inputs": [
+          "divisor sums"
+        ],
+        "purpose": "provide the inverse weights $\\mu(d)$",
+        "outputs": [
+          "cancellation/inclusion-exclusion on the divisor poset"
+        ]
+      },
+      {
+        "name": "multiplicative_functions",
+        "inputs": [
+          "prime factorization of $n_0$"
+        ],
+        "purpose": "(optional) evaluate divisor sums efficiently by multiplicativity when $F$ is multiplicative",
+        "outputs": [
+          "product decomposition across primes"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "exact_division_arguments",
+        "role": "implement divisor-sum expansions by enumerating divisors and checking $d\\mid n$"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Divisor-sum transforms form a convolution algebra; Möbius inversion is inclusion–exclusion on the divisor lattice."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Rewrite the given relation as a Dirichlet convolution equation and multiply by the Dirichlet inverse (often $\\mu$).",
+      "If $n_0$ is large, exploit multiplicativity to factor the divisor sum into a product over prime powers."
+    ],
+    "finish_type": "closed_form"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, lcm, modular exponentiation scaffolding."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional symbolic/number theory utilities: factorint, primerange, mod_inverse, crt; useful for verification tasks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, crt, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Validate that the produced object(s) satisfy all defining congruences/divisibility/Diophantine constraints for randomly sampled parameters within the declared domain."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Cross-check the main result via an alternative computation (e.g., brute force for small bounds, or an independent formula such as factorization vs. valuation, or CRT reconstruction vs. direct search)."
+      },
+      {
+        "name": "divisor_sum_bruteforce_check",
+        "reason": "Enumerate all divisors of $n_0$ and compute $\\sum_{d\\mid n_0}\\mu(d)F(n_0/d)$ directly; cross-check with any derived multiplicative product form."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 608,
+      "normalized": 608
+    }
+  }
+}

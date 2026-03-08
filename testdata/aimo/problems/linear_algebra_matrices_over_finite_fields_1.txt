@@ -1,0 +1,93 @@
+Commuting square-zero 3x3 matrices over F2
+
+Let 𝔽₂ be the field with two elements and work in M₃(𝔽₂). An ordered pair (A,B) \in M₃(𝔽₂)×M₃(𝔽₂) is called square-zero commuting if
+1) A² = 0,
+2) B² = 0,
+3) AB = BA.
+Determine the number N of square-zero commuting ordered pairs (A,B).
+
+Solution.
+Step 1 (classify_square_zero_by_Jordan_type; Jordan_decomposition)
+Over any field, A²=0 implies the minimal polynomial of A divides x², so every Jordan block of A has size \leq2. In dimension 3 this means:
+- either A=0 (partition (1,1,1)), or
+- A has Jordan type (2,1) (one 2×2 nilpotent block and one 1×1 zero block).
+In particular, any nonzero square-zero A has Jordan type (2,1) and hence rank(A)=1.
+
+Step 2 (count_nonzero_square_zero_via_rank1_outer_product; rank_one_parametrization)
+Count square-zero matrices A in M₃(𝔽₂).
+
+Any rank-1 matrix over 𝔽₂ can be written uniquely as an outer product A = u wᵀ with u,w \in 𝔽₂³\{0} (there is no nontrivial scaling in 𝔽₂). Then
+A² = (u wᵀ)(u wᵀ) = u (wᵀu) wᵀ.
+Thus A²=0 ⇔ wᵀu = 0.
+
+Count pairs (u,w) with u\neq0, w\neq0, and wᵀu=0:
+- There are 2³-1 = 7 choices for u\neq0.
+- For a fixed u\neq0, the condition wᵀu=0 is one nontrivial linear equation in w, so it cuts out a 2-dimensional subspace of 𝔽₂³ with 2²=4 elements, of which 3 are nonzero.
+Hence the number of nonzero square-zero matrices is 7 \cdot 3 = 21.
+Including A=0, the total number of square-zero matrices is 21+1 = 22.
+
+Step 3 (conjugacy_invariance_reduce_to_representative; centralizer_size_invariance_on_orbits)
+We count ordered pairs (A,B) with A²=B²=0 and AB=BA by splitting on whether A=0.
+
+Case A=0:
+Then AB=BA holds for every B. The number of choices for B with B²=0 is 22, so this case contributes 22 pairs.
+
+Case A\neq0:
+Then A has Jordan type (2,1). All such A are similar (same nilpotent Jordan type), so for any fixed representative A₀ of type (2,1), the number
+#{B : B²=0 and BA=AB}
+is constant across all 21 choices of nonzero A, by conjugation transporting centralizers and preserving the equation B²=0.
+
+Thus it suffices to compute, for one representative A₀, how many square-zero B lie in its centralizer.
+
+Step 4 (compute_centralizer_and_square_zero_subset; compute_commuting_square_zero_in_centralizer)
+Choose the standard representative
+A₀ = E₁₂ =
+[0 1 0
+ 0 0 0
+ 0 0 0].
+Let X = (x_{ij}) be a general 3×3 matrix over 𝔽₂. The commutation condition XA₀ = A₀X gives linear constraints:
+
+- XA₀ has only its 2nd column possibly nonzero, equal to the 1st column of X.
+- A₀X has only its 1st row possibly nonzero, equal to the 2nd row of X.
+
+Equating entries yields:
+x₂₁=0, x₃₁=0, x₂₃=0, and x₂₂=x₁₁.
+So the full centralizer Z(A₀) in M₃(𝔽₂) consists exactly of matrices of the form
+X =
+[a  b  c
+ 0  a  0
+ 0  d  e]
+with a,b,c,d,e \in 𝔽₂.
+
+Now impose X²=0. Compute X² (in characteristic 2):
+X² =
+[a,   c d,   c(a+e)
+ 0,    a,       0
+ 0, d(a+e),     e].
+Therefore X²=0 iff
+a=0, e=0, and c d = 0.
+
+With a=e=0:
+- b is free (2 choices),
+- (c,d) \in 𝔽₂² must satisfy cd=0, which allows (0,0),(0,1),(1,0): 3 choices.
+Hence the number of square-zero matrices in Z(A₀) is 2 \cdot 3 = 6.
+
+Therefore, for each of the 21 nonzero square-zero matrices A, there are exactly 6 square-zero matrices B commuting with it.
+
+Step 5 (sum_cases)
+Total count:
+N = (case A=0) + (case A\neq0)
+  = 22 + 21 \cdot 6
+  = 22 + 126
+  = 148.
+
+Uniqueness Test
+(References uniqueness_certificate(s): "finite-check certificate" and "conjugacy-invariance certificate".)
+
+1) Finite-check certificate: The set of ordered pairs (A,B) is finite, with |M₃(𝔽₂)×M₃(𝔽₂)| = 512². The subset defined by polynomial equations A²=0, B²=0, AB=BA is therefore a well-defined finite set, so its cardinality N is a unique integer.
+
+2) Conjugacy-invariance certificate: For A\neq0 with A²=0, Step 1 forces A to have the unique nilpotent Jordan type (2,1). Any two such A are similar, and conjugation preserves both commuting (AB=BA) and square-zero (B²=0). Hence the number of admissible B depends only on the similarity type of A, so computing it for a single representative A₀ gives the unique value for all 21 nonzero A.
+
+3) Disjointness and completeness: Every square-zero A is either A=0 or A\neq0 (no overlap), and these exhaust all possibilities. The contribution from each case is uniquely determined (22 in the first case; 21 \cdot 6 in the second), so the sum N=148 is uniquely determined.
+
+148

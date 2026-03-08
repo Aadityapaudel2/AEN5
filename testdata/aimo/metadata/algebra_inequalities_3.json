@@ -1,0 +1,253 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "inequalities__means_and_sequences__power_mean_maclaurin_holder_minkowski",
+    "instance_id": "imo_compendium__basic_concepts__2_1_3__inequalities_means",
+    "short_name": "n-variable mean inequalities for sequences",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "algebra",
+    "subdomain(s)": [
+      "inequalities",
+      "means",
+      "sequences_recurrences"
+    ],
+    "topic_path": [
+      "inequalities",
+      "means_and_sequences",
+      "power_mean_maclaurin"
+    ],
+    "tags": [
+      "Holder",
+      "Minkowski",
+      "Power_Mean",
+      "Maclaurin",
+      "Bernoulli",
+      "Muirhead",
+      "n_variable",
+      "sequence_inequality",
+      "constrained_domain",
+      "parameterized",
+      "normalize",
+      "homogenize",
+      "majorization",
+      "convexity_concavity",
+      "equality_case"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Given $n$ nonnegative or positive reals (often a finite sequence), derive sharp bounds relating arithmetic, geometric, power means, and elementary symmetric means. Typical asks: determine the best constant or monotonicity relation among means, or bound a symmetric expression of $(x_1,\\dots,x_n)$ that is naturally expressed via sequence_inequality.",
+    "object(s)": [
+      {
+        "name": "x_1,\\dots,x_n",
+        "type": "real",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "p",
+        "type": "real",
+        "role": "aux",
+        "dependency": "independent"
+      },
+      {
+        "name": "B",
+        "type": "real",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "An integer $n\\geq 2$ and exponent parameters (e.g., $p,q$) are given.",
+      "Variables satisfy $x_i\\geq 0$ (or $x_i>0$ when required by Maclaurin).",
+      "A normalization such as $\\sum x_i = 1$ or $\\prod x_i = 1$ may be imposed via normalize."
+    ],
+    "ask": [
+      "Establish the sharp inequality relation among selected means (Power_Mean/Maclaurin) and identify all equality_case configurations."
+    ]
+  },
+  "answer_spec": {
+    "type": "expression",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "integer $n\\geq 2$",
+        "purpose": "Controls the dimension and which Maclaurin inequality applies."
+      },
+      {
+        "name": "mean_exponents",
+        "type": "other",
+        "domain": "a decidable set of real exponents (e.g., $p\\geq q$)",
+        "purpose": "Selects which Power_Mean comparisons are required."
+      },
+      {
+        "name": "symmetric_statistic",
+        "type": "enum",
+        "domain": "{power_mean, elementary_symmetric_mean, mixed}",
+        "purpose": "Chooses the target expression to be bounded."
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "homogeneity_under_scaling",
+        "depends_on": [
+          "symmetric_statistic"
+        ],
+        "statement": "After homogenize/normalize, the inequality is treated as an $n_variable$ statement depending only on scale-invariant ratios; the family is parameterized by exponents (Power_Mean) and by the choice of symmetric_statistic."
+      },
+      {
+        "name": "majorization_monotonicity",
+        "depends_on": [
+          "n",
+          "mean_exponents"
+        ],
+        "statement": "The relevant mean function is Schur-convex/concave so that majorization implies the desired ordering of means."
+      },
+      {
+        "name": "equality_structure",
+        "depends_on": [
+          "n"
+        ],
+        "statement": "equality_case holds iff $x_1=\\cdots=x_n$ (or iff all but one variable are zero in the nonnegative boundary cases allowed by constrained_domain)."
+      },
+      {
+        "name": "interface_quantity_T",
+        "depends_on": [
+          "x_1,\\dots,x_n",
+          "mean_exponents"
+        ],
+        "statement": "Let $T_k=\\sum_{i=1}^n x_i^k$ (power_sums). The sequence component provides $(T_k)$, and the mean-inequality component (Power_Mean/Maclaurin) consumes $(T_k)$ to derive the desired sequence_inequality and equality_case."
+      }
+    ],
+    "operator(s)": [
+      "Power_Mean",
+      "Maclaurin",
+      "Holder",
+      "Minkowski",
+      "Bernoulli",
+      "Muirhead",
+      "majorization",
+      "normalize",
+      "homogenize",
+      "convexity_concavity"
+    ],
+    "essential_assumption(s)": [
+      "Parameter domains ensure the means are defined (e.g., positivity for geometric mean and Maclaurin).",
+      "The constrained_domain includes boundary points only when the targeted inequality remains meaningful (avoid $0^0$ and division by $0$)."
+    ],
+    "uniqueness_certificate(s)": [
+      "For the parameterized mean functional, convexity_concavity (strict for non-degenerate inputs) implies that equality_case occurs only at the fully symmetric point $x_1=\\cdots=x_n$ (or at allowed boundary cases). Evaluating the inequality at this equality_case uniquely fixes the sharp constant/ordering in the mean comparison."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Power_Mean",
+        "inputs": [
+          "finite sequence $(x_i)$",
+          "real exponent parameters"
+        ],
+        "purpose": "Compare $M_p$ and $M_q$ by convexity_concavity and normalization.",
+        "outputs": [
+          "monotonicity of $p\\mapsto M_p$ and sharp bounds"
+        ]
+      },
+      {
+        "name": "Maclaurin",
+        "inputs": [
+          "elementary symmetric sums of $(x_i)$"
+        ],
+        "purpose": "Relate elementary symmetric means to each other and to the geometric mean.",
+        "outputs": [
+          "inequalities among $e_k^{1/k}$ with equality_case"
+        ]
+      },
+      {
+        "name": "Holder",
+        "inputs": [
+          "nonnegative sequences and exponents"
+        ],
+        "purpose": "Bound products/sums that appear after expanding symmetric expressions.",
+        "outputs": [
+          "n_variable inequality tightening"
+        ]
+      },
+      {
+        "name": "Bernoulli",
+        "inputs": [
+          "terms of the form $(1+t)^r$ after normalization"
+        ],
+        "purpose": "Linearize or bound expressions to close the inequality chain.",
+        "outputs": [
+          "final inequality_chain_design closure"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Minkowski",
+        "role": "Convert norm inequalities into bounds on sums of radicals/powers."
+      },
+      {
+        "name": "Muirhead",
+        "role": "Handle symmetric sums once majorization is established."
+      },
+      {
+        "name": "Holder",
+        "role": "Provide the multiplicative strengthening needed for power-sum bounds."
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "monotonicity_of_means",
+      "convexity_concavity"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Normalize the scale (e.g., $\\sum x_i=1$) so the target becomes dimensionless.",
+      "Translate the target into mean language (power sums or elementary symmetric sums).",
+      "Apply Power_Mean/Maclaurin and then close with Holder/Minkowski/Bernoulli to reach the sharp constant at equality_case."
+    ],
+    "finish_type": "closed_form"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "sympy",
+        "reason": "Manipulate symmetric sums and verify algebraic reductions for specific parameter choices."
+      },
+      {
+        "name": "numpy",
+        "reason": "Numerically sample random sequences to sanity-check the inequality and locate equality_case numerically."
+      }
+    ],
+    "import_hint(s)": [
+      "import sympy as sp",
+      "import numpy as np"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Symbolically reduce the target expression to a Power_Mean/Maclaurin comparison under normalize (e.g., substitute $\\sum x_i=1$) and verify the resulting inequality is one of the declared classical_inequalities for the chosen mean_exponents."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Monte Carlo check on the constrained_domain: sample $10^4$ random $n$-tuples (Dirichlet for $\\sum x_i=1$) and numerically verify the inequality; additionally test boundary sequences with many zeros to confirm the stated equality_case/boundary behavior."
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 17,
+      "normalized": 17
+    }
+  }
+}

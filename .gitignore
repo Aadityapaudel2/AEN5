@@ -10,10 +10,14 @@ thumbs.db
 logs/
 data/users/
 data/clipboard_images/
+data/compare_runs/
 models/
 Finetune/output/
 Finetune/trainingdata/output/
 Finetune/math_finetune_workspace/
+Finetune/adapters/*
+!Finetune/adapters/.gitkeep
+!Finetune/adapters/README.md
 temp
 temp_compile/
 temp_portal*.log
@@ -50,4 +54,3 @@ Finetune/trainingdata/**/dataset_persona_chat.jsonl
 assets/mathjax/
 system_prompt_math.txt
 googleauthcloud.txt
-portal_auth.env

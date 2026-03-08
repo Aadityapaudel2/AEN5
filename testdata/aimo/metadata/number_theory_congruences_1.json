@@ -1,0 +1,494 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "CRT__2power_times_prime_power_times_prime_square_times_prime__hensel_quartic_target__four_exponent_constraints",
+    "instance_id": "nt_02_gen4_instance_2026-02-25__nonce_a7c2_nt_02_4",
+    "short_name": "CRT exponent targets with 2-adic and Hensel-lifted quartic residue coupling",
+    "generation": 4
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "congruences",
+      "CRT",
+      "multiplicative_order",
+      "primitive_roots",
+      "prime_powers",
+      "prime_squares",
+      "p-adic_valuations",
+      "2-adic_units",
+      "LTE",
+      "Hensel_lifting",
+      "quadratic_residues",
+      "linear_congruences",
+      "modular_exponentiation"
+    ],
+    "topic_path": [
+      "modular_arithmetic",
+      "Chinese_remainder",
+      "exponent_congruences",
+      "hensel_lifting_and_unit_orders"
+    ],
+    "tags": [
+      "CRT_synthesis",
+      "LTE_order_odd_prime_power",
+      "LTE_order_two_power",
+      "hensel_lift_square_root_minus_one",
+      "order_four_classification",
+      "gcd_coupling_constraints",
+      "staged_congruence_solving",
+      "normalize_mod_999"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Construct a unit A by CRT modulo 2^m p^k q^2 ell from residues A \\equiv u (mod 2^m), A \\equiv 1+p (mod p^k), A \\equiv g (mod q^2), A \\equiv h (mod ell). Define a 2-adic target D \\equiv u^t (mod 2^m), a Hensel-lifted quartic target B (the unique lift to q^2 of a chosen square root of -1 mod q), and an auxiliary prime target C \\equiv h^{(ell-1)/2} (mod ell). Translate A^n congruences into a coupled exponent system with non-coprime moduli, solve by gcd reduction / sequential CRT, then normalize n0 modulo 999.\n",
+    "object(s)": [
+      {
+        "name": "m",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "k",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "ell",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "u",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "g",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "h",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "t",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "x0",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "D",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "B",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "C",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "A",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "n0",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$m \\ge 3$.",
+      "$p,q,\\ell$ are pairwise distinct odd primes, $k \\ge 3$, and $q \\equiv 1 \\pmod 4$.",
+      "$u$ is odd with $\\operatorname{ord}_{2^m}(u)=2^{m-2}$.",
+      "$g$ is a primitive root modulo $q^2$, hence $\\operatorname{ord}_{q^2}(g)=q(q-1)$.",
+      "$h$ is a primitive root modulo $\\ell$, hence $\\operatorname{ord}_{\\ell}(h)=\\ell-1$.",
+      "$t$ is an integer with $0 \\le t < 2^{m-2}$.",
+      "$x_0$ is an integer with $x_0^2 \\equiv -1 \\pmod q$ and $q \\nmid x_0$.",
+      "$D$ is the least nonnegative integer with $D \\equiv u^{t} \\pmod{2^m}$.",
+      "$B$ is the least nonnegative integer with $B \\equiv x_0 \\pmod q$ and $B^2 \\equiv -1 \\pmod{q^2}$.",
+      "$C$ is the least nonnegative integer with $C \\equiv h^{(\\ell-1)/2} \\pmod{\\ell}$.",
+      "$A$ is the least nonnegative integer with $A \\equiv u \\pmod{2^m}$, $A \\equiv 1+p \\pmod{p^k}$, $A \\equiv g \\pmod{q^2}$, and $A \\equiv h \\pmod{\\ell}$."
+    ],
+    "ask": [
+      "Determine the unique integer $N$ with $0 \\le N < 999$ and $N \\equiv n_0 \\pmod{999}$, where $n_0$ is the least positive $n$ such that $A^n \\equiv D \\pmod{2^m}$, $A^n \\equiv 1 \\pmod{p^k}$, $A^n \\equiv B \\pmod{q^2}$, and $A^n \\equiv C \\pmod{\\ell}$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 999
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "m",
+        "type": "int",
+        "domain": "integer $m \\ge 3$",
+        "purpose": "supplies a 2-adic modulus $2^m$ whose unit group has maximal cyclic component of size $2^{m-2}$"
+      },
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime $p \\ge 3$",
+        "purpose": "supplies the odd prime-power modulus $p^k$ and enables an LTE-based order computation for $1+p$"
+      },
+      {
+        "name": "k",
+        "type": "int",
+        "domain": "integer $k \\ge 3$",
+        "purpose": "sets the odd prime-power depth and forces the exponent kernel $p^{k-1}$"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "odd prime $q \\ne p,\\ell$ with $q \\equiv 1 \\pmod 4$",
+        "purpose": "supplies the prime-square modulus $q^2$ and allows a Hensel-lifted square root of $-1$"
+      },
+      {
+        "name": "ell",
+        "type": "int",
+        "domain": "odd prime $\\ell \\ne p,q$",
+        "purpose": "supplies an auxiliary prime modulus creating a fourth exponent congruence modulo $\\ell-1$"
+      },
+      {
+        "name": "u",
+        "type": "int",
+        "domain": "odd integer with $\\operatorname{ord}_{2^m}(u)=2^{m-2}$",
+        "purpose": "makes the 2-adic power constraint translate to the linear congruence $n \\equiv t \\pmod{2^{m-2}}$"
+      },
+      {
+        "name": "g",
+        "type": "int",
+        "domain": "integer $g$ with $\\operatorname{ord}_{q^2}(g)=q(q-1)$",
+        "purpose": "rigidifies exponents modulo $q^2$ and enables order-$4$ target classification"
+      },
+      {
+        "name": "h",
+        "type": "int",
+        "domain": "integer $h$ with $\\operatorname{ord}_{\\ell}(h)=\\ell-1$",
+        "purpose": "rigidifies exponents modulo $\\ell$"
+      },
+      {
+        "name": "t",
+        "type": "int",
+        "domain": "integer $0 \\le t < 2^{m-2}$",
+        "purpose": "target exponent for the 2-adic constraint $A^n \\equiv u^t \\pmod{2^m}$"
+      },
+      {
+        "name": "x0",
+        "type": "int",
+        "domain": "integer root of $x^2 \\equiv -1 \\pmod q$ with $q \\nmid x_0$",
+        "purpose": "selects which of the two order-$4$ lifts is used in the $q^2$ constraint"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "CRT_synthesized_unit",
+        "depends_on": [
+          "m",
+          "p",
+          "k",
+          "q",
+          "ell"
+        ],
+        "statement": "$M=2^m p^k q^2 \\ell$ has pairwise coprime factors, so CRT gives a unique $A \\pmod M$ from the four local residues."
+      },
+      {
+        "name": "LTE_order_of_1_plus_p",
+        "depends_on": [
+          "p",
+          "k"
+        ],
+        "statement": "For odd prime $p$, $v_p((1+p)^n-1)=1+v_p(n)$ and $\\operatorname{ord}_{p^k}(1+p)=p^{k-1}$."
+      },
+      {
+        "name": "two_adic_max_order_invariant",
+        "depends_on": [
+          "m",
+          "u"
+        ],
+        "statement": "If $\\operatorname{ord}_{2^m}(u)=2^{m-2}$, then $u^n \\equiv u^t \\pmod{2^m}$ iff $n \\equiv t \\pmod{2^{m-2}}$."
+      },
+      {
+        "name": "hensel_quartic_lift_invariant",
+        "depends_on": [
+          "q",
+          "x0"
+        ],
+        "statement": "If $x_0^2 \\equiv -1 \\pmod q$ and $q \\nmid x_0$, then there is a unique $B \\pmod{q^2}$ with $B \\equiv x_0 \\pmod q$ and $B^2 \\equiv -1 \\pmod{q^2}$; this $B$ has order $4$ modulo $q^2$."
+      },
+      {
+        "name": "coupling_gcd_compatibility",
+        "depends_on": [
+          "m",
+          "q",
+          "ell",
+          "t"
+        ],
+        "statement": "The exponent system requires compatibility modulo shared gcds when combining $2^{m-2}$, $q(q-1)$, and $\\ell-1$ via gcd reduction."
+      }
+    ],
+    "operator(s)": [
+      "Chinese_remainder",
+      "modular_reduction",
+      "LTE_valuation",
+      "multiplicative_order",
+      "order_translation",
+      "two_adic_LTE",
+      "Hensel_lifting",
+      "quadratic_reciprocity",
+      "primitive_root_mod_prime_power",
+      "primitive_root_usage",
+      "cyclic_exponent_identification",
+      "gcd_based_reduction",
+      "linear_congruence_solvability",
+      "generalized_CRT_sequential",
+      "modular_exponentiation"
+    ],
+    "essential_assumption(s)": [
+      "$u$ must have maximal order $2^{m-2}$ modulo $2^m$ so the 2-adic condition becomes a single linear congruence in $n$.",
+      "$q \\equiv 1 \\pmod 4$ and $q \\nmid x_0$ are required so $x^2 \\equiv -1 \\pmod q$ has a simple root that lifts uniquely to $q^2$.",
+      "$g$ being a primitive root modulo $q^2$ is required to avoid discrete logarithm ambiguity and to classify the order-$4$ target exponent uniquely once $x_0$ is fixed."
+    ],
+    "uniqueness_certificate(s)": [
+      "The four power congruences translate to the coupled exponent system $n \\equiv t \\pmod{2^{m-2}}$, $n \\equiv 0 \\pmod{p^{k-1}}$, $n \\equiv r \\pmod{q(q-1)}$, $n \\equiv (\\ell-1)/2 \\pmod{\\ell-1}$, where $r$ is uniquely forced by the chosen Hensel lift (pinned by $x_0$). Solving by gcd reduction and sequential CRT yields a single residue class, hence a unique least positive $n_0$ and a unique $N \\equiv n_0 \\pmod{999}$ with $0 \\le N < 999$.\n"
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Chinese_remainder",
+        "inputs": [
+          "congruences modulo $2^m$, $p^k$, $q^2$, $\\ell$"
+        ],
+        "purpose": "construct the unique CRT-synthesized unit $A$ modulo $2^m p^k q^2 \\ell$",
+        "outputs": [
+          "unique $A \\pmod M$"
+        ]
+      },
+      {
+        "name": "LTE_valuation",
+        "inputs": [
+          "$(1+p)^n-1$ at odd prime $p$"
+        ],
+        "purpose": "compute $v_p((1+p)^n-1)$ and force $\\operatorname{ord}_{p^k}(1+p)=p^{k-1}$",
+        "outputs": [
+          "exponent kernel $p^{k-1}\\mid n$"
+        ]
+      },
+      {
+        "name": "two_adic_LTE",
+        "inputs": [
+          "$u^{2^t}-1$ for odd $u$"
+        ],
+        "purpose": "compute 2-adic valuations and orders modulo $2^m$",
+        "outputs": [
+          "determine $\\operatorname{ord}_{2^m}(u)$ and translate $u^n \\equiv u^t$ into $n \\equiv t \\pmod{2^{m-2}}$"
+        ]
+      },
+      {
+        "name": "quadratic_reciprocity",
+        "inputs": [
+          "Legendre symbol $\\left(\\frac{-1}{q}\\right)$"
+        ],
+        "purpose": "guarantee solvability of $x^2 \\equiv -1 \\pmod q$ when $q \\equiv 1 \\pmod 4$",
+        "outputs": [
+          "existence of $x_0$ needed for Hensel lifting"
+        ]
+      },
+      {
+        "name": "Hensel_lifting",
+        "inputs": [
+          "$x_0^2 \\equiv -1 \\pmod q$ with $q \\nmid x_0$"
+        ],
+        "purpose": "lift $x_0$ uniquely to $B \\pmod{q^2}$ solving $B^2 \\equiv -1 \\pmod{q^2}$",
+        "outputs": [
+          "unique $B$ modulo $q^2$"
+        ]
+      },
+      {
+        "name": "primitive_root_mod_prime_power",
+        "inputs": [
+          "primitive root $g$ modulo $q^2$"
+        ],
+        "purpose": "rigidify exponents modulo $q^2$ and classify order-$4$ elements",
+        "outputs": [
+          "convert $A^n \\equiv B \\pmod{q^2}$ into $n \\equiv r \\pmod{q(q-1)}$"
+        ]
+      },
+      {
+        "name": "primitive_root_usage",
+        "inputs": [
+          "primitive root $h$ modulo $\\ell$"
+        ],
+        "purpose": "translate $A^n \\equiv h^{(\\ell-1)/2}$ into an exponent congruence modulo $\\ell-1$",
+        "outputs": [
+          "$n \\equiv (\\ell-1)/2 \\pmod{\\ell-1}$"
+        ]
+      },
+      {
+        "name": "gcd_based_reduction",
+        "inputs": [
+          "non-coprime exponent moduli"
+        ],
+        "purpose": "reduce and solve intermediate linear congruences by dividing by gcd and inverting",
+        "outputs": [
+          "arithmetic progression for $n$"
+        ]
+      },
+      {
+        "name": "generalized_CRT_sequential",
+        "inputs": [
+          "progression for $n$ and remaining exponent congruences"
+        ],
+        "purpose": "sequentially incorporate constraints to reach a single residue class",
+        "outputs": [
+          "least positive $n_0$"
+        ]
+      },
+      {
+        "name": "modular_exponentiation",
+        "inputs": [
+          "large integer $n_0$"
+        ],
+        "purpose": "compute $n_0 \\bmod 999$",
+        "outputs": [
+          "normalized answer $N$"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Chinese_remainder_theorem_coprime_moduli",
+        "role": "existence and uniqueness of $A$ modulo $2^m p^k q^2 \\ell$"
+      },
+      {
+        "name": "lifting_the_exponent_LTE_odd_prime",
+        "role": "valuation formula $v_p((1+p)^n-1)=v_p(1+p-1)+v_p(n)$ for odd prime $p$"
+      },
+      {
+        "name": "lifting_the_exponent_LTE_p_equals_2",
+        "role": "valuation formula $v_2(a^n-b^n)=v_2(a-b)+v_2(a+b)+v_2(n)-1$ for odd $a,b$ and even $n$"
+      },
+      {
+        "name": "quadratic_reciprocity_supplement_minus_one",
+        "role": "criterion $\\left(\\frac{-1}{q}\\right)=(-1)^{(q-1)/2}$"
+      },
+      {
+        "name": "Hensel_lemma_simple_root",
+        "role": "unique lifting of a simple root modulo $q$ to modulo $q^2$"
+      },
+      {
+        "name": "Euler_totient_prime_power_formula",
+        "role": "$\\varphi(q^2)=q(q-1)$"
+      },
+      {
+        "name": "cyclic_group_order_formula",
+        "role": "order of $g^a$ in a cyclic group is $m/\\gcd(m,a)$"
+      },
+      {
+        "name": "linear_congruence_theorem",
+        "role": "solvability and reduction of $ax \\equiv b \\pmod m$"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Equality of powers in a finite cyclic group is equivalent to congruence of exponents modulo the group order."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Convert each power condition on $A^n$ into a linear congruence on $n$ using LTE, 2-adic LTE, primitive-root rigidity, and an order-$4$ Hensel-lifted target.",
+      "Solve the coupled exponent system by gcd reduction and sequential CRT, then take the least positive solution and normalize modulo $999$."
+    ],
+    "finish_type": "extremal_argument"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "gcd computations and modular arithmetic"
+      },
+      {
+        "name": "sympy",
+        "reason": "CRT construction, order checks, and solving congruence systems"
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "import sympy as sp",
+      "from sympy.ntheory.modular import crt, solve_congruence",
+      "from sympy.ntheory.residue_ntheory import is_primitive_root, n_order"
+    ],
+    "task(s)": [
+      {
+        "name": "verify_instance",
+        "reason": "compute A by CRT, compute D,B,C, solve exponent congruences for n0, verify all four power congruences, and compute N=n0 mod 999"
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "m": 8,
+      "p": 7,
+      "k": 4,
+      "q": 17,
+      "ell": 89,
+      "u": 5,
+      "g": 5,
+      "h": 7,
+      "t": 12,
+      "x0": 4
+    },
+    "final_answer": {
+      "value": "N",
+      "normalized": 312
+    }
+  }
+}

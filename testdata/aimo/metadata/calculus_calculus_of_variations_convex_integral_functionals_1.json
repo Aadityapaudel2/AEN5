@@ -1,0 +1,100 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "variational_energy_minimization__piecewise_linear_obstacle_with_kink__kkt_active_set__min_value_and_minimizer",
+    "instance_id": "y0_0_y5_10_obstacle_3_then_2xminus1_on_1_3_min_integral_2026_02_13",
+    "short_name": "Minimize a convex slope-energy under a kinked obstacle; compute minimizer and J_min",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "calculus",
+    "subdomain(s)": [
+      "calculus of variations (convex integral functionals)",
+      "obstacle constraints with piecewise-linear (kinked) obstacles",
+      "KKT / active-set methods for convex quadratic programs"
+    ],
+    "topic_path": [
+      "calculus",
+      "calculus of variations",
+      "constrained functional minimization"
+    ],
+    "tags": [
+      "variational_problem",
+      "obstacle_constraint",
+      "boundary_conditions",
+      "convex_functional",
+      "piecewise_linear",
+      "kinked_obstacle",
+      "kkt_conditions",
+      "active_set"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Minimize an integral functional depending only on y' with fixed endpoint values and an upper obstacle that is piecewise linear on a sub-interval. Convexity reduces the problem to a finite-dimensional strictly convex quadratic program in breakpoint values, solved by KKT active-set analysis.\n",
+    "object(s)": [
+      {
+        "name": "y",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "J",
+        "type": "function",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "A",
+        "type": "set",
+        "role": "given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "y1",
+        "type": "real",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "y2",
+        "type": "real",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "y3",
+        "type": "real",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "y_star",
+        "type": "function",
+        "role": "output",
+        "dependency": "dependent"
+      },
+      {
+        "name": "J_min",
+        "type": "real",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "A is the set of piecewise continuously differentiable functions y:[0,5]\\toR with y(0)=0 and y(5)=10.",
+      "Obstacle constraint (upper obstacle on [1,3]):"
+    ]
+  },
+  "answer_spec": {
+    "type": "object",
+    "normalization": "none"
+  },
+  "instance_snapshot": {
+    "final_answer": {
+      "value": "J_min: 4",
+      "normalized": "J_min: 4"
+    }
+  }
+}

@@ -1,0 +1,342 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "Gaussian_integers__norms__sum_of_two_squares_representation__buffed",
+    "instance_id": "imocompendium:2.4.1_Thm2.117_unique_factorization_in_Zi_Zw",
+    "short_name": "Gaussian/Eisenstein integer norms (sum of two squares / $x^2+xy+y^2$) - Buffed Seed",
+    "generation": 2
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "algebraic integers (light)",
+      "representation by forms"
+    ],
+    "topic_path": [
+      "algebraic_integers_light",
+      "Gaussian_integers",
+      "norm_representations"
+    ],
+    "tags": [
+      "UFD_light_usage",
+      "cyclotomic_factorization_light",
+      "descent_via_norms_optional",
+      "gcd_in_Zi_optional",
+      "norm",
+      "norms",
+      "representation_by_quadratic_forms_light_optional",
+      "roots_of_unity_filter_light",
+      "sum_of_two_squares",
+      "sum_of_two_squares_criterion",
+      "unique_factorization_Zi_optional",
+      "unique_normalized_representation",
+      "x2_plus_xy_plus_y2_forms_optional",
+      "sterilized",
+      "buffed",
+      "gymnasium_ready",
+      "two_regime_interaction"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Couple a canonical Gaussian-norm representation $p=x^2+y^2$ with a forced quadratic-residue computation modulo a second prime. The normalized norm representation produces a distinguished intermediate residue $t$; a $q$-periodic quadratic sequence built from $t$ has a root-count governed by a residue symbol whose evaluation requires reciprocity. The final reported output is an explicit integer expression reduced modulo $1000$.",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "mode",
+        "type": "other",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "(x,y)",
+        "type": "other",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "t",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "(a_n)",
+        "type": "sequence",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "A",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "Let $p$ and $q$ be distinct odd primes with $p\\equiv 1\\pmod 4$, $q\\equiv 3\\pmod 4$, and $10^5<q<p$ and $p>10^6$.",
+      "Let $(x,y)$ be the unique integers with $x>y>0$ and $x^2+y^2=p$.",
+      "Define $\\delta$ by the structural parameter $\\mathrm{mode}$: if $\\mathrm{mode}=\\texttt{coupling_delta_1}$ then $\\delta=1$, and if $\\mathrm{mode}=\\texttt{coupling_delta_2}$ then $\\delta=2$.",
+      "Define $t$ to be the least positive residue of $x\\cdot y^{-1}\\pmod p$, i.e. $1\\le t\\le p-1$ and $t\\equiv x\\,y^{-1}\\pmod p$.",
+      "Define the $q$-periodic sequence $(a_n)_{n\\ge 0}$ by $a_n\\equiv n^2+t\\,n+(t+\\delta)\\pmod q$.",
+      "Non-degeneracy: $q\\nmid\\bigl(t^2-4(t+\\delta)\\bigr)."
+    ],
+    "ask": [
+      "Stage 1 (norm interface): Using the normalized Gaussian-norm representation $p=x^2+y^2$, justify that $t$ is well-defined and show that $N:=|\\{0\\le n\\le q-1:\\ a_n\\equiv 0\\pmod q\\}|$ is determined by the quadratic-residue symbol of the discriminant $D:=t^2-4(t+\\delta)$ modulo $q$.",
+      "Stage 2 (reciprocity finish): Evaluate $N$ (hence $A\\equiv x+2y+5N+\\delta\\pmod{1000}$) by computing the relevant residue symbol via reciprocity. Report the unique integer $A\\in\\{0,1,\\dots,999\\}$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime $p$ with $p\\equiv 1\\pmod 4$ and $p>10^6$",
+        "purpose": "ensures a nontrivial Gaussian norm representation and blocks brute-force search for $(x,y)$ as a solution method"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "odd prime $q$ with $q\\equiv 3\\pmod 4$ and $10^5<q<p$",
+        "purpose": "auxiliary modulus forcing a nontrivial residue-symbol evaluation (reciprocity regime) rather than enumeration over all residues"
+      },
+      {
+        "name": "mode",
+        "type": "enum",
+        "domain": "{coupling_delta_1, coupling_delta_2}",
+        "purpose": "structural coupling knob selecting $\\delta\\in\\{1,2\\}$ and changing the discriminant class to be analyzed modulo $q$"
+      },
+      {
+        "name": "normalization_rule",
+        "type": "enum",
+        "domain": "{x_gt_y_gt_0}",
+        "purpose": "fixes the unit/conjugation and ordering symmetries so $(x,y)$ (and hence $t$) is unique"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "norm_multiplicativity",
+        "depends_on": [
+          "p"
+        ],
+        "statement": "Norms satisfy $N(zw)=N(z)N(w)$ in $\\mathbb{Z}[i]$, enabling descent/factorization arguments that produce $p=x^2+y^2$."
+      },
+      {
+        "name": "unique_factorization_controls_representations",
+        "depends_on": [
+          "p",
+          "normalization_rule"
+        ],
+        "statement": "For $p\\equiv 1\\pmod 4$, the prime splits in $\\mathbb{Z}[i]$ as $p=\\pi\\bar\\pi$; the norm equation $N(\\pi)=p$ yields $p=x^2+y^2$, and the normalization rule selects a unique $(x,y)$ among unit/conjugation and swap symmetries."
+      },
+      {
+        "name": "anti_triviality_distinct_prime_classes",
+        "depends_on": [
+          "p",
+          "q"
+        ],
+        "statement": "The instance requires distinct odd primes with $p\\equiv 1\\pmod 4$, $q\\equiv 3\\pmod 4$, and $10^5<q<p$, excluding degenerate small-modulus or equal-prime cases."
+      },
+      {
+        "name": "coprime_and_opposite_parity_in_representation",
+        "depends_on": [
+          "p"
+        ],
+        "statement": "In the unique representation $p=x^2+y^2$ with $x>y>0$, necessarily $\\gcd(x,y)=1$ and $x,y$ have opposite parity."
+      },
+      {
+        "name": "t_is_canonical_sqrt_minus_one_mod_p",
+        "depends_on": [
+          "p",
+          "(x,y)"
+        ],
+        "statement": "With $t\\equiv x\\,y^{-1}\\pmod p$, one has $t^2\\equiv -1\\pmod p$; the normalization of $(x,y)$ induces a unique residue class $t$."
+      },
+      {
+        "name": "discriminant_nonzero_mod_q",
+        "depends_on": [
+          "t",
+          "q",
+          "mode"
+        ],
+        "statement": "Let $\\delta$ be determined by $\\mathrm{mode}$ and set $D:=t^2-4(t+\\delta)$. The admissible domain enforces $D\\not\\equiv 0\\pmod q$."
+      },
+      {
+        "name": "quadratic_root_count_via_legendre_symbol",
+        "depends_on": [
+          "t",
+          "q",
+          "mode"
+        ],
+        "statement": "For $f(n)=n^2+t\\,n+(t+\\delta)$ modulo $q$ with discriminant $D=t^2-4(t+\\delta)$, the number $N$ of roots in $\\{0,1,\\dots,q-1\\}$ satisfies $N=1+\\left(\\frac{D}{q}\\right)$; under $D\\not\\equiv 0\\pmod q$, this forces $N\\in\\{0,2\\}$."
+      }
+    ],
+    "operator(s)": [
+      "norms",
+      "norm",
+      "sum_of_two_squares",
+      "sum_of_two_squares_criterion",
+      "gcd_in_Zi_optional",
+      "unique_factorization_Zi_optional",
+      "representation_by_quadratic_forms_light_optional",
+      "descent_via_norms_optional",
+      "x2_plus_xy_plus_y2_forms_optional",
+      "cyclotomic_factorization_light",
+      "roots_of_unity_filter_light",
+      "modular_inverse",
+      "discriminant_of_quadratic",
+      "legendre_symbol"
+    ],
+    "essential_assumption(s)": [
+      "The splitting condition $p\\equiv 1\\pmod 4$ is structural: it guarantees existence of a Gaussian integer $\\pi=x+iy$ with $N(\\pi)=p$ and supports the normalization-based uniqueness of $(x,y)$.",
+      "The normalization rule ($x>y>0$) is essential: without it, the induced residue $t\\equiv x\\,y^{-1}\\pmod p$ is ambiguous up to unit/conjugation and swap symmetries, making the downstream discriminant modulo $q$ ill-defined.",
+      "One-step template exclusion: the intended solution must (i) extract the canonical $t$ from the norm representation in $\\mathbb{Z}[i]$ and then (ii) evaluate the Legendre symbol controlling $N$ using quadratic reciprocity; the parameter ranges are chosen to preclude brute-force enumeration over residues modulo $q$ as a valid solution strategy."
+    ],
+    "uniqueness_certificate(s)": [
+      "The normalization rule selects a unique $(x,y)$ with $x^2+y^2=p$, hence a unique residue class $t\\equiv x\\,y^{-1}\\pmod p$ and a unique discriminant $D=t^2-4(t+\\delta)$ modulo $q$ for each admissible $(p,q,\\mathrm{mode})$.",
+      "The non-degeneracy invariant $D\\not\\equiv 0\\pmod q$ forces the root-count $N$ of $n^2+t\\,n+(t+\\delta)\\equiv 0\\pmod q$ to be exactly $N=1+\\left(\\frac{D}{q}\\right)\\in\\{0,2\\}$, uniquely determined by the Legendre symbol.",
+      "The final reported value $A\\equiv x+2y+5N+\\delta\\pmod{1000}$ is therefore uniquely determined; the normalization rule \"mod $1000$\" fixes a unique integer output in $\\{0,1,\\dots,999\\}$."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "unique_factorization_Zi_optional",
+        "inputs": [
+          "prime $p\\equiv 1\\pmod 4$"
+        ],
+        "purpose": "factor $p$ in $\\mathbb{Z}[i]$ and extract the normalized norm representation $p=x^2+y^2$",
+        "outputs": [
+          "normalized integers $(x,y)$ with $x^2+y^2=p$"
+        ]
+      },
+      {
+        "name": "descent_via_norms_optional",
+        "inputs": [
+          "a nontrivial solution to $u^2\\equiv -1\\pmod p$"
+        ],
+        "purpose": "perform Euclidean descent on norms to obtain an exact normalized representation $p=x^2+y^2$",
+        "outputs": [
+          "integer pair $(x,y)$ with $x^2+y^2=p$"
+        ]
+      },
+      {
+        "name": "roots_of_unity_filter_light",
+        "inputs": [
+          "unit group symmetries in $\\mathbb{Z}[i]$"
+        ],
+        "purpose": "classify representations up to multiplication by units and conjugation and enforce the normalization rule",
+        "outputs": [
+          "uniqueness of the reported $(x,y)$"
+        ]
+      },
+      {
+        "name": "norm_to_modular_interface",
+        "inputs": [
+          "normalized $(x,y)$ with $x^2+y^2=p$",
+          "modular inverse $y^{-1}\\pmod p$"
+        ],
+        "purpose": "derive the canonical residue $t\\equiv x\\,y^{-1}\\pmod p$ (a canonical square root of $-1$ modulo $p$) and pass it to the discriminant $D=t^2-4(t+\\delta)$ to interface the Gaussian-norm regime with quadratic-residue analysis modulo $q$",
+        "outputs": [
+          "the integer $t$ and the discriminant $D$ modulo $q$"
+        ]
+      },
+      {
+        "name": "quadratic_reciprocity_legendre_symbol_compute",
+        "inputs": [
+          "discriminant $D$ modulo the prime $q$",
+          "congruence classes and reciprocity reductions"
+        ],
+        "purpose": "evaluate the Legendre symbol $\\left(\\frac{D}{q}\\right)$ controlling $N$ (hence the final answer), explicitly coupling the norm-derived $t$ with reciprocity-based symbol computation",
+        "outputs": [
+          "the value of $\\left(\\frac{D}{q}\\right)$ and thus $N$ and $A \\bmod 1000$"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "sum_of_two_squares_criterion",
+        "role": "characterize representability of primes as $x^2+y^2$ (equivalently splitting in $\\mathbb{Z}[i]$)"
+      },
+      {
+        "name": "quadratic_reciprocity",
+        "role": "compute the needed Legendre symbol(s) modulo $q$ from congruence data and reduced symbols"
+      },
+      {
+        "name": "quadratic_congruence_root_count",
+        "role": "for $f(n)=n^2+bn+c$ modulo an odd prime, the number of roots is $1+\\left(\\frac{b^2-4c}{q}\\right)$"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "A norm equation in a quadratic integer ring turns arithmetic conditions on primes into structured algebra; Legendre symbols encode solvability of quadratic congruences, and reciprocity provides a deterministic evaluation path."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Translate $p=x^2+y^2$ into a Gaussian norm equation and enforce a normalization to make $(x,y)$ unique.",
+      "Use the normalized $(x,y)$ to define a canonical residue $t\\equiv x\\,y^{-1}\\pmod p$, then pass this interface into a discriminant whose Legendre symbol modulo $q$ controls the root count $N$.",
+      "Evaluate the controlling Legendre symbol via quadratic reciprocity, and finish by reducing the derived expression modulo $1000$ to obtain the unique output in $\\{0,\\dots,999\\}$."
+    ],
+    "finish_type": "counting_argument"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, modular exponentiation, integer square root."
+      },
+      {
+        "name": "sympy",
+        "reason": "Number theory utilities: factorint, primerange, mod_inverse; useful for verification and bounded brute checks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, primerange, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "For the first several admissible prime pairs (p,q) in increasing lexicographic order within a fixed deterministic range, verify that the constructed $(x,y)$ satisfies $x^2+y^2=p$, that $t\\equiv x\\,y^{-1}\\pmod p$, that $D\\not\\equiv 0\\pmod q$, and that the computed $N$ matches the quadratic root count formula."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "For small admissible parameter pairs (deterministically bounded), brute-force count roots of $n^2+t\\,n+(t+\\delta)\\equiv 0\\pmod q$ and compare to $1+\\left(\\frac{D}{q}\\right)$ computed by Euler criterion; this independently validates the reciprocity-based symbol evaluation pipeline."
+      },
+      {
+        "name": "search_representation_small_primes",
+        "reason": "For small primes $p\\equiv 1\\pmod 4$ in a bounded range, brute force $(x,y)$ to confirm normalization uniqueness and to regression-test the $t$ interface definition."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 943,
+      "normalized": 943
+    }
+  }
+}

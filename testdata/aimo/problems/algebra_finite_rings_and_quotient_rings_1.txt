@@ -1,0 +1,113 @@
+- Language: python
+
+Let R = 𝔽7[x]/(x^6). Every 𝔽7-algebra automorphism φ of R is determined by
+  φ(x) = a x + b x^2 + c x^3 + d x^4 + e x^5  (mod x^6),
+with a \in 𝔽7× and b,c,d,e \in 𝔽7.
+Let
+  I = { φ \in Aut𝔽7(R) : φ^2 = id_R }.
+Compute |I|.
+
+Solution.
+Step 1 (translate_order_condition_to_series_identity)
+Write f(x) := φ(x) viewed as a truncated power series in R:
+  f(x) = a x + b x^2 + c x^3 + d x^4 + e x^5  (mod x^6).
+Because φ is an 𝔽7-algebra endomorphism determined by x ↦ f(x), we have
+  φ^2 = id_R  ⇔  f∘f(x) \equiv x (mod x^6),
+where composition is computed in R (i.e. truncate all terms of degree \geq6).
+
+Step 2 (solve_linear_term_first + coefficient_extraction)
+Compute f∘f(x) modulo x^6 and compare coefficients of x, x^2, x^3, x^4, x^5.
+
+A direct truncation computation gives
+f∘f(x) \equiv
+  (a^2) x
++ (a^2 b + a b) x^2
++ (a^3 c + 2 a b^2 + a c) x^3
++ (a^4 d + 3 a^2 b c + 2 a b c + a d + b^3) x^4
++ (a^5 e + 4 a^3 b d + 3 a^2 c^2 + 3 a b^2 c + 2 a b d + a e + 2 b^2 c) x^5
+(mod x^6).
+
+Imposing f∘f(x) \equiv x (mod x^6) is equivalent to the coefficient system over 𝔽7:
+(1) a^2 = 1,
+(2) a^2 b + a b = 0,
+(3) a^3 c + 2 a b^2 + a c = 0,
+(4) a^4 d + 3 a^2 b c + 2 a b c + a d + b^3 = 0,
+(5) a^5 e + 4 a^3 b d + 3 a^2 c^2 + 3 a b^2 c + 2 a b d + a e + 2 b^2 c = 0.
+
+From (1), a must be a square root of 1 in 𝔽7×, hence
+  a \in {1, -1} = {1, 6}.
+
+Step 3 (casework_by_a; triangular_coefficient_system)
+We solve (2)-(5) in each admissible case for a.
+
+Case A: a = 1.
+Equation (2): a^2 b + a b = b + b = 2b = 0 \Rightarrow b = 0 (since 2 is invertible in 𝔽7).
+Equation (3): a^3 c + 2 a b^2 + a c = c + 0 + c = 2c = 0 \Rightarrow c = 0.
+Equation (4): a^4 d + ... + a d + b^3 = d + d + 0 = 2d = 0 \Rightarrow d = 0.
+Equation (5): a^5 e + ... + a e + ... = e + e + 0 = 2e = 0 \Rightarrow e = 0.
+Thus the only solution in this case is (a,b,c,d,e)=(1,0,0,0,0), i.e. φ = id_R.
+
+Case B: a = 6 = -1.
+Then a^2=1, a^3=-1, a^4=1, a^5=-1.
+
+Equation (2): a^2 b + a b = b - b = 0, so b is free.
+
+Equation (3): a^3 c + 2 a b^2 + a c = (-c) + 2(-b^2) + (-c)
+= -2(c + b^2) = 0
+\Rightarrow c + b^2 = 0
+\Rightarrow c = -b^2.
+So c is uniquely determined by b.
+
+Equation (4):
+a^4 d + 3 a^2 b c + 2 a b c + a d + b^3
+= d + 3 b c + 2(-1) b c + (-d) + b^3
+= (3-2) b c + b^3
+= b c + b^3
+= b(c + b^2).
+Since c = -b^2, we have c + b^2 = 0, so (4) holds automatically and imposes no condition on d. Hence d is free.
+
+Equation (5):
+Substitute a = -1 into (5) to get
+  -2e - 6 b d + 3 c^2 - b^2 c = 0.
+Equivalently,
+  2e + 6 b d - 3 c^2 + b^2 c = 0.
+Now substitute c = -b^2, so c^2 = b^4 and b^2 c = -b^4:
+  2e + 6 b d - 3 b^4 - b^4 = 0
+  2e + 6 b d - 4 b^4 = 0.
+Reducing coefficients mod 7 (6 \equiv -1 and -4 \equiv 3) gives
+  2e - b d + 3 b^4 = 0
+\Rightarrow 2e = b d - 3 b^4.
+Since 2 is invertible in 𝔽7, this determines e uniquely in terms of b and d.
+
+Conclusion in Case B:
+- b can be any element of 𝔽7 (7 choices),
+- d can be any element of 𝔽7 (7 choices),
+- c is forced to be -b^2,
+- e is forced to be (1/2)(b d - 3 b^4).
+Hence Case B contributes 7 \cdot 7 = 49 solutions.
+
+Step 4 (count_free_parameters + solution_count)
+Summing the cases:
+- Case A contributes 1 solution,
+- Case B contributes 49 solutions.
+Therefore
+  |I| = 1 + 49 = 50.
+
+Uniqueness Test
+(Uses the uniqueness certificates: "unique coefficient tuple per automorphism" and "finite coefficient system solved exhaustively by casework".)
+
+1) (Parameterization is bijective.)
+Every 𝔽7-algebra endomorphism of R is determined by the image of x. The units criterion for truncated polynomial rings says such an endomorphism is an automorphism iff the linear coefficient a is a unit in 𝔽7, i.e. a\neq0. Thus automorphisms are in bijection with coefficient tuples (a,b,c,d,e) with a\in𝔽7× and b,c,d,e\in𝔽7.
+
+2) (Order condition becomes a finite coefficient system.)
+The condition φ^2=id_R is equivalent to f∘f(x)\equivx (mod x^6), which is equivalent (by coefficient extraction up to degree 5) to the five equations (1)-(5). This equivalence is exact because all terms of degree \geq6 vanish in R.
+
+3) (The case split is forced and complete.)
+Equation (1) forces a^2=1, so a\in{1,6}. No other a is possible. For each admissible a, equations (2)-(5) are necessary and sufficient.
+
+4) (Each case has a uniquely determined solution count.)
+- For a=1, equations force b=c=d=e=0, giving exactly 1 tuple.
+- For a=6, equations force c and e uniquely in terms of free parameters b and d, giving exactly 7^2=49 tuples.
+Thus the total number of tuples (hence automorphisms) with φ^2=id_R is uniquely 1+49=50. No other tuples can satisfy the system.
+
+50

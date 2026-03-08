@@ -1,0 +1,335 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "capstone__CRT_defined_T__prime_power_orders__lcm_exponent__mod_1000_quotient_sum",
+    "instance_id": "nt_19_revision_3_2026_02_25",
+    "short_name": "CRT-defined $T$, local orders modulo $7^4$ and $17^2$, and a mod $1000$ quotient sum",
+    "generation": 3
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "CRT and congruences",
+      "multiplicative order modulo prime powers",
+      "order lifting by binomial expansion",
+      "modular inverses and mod $1000$",
+      "Carmichael exponent reduction"
+    ],
+    "topic_path": [
+      "capstone",
+      "CRT_plus_orders",
+      "prime_power_order_lifting",
+      "mod_1000_quotients"
+    ],
+    "tags": [
+      "Chinese_remainder_theorem",
+      "multiplicative_order",
+      "prime_square_units",
+      "binomial_expansion",
+      "order_criterion",
+      "lcm_exponent",
+      "modular_inverse",
+      "Carmichael_lambda",
+      "fast_exponentiation",
+      "normalization_mod_1000"
+    ]
+  },
+  "problem_spec": {
+    "summary": "A CRT-defined integer $T$ is simultaneously near $1$ modulo $7^4$ and has maximal order modulo $17^2$. The minimal exponent $t$ with $T^t\\equiv 1$ modulo both prime powers is forced as an $\\operatorname{lcm}$ of local multiplicative orders. A quotient-sum residue is then computed modulo $1000$ using modular inverses and exponent reduction modulo $\\lambda(1000)$.",
+    "object(s)": [
+      {
+        "name": "M",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "T",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "t",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "A",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$M=7^4\\cdot 17^2$.",
+      "$T$ is the unique integer with $0\\le T<M$ such that $T\\equiv 1+2\\cdot 7^2\\pmod{7^4}$ and $T\\equiv 23\\pmod{17^2}$.",
+      "$t$ is the smallest positive integer such that $7^4\\mid T^t-1$ and $17^2\\mid T^t-1$.",
+      "$A\\equiv \\frac{T^t-1}{7^4}+\\frac{T^t-1}{17^2}\\pmod{1000}$.",
+      "$N$ is the unique integer in $\\{0,1,\\dots,999\\}$ with $N\\equiv A\\pmod{1000}$."
+    ],
+    "ask": [
+      "Determine $N$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p_part",
+        "type": "other",
+        "domain": "fixed as $7^4$ in this published instance",
+        "purpose": "prime-power modulus where $T$ is chosen to be near $1$"
+      },
+      {
+        "name": "q_part",
+        "type": "other",
+        "domain": "fixed as $17^2$ in this published instance",
+        "purpose": "prime-square modulus where $T$ is chosen to have full order"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "CRT_uniqueness_for_T",
+        "depends_on": [
+          "M",
+          "T"
+        ],
+        "statement": "$\\gcd(7^4,17^2)=1$ implies there is a unique $T$ modulo $M=7^4\\cdot 17^2$ satisfying the two congruences, and $0\\le T<M$ fixes the representative."
+      },
+      {
+        "name": "order_lifting_at_7_4",
+        "depends_on": [
+          "T"
+        ],
+        "statement": "If $T\\equiv 1+2\\cdot 7^2\\pmod{7^4}$ then $\\operatorname{ord}_{7^4}(T)=7^2=49$."
+      },
+      {
+        "name": "full_order_at_17_2",
+        "depends_on": [
+          "T"
+        ],
+        "statement": "If $T\\equiv 23\\pmod{17^2}$ and $23^{136}\\equiv -1\\pmod{17^2}$ while $23^{16}\\not\\equiv 1\\pmod{17^2}$, then $\\operatorname{ord}_{17^2}(T)=\\varphi(17^2)=272$."
+      },
+      {
+        "name": "exponent_forcing",
+        "depends_on": [
+          "T",
+          "t"
+        ],
+        "statement": "$T^t\\equiv 1\\pmod{7^4}$ and $T^t\\equiv 1\\pmod{17^2}$ force $t=\\operatorname{lcm}(\\operatorname{ord}_{7^4}(T),\\operatorname{ord}_{17^2}(T))$ as the smallest positive solution."
+      },
+      {
+        "name": "invertibility_mod_1000",
+        "depends_on": [
+          "T"
+        ],
+        "statement": "$\\gcd(7^4,1000)=\\gcd(17^2,1000)=1$, so $(7^4)^{-1}$ and $(17^2)^{-1}$ exist modulo $1000$ and the quotients in $A$ can be reduced using inverses."
+      },
+      {
+        "name": "exponent_reduction_mod_1000",
+        "depends_on": [
+          "T",
+          "t"
+        ],
+        "statement": "$\\gcd(T,1000)=1$ implies $T^{100}\\equiv 1\\pmod{1000}$, hence $T^t\\equiv T^{t\\bmod 100}\\pmod{1000}$."
+      }
+    ],
+    "operator(s)": [
+      "Chinese_remainder_theorem",
+      "multiplicative_order",
+      "binomial_expansion_mod_prime_powers",
+      "order_test_by_prime_factors",
+      "least_common_multiple",
+      "modular_inverse",
+      "Carmichael_exponent_reduction",
+      "fast_modular_exponentiation"
+    ],
+    "essential_assumption(s)": [
+      "$\\gcd(7^4,17^2)=1$ so $T$ is well-defined by CRT.",
+      "$\\gcd(7^4,1000)=\\gcd(17^2,1000)=1$ so modular inverses exist modulo $1000$.",
+      "$\\gcd(T,1000)=1$ so exponent reduction modulo $100$ is valid for computing $T^t\\pmod{1000}$."
+    ],
+    "uniqueness_certificate(s)": [
+      "Uniqueness of $T$ follows from CRT and the normalization $0\\le T<M$.",
+      "Uniqueness of $t$ follows because $t$ is forced to be the smallest positive multiple of $\\operatorname{lcm}(\\operatorname{ord}_{7^4}(T),\\operatorname{ord}_{17^2}(T))$.",
+      "Uniqueness of $N$ follows from the normalization $0\\le N<1000$."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Chinese_remainder_theorem_construction",
+        "inputs": [
+          "$T\\equiv 99\\pmod{7^4}$ and $T\\equiv 23\\pmod{17^2}$ with coprime moduli"
+        ],
+        "purpose": "construct the unique $T$ modulo $M$ and optionally compute it explicitly",
+        "outputs": [
+          "a concrete $T$ and fixed reductions modulo $7^4$ and $17^2$"
+        ]
+      },
+      {
+        "name": "order_lifting_by_binomial_expansion",
+        "inputs": [
+          "$T\\equiv 1+u p^2\\pmod{p^4}$ with $p\\nmid u$"
+        ],
+        "purpose": "prove $\\operatorname{ord}_{p^4}(T)=p^2$",
+        "outputs": [
+          "local order constraint $p^2\\mid t$"
+        ]
+      },
+      {
+        "name": "order_criterion_prime_factor_test",
+        "inputs": [
+          "$a^{\\varphi(m)}\\equiv 1\\pmod{m}$ and checks of $a^{\\varphi(m)/r}\\not\\equiv 1\\pmod{m}$ for primes $r\\mid \\varphi(m)$"
+        ],
+        "purpose": "certify $\\operatorname{ord}_m(a)=\\varphi(m)$",
+        "outputs": [
+          "exact local order modulo $17^2$"
+        ]
+      },
+      {
+        "name": "lcm_forcing_for_exponent",
+        "inputs": [
+          "local orders modulo coprime moduli"
+        ],
+        "purpose": "determine the minimal $t$ such that $T^t\\equiv 1$ modulo both prime powers",
+        "outputs": [
+          "$t=\\operatorname{lcm}(49,272)$ in this instance"
+        ]
+      },
+      {
+        "name": "quotient_reduction_via_modular_inverse",
+        "inputs": [
+          "$D\\mid (T^t-1)$ and $\\gcd(D,1000)=1$"
+        ],
+        "purpose": "compute $\\frac{T^t-1}{D}\\pmod{1000}$ using $D^{-1}\\pmod{1000}$",
+        "outputs": [
+          "$A\\pmod{1000}$"
+        ]
+      },
+      {
+        "name": "exponent_reduction_mod_1000",
+        "inputs": [
+          "$\\gcd(T,1000)=1$ and $\\lambda(1000)=100$"
+        ],
+        "purpose": "reduce $t$ modulo $100$ before computing $T^t\\pmod{1000}$",
+        "outputs": [
+          "$T^t\\equiv T^{28}\\pmod{1000}$ in this instance"
+        ]
+      },
+      {
+        "name": "fast_modular_exponentiation",
+        "inputs": [
+          "$467^{28}\\pmod{1000}$"
+        ],
+        "purpose": "compute $T^t\\pmod{1000}$ efficiently by repeated squaring",
+        "outputs": [
+          "$T^t\\equiv 841\\pmod{1000}$"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Chinese_remainder_theorem",
+        "role": "existence and uniqueness of $T$ modulo $7^4\\cdot 17^2$"
+      },
+      {
+        "name": "binomial_theorem",
+        "role": "expansions modulo $p^4$ to lift orders for $1+u p^2$"
+      },
+      {
+        "name": "Euler_totient_theorem",
+        "role": "guarantees $\\operatorname{ord}_{17^2}(23)\\mid \\varphi(17^2)$"
+      },
+      {
+        "name": "order_test_by_prime_divisors",
+        "role": "certifies $\\operatorname{ord}_{17^2}(23)=\\varphi(17^2)$ from nontriviality checks"
+      },
+      {
+        "name": "existence_of_modular_inverse",
+        "role": "allows quotient residues modulo $1000$ to be computed using inverses"
+      },
+      {
+        "name": "Carmichael_function_for_1000",
+        "role": "gives $\\lambda(1000)=100$ so $T^{100}\\equiv 1\\pmod{1000}$ for $\\gcd(T,1000)=1$"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "multiplicative order controls congruences of $T^t-1$"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "force $t$ by computing $\\operatorname{ord}_{7^4}(T)$ using binomial order lifting and $\\operatorname{ord}_{17^2}(T)$ using an order test, then take $\\operatorname{lcm}$",
+      "compute quotient residues modulo $1000$ using modular inverses, and compute $T^t\\pmod{1000}$ by reducing $t$ modulo $\\lambda(1000)=100$"
+    ],
+    "finish_type": "constructive"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "sympy",
+        "reason": "CRT computation, multiplicative orders, and modular inverses"
+      },
+      {
+        "name": "math",
+        "reason": "gcd and lcm, bounded verification loops"
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "import sympy as sp",
+      "from sympy.ntheory.modular import crt",
+      "from sympy.ntheory.residue_ntheory import n_order"
+    ],
+    "task(s)": [
+      {
+        "name": "CRT_and_order_verification",
+        "reason": "Compute $T$ by CRT, confirm the congruences, compute $\\operatorname{ord}_{7^4}(T)$ and $\\operatorname{ord}_{17^2}(T)$, and confirm $t=\\operatorname{lcm}$ is minimal by brute force up to $t$."
+      },
+      {
+        "name": "quotient_sum_mod_1000_check",
+        "reason": "Compute $A\\pmod{1000}$ both by modular-inverse reduction and by exact integer division using $T^t\\bmod (1000\\cdot 7^4)$ and $T^t\\bmod (1000\\cdot 17^2)$."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "p": 7,
+      "q": 17,
+      "a": 4,
+      "b": 2,
+      "residues": {
+        "mod_7_4": 99,
+        "mod_17_2": 23
+      }
+    },
+    "derived_value(s)": {
+      "M": 693889,
+      "T": 403467,
+      "ord_7_4": 49,
+      "ord_17_2": 272,
+      "t": 13328,
+      "Tt_mod_1000": 841
+    },
+    "final_answer": {
+      "value": 400,
+      "normalized": 400
+    }
+  }
+}

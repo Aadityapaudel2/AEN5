@@ -1,0 +1,63 @@
+Two tangent lights illuminating a one-holed disk; compute 6P then set \pi\to1
+
+A room is a vertical prism whose floor region is
+R = { (x,y) : x^2 + y^2 \leq 72  AND  (x-12)^2 + y^2 \geq 72 }.
+(So the floor is a disk of radius \sqrt72 centered at the origin with one congruent circular "hole" removed; the hole is the part inside the disk centered at (12,0) of radius \sqrt72.)
+
+Two point lights are on the ceiling directly above the floor points
+L1 = (6,6),  L2 = (6,-6).
+Light travels in straight lines with no reflection. A floor point Q is illuminated if the straight segment from Q to at least one light stays entirely inside the room (equivalently, its planar projection stays inside R).
+
+A point Q is chosen uniformly at random from R (by area). Let P be the probability that Q is illuminated.
+
+Compute E = 6P in simplest form, then substitute \pi \to 1 in E and evaluate. Output the resulting integer as a zero-padded three-digit string.
+
+Solution.
+1. Technique: reduce_3d_visibility_to_planar_segment
+   Action: In a vertical prism over R, the segment from a ceiling point above Li to a floor point above Q stays inside the room iff the planar segment LiQ is contained in R. Thus illumination is a purely planar visibility question inside R.
+
+2. Technique: separate_outer_convex_constraint_from_hole_obstruction
+   Action: The outer boundary x^2+y^2\leq72 is a convex disk. Since each Li lies on that disk's boundary (6^2+6^2=72), for any Q in R the segment LiQ automatically stays in the outer disk. Therefore LiQ ⊂ R holds iff LiQ avoids the (removed) hole disk H: (x-12)^2+y^2<72.
+
+3. Technique: tangent_halfplane_visibility_from_boundary_point
+   Action: Each Li lies on the boundary of the hole circle (because (6-12)^2+6^2=72 and (6-12)^2+(-6)^2=72). For a convex disk, from a boundary point L the segment LQ avoids the disk's interior iff Q lies in the exterior closed half-plane determined by the tangent line to the disk at L.
+   - For L1=(6,6), the radius from the hole center A=(12,0) to L1 is (-6,6), slope -1, so the tangent has slope +1 and equation y=x. The hole lies on the side y<x (it contains A), so the exterior half-plane is y\geqx.
+   - For L2=(6,-6), the radius is (-6,-6), slope +1, so the tangent has slope -1 and equation y=-x. The hole lies on the side y>-x (it contains A), so the exterior half-plane is y\leq-x.
+   Hence Q is illuminated ⇔ Q\inR and (y\geqx or y\leq-x).
+   Equivalently, Q is NOT illuminated iff Q\inR and -x < y < x, which can only happen when x>0. This "shadow wedge" is exactly the angular sector |θ|<\pi/4 around the +x-axis.
+
+4. Technique: compute_area_of_floor_lune_via_circle_overlap
+   Action: Let R0 = \sqrt72 = 6\sqrt2, and let d=12 be the distance between the two circle centers (0,0) and (12,0). The hole removed from the outer disk is exactly the overlap lens of two congruent radius-R0 disks. Its area is
+   A_overlap = 2R0^2 arccos(d/(2R0)) - (d/2)\sqrt(4R0^2 - d^2).
+   Here d/(2R0)=12/(12\sqrt2)=1/\sqrt2 so arccos(1/\sqrt2)=\pi/4, and \sqrt(4R0^2-d^2)=\sqrt(288-144)=12. Thus
+   A_overlap = 2 \cdot 72 \cdot (\pi/4) - (12/2) \cdot 12 = 36\pi - 72.
+   Therefore
+   Area(R) = Area(outer disk) - A_overlap
+           = 72\pi - (36\pi - 72)
+           = 36\pi + 72.
+
+5. Technique: compute_shadow_area_as_sector_minus_overlap
+   Action: The non-illuminated region is R∩W where W is the wedge |θ|<\pi/4. Inside the outer disk, W corresponds to a sector of angle \pi/2, so
+   Area(outer sector W) = (angle/2) \cdot R0^2 = ( (\pi/2)/2 ) \cdot 72 = 18\pi.
+   The overlap lens lies entirely within this wedge (one can verify in the overlap that y^2\leqx^2, so |θ|\leq\pi/4; equality occurs only at the intersection points (6,±6)). Hence, within W, the part removed by the hole is exactly the entire overlap lens.
+   So the shadow (non-illuminated) area is
+   Area(R∩W) = 18\pi - (36\pi - 72) = 72 - 18\pi.
+
+6. Technique: probability_as_area_ratio_then_postprocess
+   Action: The illuminated area is
+   Area(I) = Area(R) - Area(R∩W)
+           = (36\pi+72) - (72-18\pi)
+           = 54\pi.
+   Thus
+   P = Area(I)/Area(R) = 54\pi/(36\pi+72) = 3\pi/(2\pi+4).
+   Then
+   E = 6P = 18\pi/(2\pi+4) = 9\pi/(\pi+2).
+   Substituting \pi\to1 gives E \to 9/(1+2) = 3, so the required output is 003.
+
+Uniqueness Test
+- The region R is uniquely determined by the two circle inequalities, hence has a well-defined area.
+- The illumination set I is uniquely defined because, for each light, "unobstructed" is equivalent to planar segment containment in R, and the outer disk convexity reduces obstruction to the single hole disk.
+- For a light on the hole boundary, the tangent half-plane criterion is necessary and sufficient, making the shadow wedge description unique.
+- Areas are computed from standard, deterministic circle-overlap and sector formulas, so P and the postprocessed value are uniquely determined.
+
+3

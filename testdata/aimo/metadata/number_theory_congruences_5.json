@@ -1,0 +1,323 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "CRT__simultaneous_congruences__constructive_residue_design__buffed",
+    "instance_id": "imocompendium:2.4.1_Thm2.119_Chinese_remainder_theorem",
+    "short_name": "Chinese remainder synthesis (construct a unique residue class) - Buffed Seed",
+    "generation": 2
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "congruences",
+      "CRT",
+      "multiplicative_order",
+      "primitive_roots"
+    ],
+    "topic_path": [
+      "modular_arithmetic",
+      "Chinese_remainder",
+      "constructive_synthesis"
+    ],
+    "tags": [
+      "CRT_with_non_coprime_moduli_optional",
+      "Chinese_remainder",
+      "congruence_definition",
+      "construct_counterexample",
+      "constructive_CRT",
+      "equivalence_class_manipulation",
+      "lcm_bounds_via_product",
+      "mod_choice_strategy",
+      "modular_reduction",
+      "modulus_product",
+      "negative_residues_handling",
+      "parity_mod_2",
+      "pigeonhole_on_residues",
+      "residue_classes",
+      "residue_system_design",
+      "simultaneous_congruences",
+      "sterilized",
+      "buffed",
+      "gymnasium_ready",
+      "two_regime_interaction",
+      "exponent_congruences",
+      "least_positive_solution",
+      "mixed_modulus_with_prime_power",
+      "multiplicative_order_constraints",
+      "primitive_root_usage"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Construct a CRT-synthesized unit modulo a mixed modulus containing a nontrivial prime power, then determine the least positive exponent that forces a prescribed local power-pattern; this requires translating power congruences into exponent congruences via multiplicative orders and then recombining them by CRT, with the final answer reported modulo 1000.",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "k",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "g",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "M",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "A",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "S",
+        "type": "set",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "n_0",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$p,q$ are distinct odd primes with $q>3$.",
+      "$k\\in\\mathbb{Z}$ with $k\\ge 3$.",
+      "$\\gcd(p,q-1)=1$ (equivalently $\\gcd(p^{k-1},q-1)=1$).",
+      "$g$ is a primitive root modulo $q$, i.e. $\\operatorname{ord}_q(g)=q-1$.",
+      "Define the mixed modulus $M:=p^k q$.",
+      "Let $A$ be the unique residue class modulo $M$ such that $A\\equiv 1+p\\pmod{p^k}$ and $A\\equiv g\\pmod q$, and take $A\\in\\{0,1,\\dots,M-1\\}$ to be its least nonnegative representative."
+    ],
+    "ask": [
+      "Let \\(A\\) be the least nonnegative integer with \\(A\\equiv 1+p\\pmod{p^k}\\) and \\(A\\equiv g\\pmod q\\), where \\(g\\) is a primitive root modulo \\(q\\), and set \\(M=p^kq\\).\nDefine \\(S=\\{n\\in\\mathbb Z_{>0} : A^n\\equiv 1\\pmod{p^k}\\ \text{and}\\ A^n\\equiv -1\\pmod q\\}\\).\nProve \\(S\neq\u000barnothing\\), let \\(n_0=\\min S\\), and report \\(n_0 \bmod 1000\\) (an integer in \\(\\{0,1,\\dots,999\\}\\))."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime $p\\ge 3$",
+        "purpose": "supplies the prime-power factor $p^k$ and the nontrivial order constraint via $1+p$ modulo $p^k$"
+      },
+      {
+        "name": "k",
+        "type": "int",
+        "domain": "integer $k\\ge 3$",
+        "purpose": "forces a nontrivial prime power modulus and ensures the exponent modulus $p^{k-1}$ is itself a genuine prime power with $\\ge 9$"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "odd prime $q>3$ with $q\\ne p$ and $\\gcd(p,q-1)=1$",
+        "purpose": "ensures a cyclic unit group of size $q-1$ that is coprime to $p^{k-1}$, enabling a clean CRT step on exponent congruences"
+      },
+      {
+        "name": "g",
+        "type": "int",
+        "domain": "integer $g$ with $1<g<q$ and $\\operatorname{ord}_q(g)=q-1$",
+        "purpose": "fixes a generator modulo $q$ so that the condition $A^n\\equiv -1\\pmod q$ becomes a rigid congruence condition on $n$"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "structural_CRT_modulus",
+        "depends_on": [
+          "p",
+          "q",
+          "k"
+        ],
+        "statement": "The modulus has the structured form $M=p^kq$ with $k\\ge 3$ and $p,q$ distinct odd primes, so $\\gcd(p^k,q)=1$ and at least one local modulus is a nontrivial prime power (not all moduli are prime)."
+      },
+      {
+        "name": "anti_trivial_nontrivial_orders",
+        "depends_on": [
+          "p",
+          "q",
+          "k"
+        ],
+        "statement": "Since $k\\ge 3$ and $q>3$, both $p^{k-1}>1$ and $q-1>2$, so neither local power condition collapses to a tautology and the extremal value $n_0$ cannot be $1$."
+      },
+      {
+        "name": "order_of_one_plus_p_mod_p_k",
+        "depends_on": [
+          "p",
+          "k"
+        ],
+        "statement": "In $(\\mathbb{Z}/p^k\\mathbb{Z})^\\times$, the element $1+p$ has exact multiplicative order $p^{k-1}$."
+      },
+      {
+        "name": "primitive_root_half_turn",
+        "depends_on": [
+          "q",
+          "g"
+        ],
+        "statement": "Since $\\operatorname{ord}_q(g)=q-1$ and $q$ is odd, $g^{(q-1)/2}\\equiv -1\\pmod q$, and $g^n\\equiv -1\\pmod q\\iff n\\equiv (q-1)/2\\pmod{q-1}$."
+      },
+      {
+        "name": "coprime_exponent_moduli_for_CRT",
+        "depends_on": [
+          "p",
+          "q",
+          "k"
+        ],
+        "statement": "$\\gcd(p^{k-1},q-1)=1$, hence the simultaneous congruences $n\\equiv 0\\pmod{p^{k-1}}$ and $n\\equiv (q-1)/2\\pmod{q-1}$ admit a unique solution class modulo $p^{k-1}(q-1)$."
+      },
+      {
+        "name": "unit_invertibility",
+        "depends_on": [
+          "p",
+          "q",
+          "k",
+          "A"
+        ],
+        "statement": "$\\gcd(A,M)=1$ (since $A\\equiv 1+p\\not\\equiv 0\\pmod p$ and $A\\equiv g\\not\\equiv 0\\pmod q$), so multiplicative orders and exponent reductions are well-defined."
+      }
+    ],
+    "operator(s)": [
+      "Chinese_remainder",
+      "constructive_CRT",
+      "multiplicative_order",
+      "exponent_congruence_translation",
+      "CRT_on_exponent_congruences",
+      "modular_reduction",
+      "equivalence_class_manipulation",
+      "lcm_bounds_via_product",
+      "mod_choice_strategy"
+    ],
+    "essential_assumption(s)": [
+      "The modulus interface is structurally constrained: $M=p^kq$ with $k\\ge 3$ and $\\gcd(p^k,q)=1$, so the CRT synthesis of $A$ is deterministic and includes a genuine prime-power factor.",
+      "The task cannot be solved by a single CRT reconstruction step on $A$; one must first use multiplicative-order reasoning to translate the power constraints on $A^n$ into congruences on the exponent $n$, and only then apply CRT to those exponent congruences to obtain the extremal value $n_0$.",
+      "Anti-triviality guards $k\\ge 3$ and $q>3$ ensure both exponent moduli $p^{k-1}$ and $q-1$ exceed $2$, ruling out degenerate cases such as order $=1$ or $-1\\equiv 1$."
+    ],
+    "uniqueness_certificate(s)": [
+      "Using $\\operatorname{ord}_{p^k}(A)=p^{k-1}$ (since $A\\equiv 1+p\\pmod{p^k}$), we have $A^n\\equiv 1\\pmod{p^k}\\iff n\\equiv 0\\pmod{p^{k-1}}$. Using $\\operatorname{ord}_q(A)=q-1$ (since $A\\equiv g\\pmod q$ with $g$ primitive), we have $A^n\\equiv -1\\pmod q\\iff n\\equiv (q-1)/2\\pmod{q-1}$. Because $\\gcd(p^{k-1},q-1)=1$, CRT yields a unique residue class $n\\pmod{p^{k-1}(q-1)}$ satisfying both; therefore $S$ is exactly one arithmetic progression and has a unique smallest positive element $n_0$. The reported output is the canonical residue $n_0\\bmod 1000\\in\\{0,1,\\dots,999\\}$, which is unique because $n_0$ itself is unique."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "Chinese_remainder",
+        "inputs": [
+          "congruences modulo $p^k$ and modulo $q$ (coprime moduli)"
+        ],
+        "purpose": "synthesize the global unit $A\\pmod{p^kq}$ from its prescribed local residues",
+        "outputs": [
+          "a unique residue class $A\\pmod M$ and its least nonnegative representative"
+        ]
+      },
+      {
+        "name": "order_translation",
+        "inputs": [
+          "exact orders $\\operatorname{ord}_{p^k}(1+p)=p^{k-1}$ and $\\operatorname{ord}_q(g)=q-1$"
+        ],
+        "purpose": "translate power congruences for $A^n$ into congruences on the exponent $n$ (bridge from ORDER to CRT)",
+        "outputs": [
+          "$n\\equiv 0\\pmod{p^{k-1}}$ and $n\\equiv (q-1)/2\\pmod{q-1}$"
+        ]
+      },
+      {
+        "name": "CRT_on_order_constraints",
+        "inputs": [
+          "ORDER-derived exponent congruences modulo $p^{k-1}$ and $q-1$",
+          "coprimality $\\gcd(p^{k-1},q-1)=1$"
+        ],
+        "purpose": "combine ORDER-derived exponent constraints into a single congruence class and extract the least positive representative (interaction kernel: ORDER + CRT)",
+        "outputs": [
+          "unique class $n\\pmod{p^{k-1}(q-1)}$ and the extremal value $n_0=\\min S$"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "Chinese_remainder_theorem_coprime_moduli",
+        "role": "guarantees existence/uniqueness of $A\\pmod{p^kq}$ from its residues modulo $p^k$ and $q$, and guarantees existence/uniqueness of the exponent class modulo $p^{k-1}(q-1)$"
+      },
+      {
+        "name": "order_of_1_plus_p_mod_prime_power",
+        "role": "gives $\\operatorname{ord}_{p^k}(1+p)=p^{k-1}$ (typically proved by binomial expansion / lifting arguments)"
+      },
+      {
+        "name": "primitive_root_mod_prime",
+        "role": "ensures $(\\mathbb{Z}/q\\mathbb{Z})^\\times$ is cyclic and that $\\operatorname{ord}_q(g)=q-1$ makes $-1$ the half-power $g^{(q-1)/2}$"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "A congruence constraint is a statement about membership in an arithmetic progression; CRT intersects progressions into a single progression.",
+      "In a finite cyclic group, a power equation $u^n=v$ becomes a congruence condition on $n$ once the order structure is identified."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use the known exact order $\\operatorname{ord}_{p^k}(1+p)=p^{k-1}$ to rewrite $A^n\\equiv 1\\pmod{p^k}$ as the exponent constraint $n\\equiv 0\\pmod{p^{k-1}}$.",
+      "Use that $A\\equiv g\\pmod q$ with $g$ primitive to rewrite $A^n\\equiv -1\\pmod q$ as $n\\equiv (q-1)/2\\pmod{q-1}$.",
+      "Apply CRT to these ORDER-derived exponent congruences (made possible by $\\gcd(p^{k-1},q-1)=1$), then take the least positive representative and finally normalize modulo $1000$."
+    ],
+    "finish_type": "extremal_argument"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic (gcd, pow) for fast modular checks."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional verification: crt reconstruction, primitive-root checks, and multiplicative-order computation on small admissible samples."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, isprime",
+      "from sympy.ntheory.modular import crt",
+      "from sympy.ntheory.residue_ntheory import is_primitive_root, primitive_root, n_order"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "For small admissible parameters, compute $A$ via crt, solve the exponent congruences via CRT, take the least positive $n_0$, and verify $A^{n_0}\\equiv 1\\pmod{p^k}$ and $A^{n_0}\\equiv -1\\pmod q$."
+      },
+      {
+        "name": "order_sanity_check",
+        "reason": "For small odd primes $p$ and $k\\ge 3$, verify $\\operatorname{ord}_{p^k}(1+p)=p^{k-1}$ by direct multiplicative-order computation (n_order)."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Independently brute-force the minimal $n_0$ for small parameter sizes to confirm agreement with the CRT-derived value."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 193,
+      "normalized": 193
+    }
+  }
+}

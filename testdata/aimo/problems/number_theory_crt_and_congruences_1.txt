@@ -1,0 +1,284 @@
+CRT-defined $T$ with odd prime-power and $2$-power components; valuation/order forcing; quotient sum mod $1000$ with a noninvertible divisor
+
+Let $M=11^5\cdot 19^2\cdot 2^{10}$.
+
+Let $T$ be the unique integer such that $0\le T<M$ and
+$$
+T\equiv 1+4\cdot 11^2 \pmod{11^5},\qquad
+T\equiv 2 \pmod{19^2},\qquad
+T\equiv 3 \pmod{2^{10}}.
+$$
+
+Let $t$ be the smallest positive integer such that
+$$
+11^5\mid (T^t-1),\qquad 19^2\mid (T^t-1),\qquad 2^{10}\mid (T^t-1).
+$$
+
+Define $A$ by
+$$
+A\equiv \frac{T^t-1}{11^5}+\frac{T^t-1}{19^2}+\frac{T^t-1}{2^{10}}\pmod{1000},
+$$
+where each division is taken in the integers. Let $N$ be the unique integer in $\{0,1,\dots,999\}$ such that $N\equiv A\pmod{1000}$.
+Determine $N$.
+
+Solution.
+Step 1. (CRT well-definedness of $T$)
+The moduli $11^5$, $19^2$, and $2^{10}$ are pairwise coprime, so the Chinese Remainder Theorem gives a unique residue class modulo $M=11^5\cdot 19^2\cdot 2^{10}$ satisfying the three congruences, and the normalization $0\le T<M$ selects a unique integer $T$.
+
+Step 2. (Explicit computation of $T$ by CRT)
+Compute the residues:
+$11^5=161051$, $19^2=361$, and $1+4\cdot 11^2=485$.
+
+Write $T=485+161051k$ and impose $T\equiv 2\pmod{361}$.
+Reducing modulo $361$ gives $485\equiv 124$ and $161051\equiv 45$, hence
+$124+45k\equiv 2\pmod{361}$, so $45k\equiv 239\pmod{361}$.
+Since $361=45\cdot 8+1$, we have $45^{-1}\equiv -8\equiv 353\pmod{361}$, hence
+$k\equiv 239\cdot 353\equiv 254\pmod{361}$.
+So $k=254+361m$ and therefore
+$T=485+161051(254+361m)=40907439+58139411\,m$.
+
+Now impose $T\equiv 3\pmod{1024}$:
+$40907439+58139411m\equiv 3\pmod{1024}$.
+Reducing modulo $1024$ gives $40907439\equiv 687$ and $58139411\equiv 787$, so
+$687+787m\equiv 3\pmod{1024}$, i.e. $787m\equiv 340\pmod{1024}$.
+A Euclidean back-substitution yields $787^{-1}\equiv 795\pmod{1024}$, hence
+$m\equiv 340\cdot 795\equiv 988\pmod{1024}$.
+Taking $m=988$ gives
+$T=40907439+58139411\cdot 988=57482645507$.
+Also $M=58139411\cdot 1024=59534756864$, so indeed $0\le T<M$.
+
+Step 3. (A valuation lemma for $a^n-1$ when $p\mid (a-1)$)
+Lemma 1. Let $p$ be an odd prime and let $a$ be an integer with $p\mid (a-1)$ and $p\nmid a$. Then for every $n\ge 1$,
+$$
+v_p(a^n-1)=v_p(a-1)+v_p(n).
+$$
+
+Proof.
+Write $n=p^k m$ where $k=v_p(n)$ and $p\nmid m$.
+
+First, assume $p\nmid m$. Factor
+$a^m-1=(a-1)(a^{m-1}+a^{m-2}+\cdots+1)$.
+Since $a\equiv 1\pmod{p}$, the sum satisfies
+$a^{m-1}+\cdots+1\equiv m\pmod{p}$, and $p\nmid m$ implies $p\nmid (a^{m-1}+\cdots+1)$.
+Hence $v_p(a^m-1)=v_p(a-1)$.
+
+Next, prove by induction on $k\ge 0$ that $v_p(a^{p^k}-1)=v_p(a-1)+k$.
+For $k=0$ this is tautological.
+Assume it holds for $k$ and set $b=a^{p^k}$, so $v_p(b-1)=v_p(a-1)+k\ge 1$.
+Expand with the binomial theorem:
+$b^p-1=(1+(b-1))^p-1=p(b-1)+\sum_{j=2}^p \binom{p}{j}(b-1)^j$.
+The first term has valuation $v_p(p(b-1))=1+v_p(b-1)$.
+For $j\ge 2$, $\binom{p}{j}$ is divisible by $p$ but not by $p^2$, so $v_p\!\left(\binom{p}{j}\right)=1$, and thus
+$v_p\!\left(\binom{p}{j}(b-1)^j\right)\ge 1+2v_p(b-1)>1+v_p(b-1)$.
+Therefore the first term has strictly smaller $p$-adic valuation than every other term, so
+$v_p(b^p-1)=1+v_p(b-1)$.
+Hence $v_p(a^{p^{k+1}}-1)=v_p(b^p-1)=1+v_p(b-1)=v_p(a-1)+(k+1)$.
+
+Finally, with $n=p^k m$ and $p\nmid m$, we have
+$a^n-1=(a^{p^k})^m-1$.
+Applying the first part with $a^{p^k}$ in place of $a$ and $m$ in place of $n$ gives
+$v_p(a^n-1)=v_p(a^{p^k}-1)=v_p(a-1)+k=v_p(a-1)+v_p(n)$.
+This proves the lemma.  $\square$
+
+Step 4. (Compute $\operatorname{ord}_{11^5}(T)$)
+From the defining congruence, $T\equiv 1+4\cdot 11^2\pmod{11^5}$, hence $v_{11}(T-1)=2$.
+Applying Lemma 1 with $p=11$ and $a=T$ gives
+$v_{11}(T^n-1)=2+v_{11}(n)$.
+Therefore $11^5\mid (T^n-1)$ is equivalent to $2+v_{11}(n)\ge 5$, i.e. $v_{11}(n)\ge 3$, i.e. $11^3\mid n$.
+Thus the smallest positive $n$ with $T^n\equiv 1\pmod{11^5}$ is $11^3=1331$, so
+$\operatorname{ord}_{11^5}(T)=1331$.
+
+Step 5. (Compute $\operatorname{ord}_{19}(T)$)
+Because $T\equiv 2\pmod{19^2}$, we also have $T\equiv 2\pmod{19}$.
+Compute $2^9=512\equiv -1\pmod{19}$ since $19\cdot 27=513$.
+Hence $2^{18}\equiv 1\pmod{19}$ but $2^9\not\equiv 1\pmod{19}$.
+Since the positive divisors of $18$ are $1,2,3,6,9,18$ and $2^9\not\equiv 1$, the order cannot be any of $1,2,3,6,9$, so it must be $18$:
+$\operatorname{ord}_{19}(2)=18$, and thus $\operatorname{ord}_{19}(T)=18$.
+
+Step 6. (Lift the order from $19$ to $19^2$)
+Lemma 2. Let $q$ be an odd prime and let $g$ be an integer with $\gcd(g,q)=1$ and $\operatorname{ord}_q(g)=q-1$.
+Then $\operatorname{ord}_{q^2}(g)$ is either $q-1$ or $q(q-1)$.
+Moreover, if $g^{q-1}\not\equiv 1\pmod{q^2}$, then $\operatorname{ord}_{q^2}(g)=q(q-1)$.
+
+Proof.
+The group $(\mathbb{Z}/q^2\mathbb{Z})^\times$ has size $\varphi(q^2)=q(q-1)$, so $\operatorname{ord}_{q^2}(g)\mid q(q-1)$.
+Reducing modulo $q$ gives a homomorphism $(\mathbb{Z}/q^2\mathbb{Z})^\times\to (\mathbb{Z}/q\mathbb{Z})^\times$, so $\operatorname{ord}_q(g)$ divides $\operatorname{ord}_{q^2}(g)$.
+Since $\operatorname{ord}_q(g)=q-1$, we get $q-1\mid \operatorname{ord}_{q^2}(g)$ and also $\operatorname{ord}_{q^2}(g)\mid q(q-1)$.
+Because $q$ is prime, the only possibilities are $\operatorname{ord}_{q^2}(g)=q-1$ or $\operatorname{ord}_{q^2}(g)=q(q-1)$.
+If $g^{q-1}\not\equiv 1\pmod{q^2}$, then the order is not $q-1$, so it must be $q(q-1)$.  $\square$
+
+Step 7. (Compute $\operatorname{ord}_{19^2}(T)$)
+We have $T\equiv 2\pmod{19^2}$, so $\operatorname{ord}_{19^2}(T)=\operatorname{ord}_{19^2}(2)$.
+Compute $2^{18}=262144$ and reduce modulo $19^2=361$:
+$361\cdot 726=262086$, so $2^{18}\equiv 262144-262086=58\pmod{361}$, which is not $1$.
+Therefore Lemma 2 with $q=19$ and $g=2$ gives
+$\operatorname{ord}_{19^2}(T)=19\cdot 18=342$.
+
+Step 8. (Order of $3$ modulo $2^n$)
+Lemma 3. For every integer $n\ge 3$, $\operatorname{ord}_{2^n}(3)=2^{n-2}$.
+
+Proof.
+We claim that for every $k\ge 1$,
+$$
+v_2\!\left(3^{2^k}-1\right)=k+2.
+$$
+Base case $k=1$: $3^2-1=8$ so the valuation is $3=1+2$.
+
+Inductive step: assume $v_2(3^{2^k}-1)=k+2$ for some $k\ge 1$.
+Then
+$3^{2^{k+1}}-1=(3^{2^k}-1)(3^{2^k}+1)$.
+The first factor has valuation $k+2$ by the induction hypothesis.
+Also $3^{2^k}\equiv 1\pmod{8}$ for $k\ge 1$ (since already $3^2\equiv 1\pmod{8}$ and squaring preserves $\equiv 1\pmod{8}$),
+so $3^{2^k}+1\equiv 2\pmod{8}$ and therefore $v_2(3^{2^k}+1)=1$.
+Hence
+$v_2(3^{2^{k+1}}-1)=v_2(3^{2^k}-1)+v_2(3^{2^k}+1)=(k+2)+1=k+3$,
+which completes the induction.
+
+Now set $k=n-2\ge 1$. Then $v_2(3^{2^{n-2}}-1)=n$, i.e. $3^{2^{n-2}}\equiv 1\pmod{2^n}$.
+For $k=n-3$, we have $v_2(3^{2^{n-3}}-1)=n-1$, so $3^{2^{n-3}}\not\equiv 1\pmod{2^n}$.
+Therefore the order of $3$ modulo $2^n$ is exactly $2^{n-2}$.  $\square$
+
+Step 9. (Compute $\operatorname{ord}_{2^{10}}(T)$)
+Since $T\equiv 3\pmod{2^{10}}$, we have $\operatorname{ord}_{2^{10}}(T)=\operatorname{ord}_{2^{10}}(3)$.
+By Lemma 3 with $n=10$, $\operatorname{ord}_{2^{10}}(T)=2^8=256$.
+
+Step 10. (Determine the minimal exponent $t$)
+The conditions $11^5\mid (T^t-1)$, $19^2\mid (T^t-1)$, $2^{10}\mid (T^t-1)$ are equivalent to
+$T^t\equiv 1$ modulo each of $11^5$, $19^2$, $2^{10}$.
+Thus $t$ must be a common multiple of the three local orders found above, and the smallest such $t$ is their least common multiple:
+$t=\operatorname{lcm}(1331,342,256)$.
+
+Compute $\gcd(342,256)=2$, so $\operatorname{lcm}(342,256)=342\cdot 128=43776$.
+Also $\gcd(1331,43776)=1$ (since $11\nmid 43776$), hence
+$t=1331\cdot 43776=58265856$.
+
+Step 11. (Exponent reduction modulo $1000$)
+Lemma 4. If $\gcd(U,1000)=1$, then $U^{100}\equiv 1\pmod{1000}$.
+
+Proof.
+Since $1000=8\cdot 125$ with $\gcd(8,125)=1$, it suffices to prove $U^{100}\equiv 1\pmod{8}$ and $U^{100}\equiv 1\pmod{125}$.
+Modulo $8$, any unit is odd, so $U^2\equiv 1\pmod{8}$ and hence $U^{100}=(U^2)^{50}\equiv 1\pmod{8}$.
+Modulo $125$, Euler's theorem gives $U^{\varphi(125)}=U^{100}\equiv 1\pmod{125}$ because $\varphi(125)=100$.
+CRT combines the two congruences into $U^{100}\equiv 1\pmod{1000}$.  $\square$
+
+Since $T\equiv 507\pmod{1000}$ is coprime to $1000$, Lemma 4 implies $T^{100}\equiv 1\pmod{1000}$ and therefore
+$T^t\equiv T^{t\bmod 100}\pmod{1000}$.
+Because $t=58265856\equiv 56\pmod{100}$, we get $T^t\equiv 507^{56}\pmod{1000}$.
+
+Step 12. (Compute $T^t\bmod 1000$)
+Use repeated squaring modulo $1000$:
+$507^2=257049\equiv 49$,
+$507^4\equiv 49^2=2401\equiv 401$,
+$507^8\equiv 401^2=160801\equiv 801$,
+$507^{16}\equiv 801^2=641601\equiv 601$,
+$507^{32}\equiv 601^2=361201\equiv 201$.
+Hence
+$507^{56}=507^{32}\cdot 507^{16}\cdot 507^{8}\equiv 201\cdot 601\cdot 801\pmod{1000}$.
+Compute $201\cdot 601=120801\equiv 801$, so the product is $801\cdot 801=641601\equiv 601$.
+Thus $T^t\equiv 601\pmod{1000}$, so $T^t-1\equiv 600\pmod{1000}$.
+
+Step 13. (Mod-$1000$ reduction of quotients when the divisor is invertible)
+Lemma 5. If $D\mid N$ and $\gcd(D,1000)=1$, then $\frac{N}{D}\equiv N\cdot D^{-1}\pmod{1000}$.
+
+Proof.
+Write $N=DQ$ with $Q\in\mathbb{Z}$.
+Reducing modulo $1000$ gives $N\equiv DQ$, and multiplying by $D^{-1}\pmod{1000}$ yields $Q\equiv N\cdot D^{-1}\pmod{1000}$.  $\square$
+
+Since $\gcd(11^5,1000)=\gcd(19^2,1000)=1$, Lemma 5 applies to the first two quotients.
+
+Step 14. (Compute the first two quotient terms modulo $1000$)
+Reduce the divisors modulo $1000$:
+$11^5=161051\equiv 51\pmod{1000}$ and $19^2=361$.
+
+Find inverses modulo $1000$:
+$51^{-1}\equiv 451\pmod{1000}$ (since $51\cdot 451=23001\equiv 1$),
+and $361^{-1}\equiv 241\pmod{1000}$ (since $361\cdot 241=87001\equiv 1$).
+
+Using Lemma 5 and $T^t-1\equiv 600\pmod{1000}$,
+$$
+\frac{T^t-1}{11^5}\equiv 600\cdot 451\equiv 600\pmod{1000},\qquad
+\frac{T^t-1}{19^2}\equiv 600\cdot 241\equiv 600\pmod{1000}.
+$$
+
+Step 15. (Handling the noninvertible divisor $2^{10}$ modulo $1000$)
+Let $X=T^t$ and $K=\frac{X-1}{2^{10}}=\frac{X-1}{1024}\in\mathbb{Z}$.
+We must compute $K\bmod 1000$.
+
+Lemma 6. Assume $X\equiv 1\pmod{1024}$ and let $K=(X-1)/1024$.
+Then:
+(i) $K\bmod 8$ is determined by $X\bmod 8192$ via $X\equiv 1+1024(K\bmod 8)\pmod{8192}$.
+(ii) $K\bmod 125$ is determined by $X\bmod 125$ via $K\equiv (X-1)\cdot 1024^{-1}\pmod{125}$.
+(iii) The pair $(K\bmod 8,\;K\bmod 125)$ determines $K\bmod 1000$ uniquely by CRT.
+
+Proof.
+Write $X=1+1024K$.
+Reducing modulo $8192=1024\cdot 8$ gives (i).
+Reducing modulo $125$ gives $X-1\equiv 1024K\pmod{125}$, and since $\gcd(1024,125)=1$ we can invert $1024$ modulo $125$ to get (ii).
+Finally, $1000=8\cdot 125$ with coprime factors, so CRT gives uniqueness in (iii).  $\square$
+
+Step 16. (Compute $K\bmod 8$ from $X\bmod 8192$)
+First compute $T\bmod 8192$ from Step 2:
+$T=57482645507\equiv 4099\pmod{8192}$.
+
+Because $\gcd(4099,8192)=1$ and $\varphi(8192)=4096$, Euler's theorem gives $4099^{4096}\equiv 1\pmod{8192}$.
+Hence $T^t\equiv 4099^{t\bmod 4096}\pmod{8192}$.
+Since $t=58265856\equiv 256\pmod{4096}$, we get $X\equiv 4099^{256}\pmod{8192}$.
+
+Compute by repeated squaring modulo $8192$:
+$4099^2=(4096+3)^2\equiv 9$,
+$4099^4\equiv 9^2=81$,
+$4099^8\equiv 81^2=6561$,
+$4099^{16}\equiv 6561^2\equiv 5953$,
+$4099^{32}\equiv 5953^2\equiv 7809$,
+$4099^{64}\equiv 7809^2\equiv 7425$,
+$4099^{128}\equiv 7425^2\equiv 6657$,
+$4099^{256}\equiv 6657^2\equiv 5121$.
+Thus $X\equiv 5121\pmod{8192}$.
+
+Then $X-1\equiv 5120=1024\cdot 5\pmod{8192}$, so by Lemma 6(i),
+$K\equiv 5\pmod{8}$.
+
+Step 17. (Compute $K\bmod 125$ from $X\bmod 125$)
+From Step 2, $T\equiv 7\pmod{125}$.
+Because $\gcd(7,125)=1$ and $\varphi(125)=100$, Euler's theorem gives $7^{100}\equiv 1\pmod{125}$, hence
+$X=T^t\equiv 7^{t\bmod 100}\equiv 7^{56}\pmod{125}$.
+A repeated-squaring computation gives $7^{56}\equiv 101\pmod{125}$, so $X-1\equiv 100\pmod{125}$.
+
+Also $1024\equiv 24\pmod{125}$ and $24^{-1}\equiv 99\pmod{125}$ (since $24\cdot 99=2376\equiv 1$).
+By Lemma 6(ii),
+$K\equiv 100\cdot 99\equiv 25\pmod{125}$.
+
+Step 18. (CRT to get $K\bmod 1000$)
+Solve
+$K\equiv 5\pmod{8}$ and $K\equiv 25\pmod{125}$.
+Write $K=25+125n$.
+Modulo $8$ this is $25+125n\equiv 1+5n\equiv 5\pmod{8}$, so $5n\equiv 4\pmod{8}$.
+Since $5^{-1}\equiv 5\pmod{8}$, we get $n\equiv 4\pmod{8}$.
+Thus $n=4+8m$ and
+$K=25+125(4+8m)=525+1000m$.
+Therefore $K\equiv 525\pmod{1000}$, i.e.
+$$
+\frac{T^t-1}{2^{10}}\equiv 525\pmod{1000}.
+$$
+
+Step 19. (Compute $A\bmod 1000$ and $N$)
+Combine the three quotient residues:
+$A\equiv 600+600+525=1725\equiv 725\pmod{1000}$.
+Hence the unique $N\in\{0,1,\dots,999\}$ with $N\equiv A\pmod{1000}$ is
+$N=725$.
+
+Uniqueness Test
+1) $T$ is unique: the moduli $11^5$, $19^2$, and $2^{10}$ are pairwise coprime, so CRT gives exactly one residue class modulo $M$, and $0\le T<M$ fixes the representative.
+
+2) The local orders are uniquely forced:
+- Lemma 1 and $v_{11}(T-1)=2$ force $\operatorname{ord}_{11^5}(T)=11^3=1331$.
+- Steps 5-7 and Lemma 2 force $\operatorname{ord}_{19^2}(T)=342$.
+- Lemma 3 forces $\operatorname{ord}_{2^{10}}(T)=256$.
+
+3) $t$ is unique: $T^t\equiv 1$ modulo each prime power holds exactly when $t$ is a common multiple of the three local orders, so the smallest positive such $t$ is uniquely $t=\operatorname{lcm}(1331,342,256)=58265856$.
+
+4) $A\bmod 1000$ is unique: the first two quotients are uniquely determined modulo $1000$ by Lemma 5 because their denominators are invertible modulo $1000$; the $2^{10}$-quotient is uniquely determined modulo $1000$ by Lemma 6 and CRT. Therefore $A$ is uniquely determined modulo $1000$.
+
+5) $N$ is unique by normalization: for every residue class modulo $1000$ there is exactly one representative in $\{0,1,\dots,999\}$.
+
+725

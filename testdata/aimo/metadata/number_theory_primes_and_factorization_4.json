@@ -1,0 +1,235 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "prime_exponent_vectors__extremal_divisor_structure__tau_maximization",
+    "instance_id": "imocompendium:Problem_BRA2_largest_number_of_divisors_up_to_1983",
+    "short_name": "Extremal factorization under size bounds (maximize/divisor-structure)",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "primes & factorization",
+      "divisor structure",
+      "extremal methods"
+    ],
+    "topic_path": [
+      "primes_factorization",
+      "prime_exponent_vectors",
+      "extremal_divisor_structure"
+    ],
+    "tags": [
+      "bounding_number_of_divisors_optional",
+      "bounding_prime_factors",
+      "controlling_exponents_in_factorization",
+      "count_divisors_in_constraints",
+      "divisor_structure_constraints",
+      "exact_division_arguments",
+      "extremal_divisor_choice",
+      "extremal_prime_packing",
+      "factorization_under_constraints",
+      "forcing_parity",
+      "forcing_prime_power",
+      "forcing_squarefree",
+      "fundamental_theorem_arithmetic",
+      "inequality_bounds_for_integers",
+      "largest_prime_factor_bounds",
+      "lcm_of_pairwise_coprime",
+      "minimal_prime_factor_choice",
+      "pairwise_coprime_structures",
+      "prime_exponent_vectors",
+      "prime_factorization_uniqueness",
+      "smallest_prime_factor_bounds",
+      "smoothness_constraints_light",
+      "splitting_into_coprime_parts"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Given a size bound $N$, determine an integer $n\\le N$ that optimizes a divisor-structure objective (typically maximizing the number of divisors, or forcing $n$ to be a prime power/squarefree/etc.), reported with a deterministic tie-break rule (e.g., smallest such $n$).",
+    "object(s)": [
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n_*",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$N\\in\\mathbb{N},\\ N\\ge 2$",
+      "Objective is fixed for the family (default: maximize divisor count among $1\\le n\\le N$, with tie-break to the smallest maximizer)."
+    ],
+    "ask": [
+      "Find $n_*\\in\\{1,2,\\dots,N\\}$ maximizing the chosen objective, and if there are multiple, output the smallest such $n_*$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "N",
+        "type": "int",
+        "domain": "$N\\ge 2$",
+        "purpose": "sets a finite search universe and makes extremal arguments meaningful"
+      },
+      {
+        "name": "objective_mode",
+        "type": "enum",
+        "domain": "{maximize_tau, force_squarefree, force_prime_power, force_smoothness_light}",
+        "purpose": "selects a coherent divisor-structure target within the same prime-exponent framework"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "nonincreasing_exponent_shape",
+        "depends_on": [
+          "n_*"
+        ],
+        "statement": "For extremal divisor objectives under a size cap, the prime exponents in $n_* = \\prod p_i^{e_i}$ typically satisfy $e_1\\ge e_2\\ge\\cdots$ (otherwise one can swap exponents to reduce $n$ without decreasing the objective)."
+      },
+      {
+        "name": "prime_packing_heuristic",
+        "depends_on": [
+          "N"
+        ],
+        "statement": "Extremal solutions prioritize small primes first: if a large prime $q$ divides $n_*$, replacing $q$ by a smaller prime (when feasible) improves size efficiency for the same exponent budget."
+      }
+    ],
+    "operator(s)": [
+      "fundamental_theorem_arithmetic",
+      "prime_exponent_vectors",
+      "controlling_exponents_in_factorization",
+      "divisor_structure_constraints",
+      "bounding_prime_factors",
+      "largest_prime_factor_bounds",
+      "smallest_prime_factor_bounds",
+      "forcing_prime_power",
+      "forcing_squarefree",
+      "forcing_parity",
+      "smoothness_constraints_light",
+      "extremal_divisor_choice",
+      "minimal_prime_factor_choice",
+      "inequality_bounds_for_integers",
+      "bounding_number_of_divisors_optional",
+      "count_divisors_in_constraints"
+    ],
+    "essential_assumption(s)": [
+      "A deterministic tie-break rule (e.g., \"choose the smallest maximizer\") is part of the family definition and is required for uniqueness.",
+      "In \"smoothness_constraints_light\" mode, the smoothness bound is an explicit parameter so the decision problem stays decidable."
+    ],
+    "uniqueness_certificate(s)": [
+      "Because the search universe $\\{1,\\dots,N\\}$ is finite, an optimum exists. The tie-break rule selects exactly one integer, making the output globally unique."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "prime_exponent_vectors",
+        "inputs": [
+          "factorization $n=\\prod p_i^{e_i}$"
+        ],
+        "purpose": "translate divisor-structure objectives into constraints on exponent vectors",
+        "outputs": [
+          "optimization problem on integer exponent vectors"
+        ]
+      },
+      {
+        "name": "extremal_divisor_choice",
+        "inputs": [
+          "candidate extremal $n_*$"
+        ],
+        "purpose": "choose an extremal object and perform local modifications to derive structural constraints",
+        "outputs": [
+          "monotonicity constraints such as $e_1\\ge e_2\\ge\\cdots$"
+        ]
+      },
+      {
+        "name": "minimal_prime_factor_choice",
+        "inputs": [
+          "a counterexample extremal with an avoidable large prime factor"
+        ],
+        "purpose": "replace a large prime factor by a smaller one while preserving objective to get contradiction",
+        "outputs": [
+          "proof that only small primes appear in extremal candidates"
+        ]
+      },
+      {
+        "name": "inequality_bounds_for_integers",
+        "inputs": [
+          "product constraints $\\prod p_i^{e_i}\\le N$"
+        ],
+        "purpose": "convert factorization constraints into numeric bounds on exponents",
+        "outputs": [
+          "finite enumeration range for feasible exponent vectors"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "fundamental_theorem_arithmetic",
+        "role": "justify that prime exponent vectors parameterize all $n$ uniquely"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Integers are uniquely determined by their prime exponents; optimizing an arithmetic property often reduces to optimizing over exponent vectors under a size constraint."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Convert the objective to constraints on the prime exponent vector and show exponents must be nonincreasing with primes in increasing order.",
+      "Use a local replacement argument (swap primes/exponents) to rule out non-optimal shapes, then enumerate the remaining finite candidates."
+    ],
+    "finish_type": "finite_enumeration"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "Core integer arithmetic: gcd, lcm, modular exponentiation scaffolding."
+      },
+      {
+        "name": "sympy",
+        "reason": "Optional symbolic/number theory utilities: factorint, primerange, mod_inverse, crt; useful for verification tasks."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "from sympy import factorint, crt, mod_inverse"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Validate that the produced object(s) satisfy all defining congruences/divisibility/Diophantine constraints for randomly sampled parameters within the declared domain."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "Cross-check the main result via an alternative computation (e.g., brute force for small bounds, or an independent formula such as factorization vs. valuation, or CRT reconstruction vs. direct search)."
+      },
+      {
+        "name": "bruteforce_small_N_validation",
+        "reason": "For small $N$, brute force the objective across $1..N$ and compare to the structural prediction (exponent shape / prime packing)."
+      },
+      {
+        "name": "factorization_based_search",
+        "reason": "Enumerate admissible exponent vectors and reconstruct candidates; verify the extremal candidate matches brute force for moderate $N$."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 840,
+      "normalized": 840
+    }
+  }
+}

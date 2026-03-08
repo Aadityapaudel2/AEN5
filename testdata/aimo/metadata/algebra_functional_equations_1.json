@@ -1,0 +1,275 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "functional_equations__additive_pexider_jensen__regularity_forces_linearity",
+    "instance_id": "imo_compendium__imo1981__longlist_YUG4__cauchy_equivalence",
+    "short_name": "Additive/Pexider/Jensen FE with regularity forcing",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "algebra",
+    "subdomain(s)": [
+      "functional_equations"
+    ],
+    "topic_path": [
+      "functional_equations",
+      "additive_and_Jensen",
+      "regularity_forcing"
+    ],
+    "tags": [
+      "additive_Cauchy",
+      "Pexider_type",
+      "Jensen_type",
+      "R_to_R",
+      "Q_to_Q",
+      "interval_to_interval",
+      "injective",
+      "surjective",
+      "bijective",
+      "monotone",
+      "bounded",
+      "continuity_forced",
+      "plug_special_values",
+      "swap_variables",
+      "equal_inputs",
+      "generate_recursion",
+      "force_additivity",
+      "show_linearity",
+      "classify_piecewise",
+      "bounding_trap",
+      "invariant_extraction"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Classify all functions $f$ satisfying an additive_Cauchy / Pexider_type / Jensen_type identity on a specified domain (e.g., $Q_to_Q$, $R_to_R$, or interval_to_interval). Additional constraint_atoms (bounded/monotone/continuity_forced) force the wild solutions away and yield an affine (or linear) description.",
+    "object(s)": [
+      {
+        "name": "f",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "D",
+        "type": "set",
+        "role": "given",
+        "dependency": "independent"
+      }
+    ],
+    "givens": [
+      "A domain model $D$ is chosen from {reals, rationals, integers, an interval} (parameter).",
+      "The function satisfies one of the archetype_families: additive_Cauchy, Pexider_type, or Jensen_type (parameterized).",
+      "At least one regularity/constraint_atom is assumed: bounded on an interval, monotone, or continuity_forced."
+    ],
+    "ask": [
+      "Determine the full set of functions $f:D\\to D$ satisfying the given functional equation and constraint_atoms."
+    ]
+  },
+  "answer_spec": {
+    "type": "set",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "domain_model",
+        "type": "enum",
+        "domain": "{R_to_R, Q_to_Q, interval_to_interval}",
+        "purpose": "Chooses the ambient domain and affects which regularity implies continuity_forced."
+      },
+      {
+        "name": "equation_form",
+        "type": "enum",
+        "domain": "{additive_Cauchy, Pexider_type, Jensen_type}",
+        "purpose": "Selects the functional equation template."
+      },
+      {
+        "name": "regularity_guard",
+        "type": "enum",
+        "domain": "{bounded, monotone, continuity_forced}",
+        "purpose": "Selects which constraint_atom eliminates pathological solutions."
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "translation_invariance",
+        "depends_on": [
+          "equation_form"
+        ],
+        "statement": "The equation implies invariance under translations or midpoints (e.g., $f(x+y)-f(x)-f(y)=0$ or Jensen midpoint condition)."
+      },
+      {
+        "name": "rational_scaling",
+        "depends_on": [
+          "domain_model",
+          "equation_form"
+        ],
+        "statement": "From generate_recursion and equal_inputs one obtains $f(qx)=qf(x)$ for rational $q$ whenever the domain allows it."
+      },
+      {
+        "name": "interface_quantity_T",
+        "depends_on": [
+          "f"
+        ],
+        "statement": "Define the interface quantity $T=f(1)$ (or slope parameter); the equation forces $f(x)=Tx$ on $Q_to_Q$, and regularity_guard extends this to $R_to_R$ or interval_to_interval."
+      },
+      {
+        "name": "constraint_atoms_rigidity",
+        "depends_on": [
+          "regularity_guard"
+        ],
+        "statement": "Constraint_atoms such as injective, surjective, bijective, bounded, or monotone are used to deduce continuity_forced (or to force fixed_points), eliminating wild additive_Cauchy solutions and enabling show_linearity."
+      }
+    ],
+    "operator(s)": [
+      "plug_special_values",
+      "swap_variables",
+      "equal_inputs",
+      "generate_recursion",
+      "invariant_extraction"
+    ],
+    "essential_assumption(s)": [
+      "The domain_model is closed under required operations (addition and rational scaling as needed).",
+      "regularity_guard holds on a nontrivial interval/subset so that continuity_forced can be deduced when working over $R_to_R$."
+    ],
+    "uniqueness_certificate(s)": [
+      "The equation_form plus force_additivity determines $f$ on the rational skeleton by the single parameter $T=f(1)$ (so $f(q)=qT$ on $Q_to_Q$). Any regularity_guard from {bounded, monotone, injective, surjective, bijective} implies continuity_forced on a nontrivial interval, which uniquely extends the rational formula to $R_to_R$ / interval_to_interval. Thus the solution set is completely and uniquely classified by $T$."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "plug_special_values",
+        "inputs": [
+          "functional equation"
+        ],
+        "purpose": "Obtain $f(0)$, $f(1)$, and other anchors that seed recursion.",
+        "outputs": [
+          "basepoint values and fixed_points"
+        ]
+      },
+      {
+        "name": "swap_variables",
+        "inputs": [
+          "two-variable equation"
+        ],
+        "purpose": "Derive symmetry relations and cancellation identities that imply additivity.",
+        "outputs": [
+          "force_additivity or Jensen midpoint property"
+        ]
+      },
+      {
+        "name": "equal_inputs",
+        "inputs": [
+          "substitute $x=y$ or $y=0$"
+        ],
+        "purpose": "Generate scaling and midpoint identities.",
+        "outputs": [
+          "recursive relations on iterates"
+        ]
+      },
+      {
+        "name": "bounding_trap",
+        "inputs": [
+          "bounded/monotone hypothesis"
+        ],
+        "purpose": "Use bounds to show the additive solution is continuous, hence linear.",
+        "outputs": [
+          "continuity_forced and show_linearity"
+        ]
+      },
+      {
+        "name": "classify_piecewise",
+        "inputs": [
+          "mixed domains or sign splits"
+        ],
+        "purpose": "Handle $x>0$, $x<0$, $x=0$ branches and reassemble.",
+        "outputs": [
+          "complete classification on $R_to_R$"
+        ]
+      },
+      {
+        "name": "force_additivity",
+        "inputs": [
+          "Pexider_type or Jensen_type identity",
+          "plug_special_values / swap_variables / equal_inputs"
+        ],
+        "purpose": "Reduce the given equation_form to the additive_Cauchy skeleton by cancellations and standard substitutions.",
+        "outputs": [
+          "additive_Cauchy on the underlying group"
+        ]
+      },
+      {
+        "name": "show_linearity",
+        "inputs": [
+          "additive_Cauchy on $Q$ or on $R$ plus a regularity_guard"
+        ],
+        "purpose": "Use bounded/monotone/continuity_forced to rule out pathological additive solutions and conclude $f(x)=Tx$ (or affine) on the full domain_model.",
+        "outputs": [
+          "complete linear/affine classification"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "additive_Cauchy",
+        "role": "Characterize solutions on $Q$ and under regularity on $R$."
+      },
+      {
+        "name": "Jensen_type",
+        "role": "Relate midpoint convexity to linearity under boundedness."
+      },
+      {
+        "name": "Pexider_type",
+        "role": "Reduce a three-function variant to the additive_Cauchy skeleton."
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "functional_equation_as_invariant_constraint",
+      "regularity_eliminates_pathologies"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use plug_special_values and equal_inputs to isolate $T=f(1)$ and force additivity.",
+      "Show that regularity_guard implies continuity_forced, hence show_linearity on $R_to_R$.",
+      "If the domain is mixed_domain, classify_piecewise and then stitch via the equation."
+    ],
+    "finish_type": "existence_uniqueness"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "sympy",
+        "reason": "Check derived linear forms and verify functional identities symbolically."
+      },
+      {
+        "name": "random",
+        "reason": "Random testing of candidate closed forms on sampled domain points."
+      }
+    ],
+    "import_hint(s)": [
+      "import sympy as sp",
+      "import random"
+    ],
+    "task(s)": [
+      {
+        "name": "primary_structural_check",
+        "reason": "Symbolically derive additivity from the chosen equation_form (Pexider_type/Jensen_type) via plug_special_values, swap_variables, and equal_inputs; then prove the rational scaling formula $f(qx)=qf(x)$ by generate_recursion and check that the inferred linear form satisfies the original identity."
+      },
+      {
+        "name": "secondary_independent_check",
+        "reason": "For representative parameter choices and constraint_atoms (bounded/monotone/injective/surjective/bijective), run randomized tests on rational inputs and on sampled real inputs: verify the equation numerically for the candidate linear/affine forms and search for counterexamples on small finite grids."
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "final_answer": {
+      "value": 29,
+      "normalized": 29
+    }
+  }
+}

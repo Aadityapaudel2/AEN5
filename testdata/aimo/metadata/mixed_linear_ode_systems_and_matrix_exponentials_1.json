@@ -1,0 +1,432 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "random_matrix_ode_system__wronskian_reduction__poly_value_sum_divisibility__exact_probability_variant_n7",
+    "instance_id": "n7_S3_matrix_companion_shift4__T3_theta_sum0to4_mod6__probability_m_plus_2n_mod1000_2026_02_13",
+    "short_name": "Random 3x3 ODE + polynomial-sum divisibility (n=7 variant)",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "mixed",
+    "subdomain(s)": [
+      "linear ODE systems and matrix exponentials",
+      "Wronskian/determinant invariants for linear systems",
+      "finite-sample probability by exact counting",
+      "polynomial evaluation sums and modular divisibility"
+    ],
+    "topic_path": [
+      "linear_algebra",
+      "linear_odes",
+      "determinants",
+      "finite_probability",
+      "modular_polynomial_evaluation"
+    ],
+    "tags": [
+      "matrix_exponential",
+      "trace_identity",
+      "Wronskian",
+      "determinant_nonvanishing",
+      "random_subsets",
+      "finite_enumeration",
+      "polynomial_from_roots",
+      "symmetric_sums",
+      "mod_6_condition",
+      "independence_product_rule",
+      "three_digit_output"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Choose discrete random data S (defining a companion-like 3x3 matrix), a nonzero binary initial vector v for X'=A_S X, and a subset T defining a cubic q_T. The event requires a Wronskian-type determinant det[X,X',X''] to be nonzero for all t\\geq0 and a separate polynomial-sum invariant Θ_T to be divisible by 6. Compute P(E) exactly and output a three-digit residue derived from the reduced fraction.",
+    "object(s)": [
+      {
+        "name": "n",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "S",
+        "type": "set",
+        "role": "random_given",
+        "dependency": "independent"
+      },
+      {
+        "name": "s1_s2_s3",
+        "type": "tuple",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "A_S",
+        "type": "matrix",
+        "role": "dependent_given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "v",
+        "type": "vector",
+        "role": "random_given",
+        "dependency": "independent"
+      },
+      {
+        "name": "X",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "W",
+        "type": "function",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "Delta_S",
+        "type": "function",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "T",
+        "type": "set",
+        "role": "random_given",
+        "dependency": "independent"
+      },
+      {
+        "name": "q_T",
+        "type": "polynomial",
+        "role": "dependent_given",
+        "dependency": "dependent"
+      },
+      {
+        "name": "Theta_T",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "E",
+        "type": "event",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "P_E",
+        "type": "rational",
+        "role": "output",
+        "dependency": "dependent"
+      },
+      {
+        "name": "m_n",
+        "type": "tuple",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "out",
+        "type": "string",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "n = 7.",
+      "S is chosen uniformly among 3-subsets of {1,2,3,4,5,6,7}, written S={s1<s2<s3}.",
+      "A_S is the 3x3 real matrix with top two rows [[0,1,0],[0,0,1]] and bottom row [(-1)^{s1}, s2-4, (-1)^{s3}].",
+      "v is chosen uniformly from {0,1}^3 \\ {0}.",
+      "X(t) solves X'(t)=A_S X(t), X(0)=v.",
+      "W(t)=det[X(t), X'(t), X''(t)].",
+      "T is chosen uniformly among 3-subsets of {0,1,2,3,4,5,6}.",
+      "q_T(z)=\\prod_{t in T}(z-t) in Z[z].",
+      "Theta_T=\\sum_{k=0}^4 q_T(k).",
+      "Event E: (i) W(t)\\neq0 for all t\\geq0, and (ii) 6 | Theta_T."
+    ],
+    "ask": [
+      "Compute P(E)=m/n in lowest terms and output the zero-padded three-digit string for ((m+2n) mod 1000)."
+    ]
+  },
+  "answer_spec": {
+    "type": "string",
+    "normalization": "zero_padded_3_digits_of_residue_mod_1000"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "universe_size",
+        "type": "int",
+        "domain": "integer >= 3",
+        "purpose": "size of the base set for S and T (here 7)"
+      },
+      {
+        "name": "subset_size_S",
+        "type": "int",
+        "domain": "integer >= 1",
+        "purpose": "size of S defining A_S (here 3)"
+      },
+      {
+        "name": "matrix_template",
+        "type": "symbolic_recipe",
+        "domain": "companion_like_with_discrete_parameters",
+        "purpose": "maps S to A_S via parity signs and a centered shift beta=s2-4"
+      },
+      {
+        "name": "initial_vector_distribution",
+        "type": "discrete_distribution",
+        "domain": "nonzero_binary_vectors_dimension_3",
+        "purpose": "chooses v uniformly from {0,1}^3\\{0}"
+      },
+      {
+        "name": "subset_size_T",
+        "type": "int",
+        "domain": "integer >= 1",
+        "purpose": "size of T defining q_T (here 3)"
+      },
+      {
+        "name": "evaluation_points",
+        "type": "list_int",
+        "domain": "fixed_small_integers",
+        "purpose": "k=0..4 used in Theta_T"
+      },
+      {
+        "name": "divisibility_modulus",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "modulus 6 for Theta_T condition"
+      },
+      {
+        "name": "output_modulus",
+        "type": "int",
+        "domain": "positive_integer",
+        "purpose": "1000 for final reduction"
+      },
+      {
+        "name": "output_linear_form",
+        "type": "other",
+        "domain": "(m+2n)",
+        "purpose": "postprocessing uses the linear form m+2n before reducing mod 1000"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "wronskian_reduction_to_static_determinant",
+        "depends_on": [
+          "A_S",
+          "v"
+        ],
+        "statement": "For X'=A_S X with X(t)=e^{tA_S}v, we have X^{(k)}(t)=A_S^k X(t), hence W(t)=det[X,AX,A^2X]=det(e^{tA_S}) \\cdot det[v,Av,A^2v]=e^{t \\cdot tr(A_S)} \\cdot Delta_S(v). Therefore W(t)\\neq0 for all t\\geq0 iff Delta_S(v)\\neq0."
+      },
+      {
+        "name": "event_independence_factorization",
+        "depends_on": [
+          "S",
+          "v",
+          "T"
+        ],
+        "statement": "(S,v) are independent of T, and the W-condition depends only on (S,v) while the Theta-condition depends only on T, so P(E)=P(Delta_S(v)\\neq0) \\cdot P(6|Theta_T)."
+      },
+      {
+        "name": "theta_sum_closed_form",
+        "depends_on": [
+          "T",
+          "evaluation_points"
+        ],
+        "statement": "Writing q_T(z)=z^3-s1 z^2+s2 z-s3, we have Theta_T=\\sum_{k=0}^4 q_T(k)=100-30s1+10s2-5s3."
+      },
+      {
+        "name": "theta_mod6_structure",
+        "depends_on": [
+          "T"
+        ],
+        "statement": "From Theta_T=100-30s1+10s2-5s3, the mod-2 condition reduces to s3 even (i.e., T contains an even element). Mod 3, Theta_T \\equiv 1+s2+s3, which depends only on the residues of elements of T modulo 3."
+      }
+    ],
+    "operator(s)": [
+      "build_matrix_from_subset",
+      "solve_linear_system_via_matrix_exponential",
+      "relate_higher_derivatives_to_powers_of_A",
+      "determinant_multiplicativity",
+      "trace_exponential_identity",
+      "finite_enumeration_over_subsets",
+      "polynomial_from_roots",
+      "symmetric_sum_expansion",
+      "modular_reduction_mod_2_and_mod_3",
+      "gcd_fraction_reduction",
+      "residue_and_zero_padding"
+    ],
+    "essential_assumption(s)": [
+      "The ODE solution exists uniquely for all t\\geq0 (true for constant-coefficient linear systems).",
+      "Determinant and trace identities over reals apply: det(e^{tA})=e^{t tr(A)}.",
+      "Uniform distributions on S, v, and T are independent.",
+      "Theta_T is interpreted as an integer; divisibility is in Z."
+    ],
+    "uniqueness_certificate(s)": [
+      "The finite sample spaces have fixed sizes: |C(7,3)|=35 for S and T, and 7 for v. The W-condition reduces deterministically to Delta_S(v)\\neq0, so counting good pairs (S,v) gives a unique rational. Separately, counting T with 6|Theta_T gives a unique rational. Independence fixes P(E) uniquely; lowest-terms reduction fixes (m,n) uniquely and thus the three-digit residue of (m+2n) mod 1000."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "wronskian_to_initial_data_determinant",
+        "inputs": [
+          "A_S",
+          "v"
+        ],
+        "purpose": "replace the infinite-time condition W(t)\\neq0 for all t\\geq0 by the finite check Delta_S(v)\\neq0",
+        "outputs": [
+          "Delta_S(v)"
+        ]
+      },
+      {
+        "name": "discrete_parameterization_of_A_S",
+        "inputs": [
+          "S"
+        ],
+        "purpose": "encode A_S by (alpha,beta,gamma) with alpha=(-1)^{s1}, beta=s2-4, gamma=(-1)^{s3}",
+        "outputs": [
+          "alpha",
+          "beta",
+          "gamma"
+        ]
+      },
+      {
+        "name": "enumerate_zero_locus_over_binary_vectors",
+        "inputs": [
+          "alpha",
+          "beta",
+          "gamma"
+        ],
+        "purpose": "evaluate Delta_S(v) on the 7 nonzero binary vectors and count vanishing cases",
+        "outputs": [
+          "count_good_pairs_Sv"
+        ]
+      },
+      {
+        "name": "expand_theta_via_symmetric_sums",
+        "inputs": [
+          "T"
+        ],
+        "purpose": "express Theta_T via symmetric sums and precomputed power sums over k=0..4, then reduce mod 6",
+        "outputs": [
+          "Theta_T_mod6"
+        ]
+      },
+      {
+        "name": "classify_T_by_residues_mod3",
+        "inputs": [
+          "T"
+        ],
+        "purpose": "count T satisfying the mod-3 component by residue-class patterns, then combine with the parity constraint",
+        "outputs": [
+          "count_good_T"
+        ]
+      },
+      {
+        "name": "multiply_probabilities_and_postprocess",
+        "inputs": [
+          "P_Delta",
+          "P_Theta"
+        ],
+        "purpose": "compute P(E), reduce to m/n, then output zero-padded ((m+2n) mod 1000)",
+        "outputs": [
+          "out"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "matrix_exponential_solution",
+        "role": "X(t)=e^{tA}v for constant A"
+      },
+      {
+        "name": "derivative_power_relation",
+        "role": "X^{(k)}=A^k X for X'=AX"
+      },
+      {
+        "name": "determinant_multiplicativity_and_trace_exponential",
+        "role": "det(e^{tA})=e^{t tr(A)} and det(e^{tA}B)=det(e^{tA})det(B)"
+      },
+      {
+        "name": "polynomial_from_roots_expansion",
+        "role": "q_T(z)=\\prod(z-t)=z^3-s1 z^2+s2 z-s3"
+      },
+      {
+        "name": "CRT_style_mod6_check",
+        "role": "6|Theta ⇔ (2|Theta and 3|Theta)"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "reduce an analytic condition to a finite algebraic determinant, then do exact finite counting"
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use W(t)=e^{t tr(A_S)}\\Delta_S(v) to turn \"for all t\" into an algebraic determinant condition at t=0.",
+      "Count (S,v) by classifying A_S via discrete parameters (α,β,γ) and checking \\Delta_S(v) on the 7 binary vectors.",
+      "Compute Θ_T mod 6 via symmetric-sum expansion and residue-pattern counting modulo 3, with a simple parity exclusion.",
+      "Multiply the independent probabilities, reduce to lowest terms, then compute the required three-digit residue of (m+2n) mod 1000."
+    ],
+    "finish_type": "exact_probability_by_enumeration"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "itertools",
+        "reason": "enumerate subsets S,T and vectors v"
+      },
+      {
+        "name": "fractions",
+        "reason": "exact rational arithmetic and reduction"
+      },
+      {
+        "name": "math",
+        "reason": "gcd for normalization and modular postprocessing"
+      }
+    ],
+    "import_hint(s)": [
+      "from itertools import combinations, product",
+      "from fractions import Fraction",
+      "from math import gcd"
+    ],
+    "task(s)": [
+      {
+        "name": "brute_force_count_Delta_nonzero",
+        "reason": "enumerate all 35 subsets S and 7 vectors v, compute Delta_S(v)=det[v,Av,A^2v], count nonzero"
+      },
+      {
+        "name": "brute_force_count_Theta_divisible_by_6",
+        "reason": "enumerate all 35 subsets T, compute Theta_T=\\sum_{k=0}^4 \\prod_{t\\inT}(k-t), count those divisible by 6"
+      },
+      {
+        "name": "verify_independence_product",
+        "reason": "confirm P(E) equals the product of the two independent proportions"
+      },
+      {
+        "name": "format_three_digit_output",
+        "reason": "compute (m+2n)%1000 and zero-pad to length 3"
+      }
+    ]
+  },
+  "well_posed": true,
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "n": 7,
+      "subset_size_S": 3,
+      "subset_size_T": 3,
+      "evaluation_points": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "divisibility_modulus": 6,
+      "output_modulus": 1000
+    },
+    "final_answer": {
+      "value": "647",
+      "normalized": "647"
+    }
+  }
+}

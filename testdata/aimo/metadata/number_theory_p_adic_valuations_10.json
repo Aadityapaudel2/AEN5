@@ -1,0 +1,433 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "LTE__mixed_plus_minus__first_digit_legendre_coupling",
+    "instance_id": "nt_08_3__2026-02-25__v1",
+    "short_name": "Mixed LTE count with prime-square first digits and Legendre coupling",
+    "generation": 3
+  },
+  "taxonomy": {
+    "domain": "number_theory",
+    "subdomain(s)": [
+      "p-adic valuations",
+      "LTE and exponent lifting",
+      "multiplicative orders modulo primes",
+      "prime-square lifting via binomial expansion",
+      "quadratic residues and Legendre symbol",
+      "Chinese remainder theorem"
+    ],
+    "topic_path": [
+      "p_adic_valuations",
+      "LTE",
+      "prime_square_digits_and_quadratic_characters"
+    ],
+    "tags": [
+      "LTE_difference_of_powers",
+      "LTE_sum_of_powers_odd_exponent",
+      "order2_bridge_to_negative_one",
+      "prime_square_first_digit",
+      "legendre_symbol_coupling",
+      "CRT_counting"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Two-prime counting problem with mixed valuation constraints $v_p(x^n-1)=A$ and $v_q(x^n+1)=B$, reduced by LTE to prime-square exactness, then refined by coupling the Legendre signs of the prime-square first digits of $x^{d_p}-1$ and $x^{d_q}+1$.",
+    "object(s)": [
+      {
+        "name": "p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "A",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "B",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "d_p",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "d_q",
+        "type": "integer",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "n",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "M",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "x",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "independent"
+      },
+      {
+        "name": "a",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "b",
+        "type": "integer",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "S",
+        "type": "set",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "N",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "$p$ and $q$ are distinct odd primes.",
+      "$A,B\\in\\mathbb{Z}$ with $A\\ge 2$ and $B\\ge 2$.",
+      "$d_p\\mid(p-1)$ and $1<d_p$.",
+      "$2d_q\\mid(q-1)$ and $1<d_q$.",
+      "Define $M=p^{A+1}q^{B+1}$ and $n=\\operatorname{lcm}(d_p,d_q)p^{A-1}q^{B-1}$.",
+      "Work in the unit group $(\\mathbb{Z}/M\\mathbb{Z})^\\times$."
+    ],
+    "ask": [
+      "Let $S\\subset(\\mathbb{Z}/M\\mathbb{Z})^\\times$ be the set of classes $x\\pmod M$ with $\\operatorname{ord}_p(x)=d_p$, $\\operatorname{ord}_q(x)=2d_q$, $v_p(x^n-1)=A$, $v_q(x^n+1)=B$, and with prime-square first digits defined by $x^{d_p}\\equiv 1+pa\\pmod{p^2}$ and $x^{d_q}\\equiv -1+qb\\pmod{q^2}$ satisfying $(\\frac{a}{p})=(\\frac{b}{q})$. Determine $|S|$ and output the unique $N$ with $0\\le N<1000$ and $N\\equiv |S|\\pmod{1000}$."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "mod_m",
+    "modulus": 1000
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "p",
+        "type": "int",
+        "domain": "odd prime $p\\ge 3$",
+        "purpose": "prime for the difference-of-powers LTE constraint and the digit $a$ modulo $p$"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "domain": "odd prime $q\\ge 3$, $q\\ne p$",
+        "purpose": "prime for the sum-of-powers LTE constraint and the digit $b$ modulo $q$"
+      },
+      {
+        "name": "A",
+        "type": "int",
+        "domain": "integer $A\\ge 2$",
+        "purpose": "target depth $v_p(x^n-1)=A$ and modulus exponent $p^{A+1}$"
+      },
+      {
+        "name": "B",
+        "type": "int",
+        "domain": "integer $B\\ge 2$",
+        "purpose": "target depth $v_q(x^n+1)=B$ and modulus exponent $q^{B+1}$"
+      },
+      {
+        "name": "d_p",
+        "type": "int",
+        "domain": "integer $d_p$ with $1<d_p\\mid(p-1)$ and $q\\nmid d_p$",
+        "purpose": "prescribed order modulo $p$, reducing $x^n-1$ to $(x^{d_p})^{n/d_p}-1$"
+      },
+      {
+        "name": "d_q",
+        "type": "int",
+        "domain": "integer $d_q$ with $1<d_q$ and $2d_q\\mid(q-1)$ and $p\\nmid d_q$",
+        "purpose": "half the prescribed even order modulo $q$, forcing $x^{d_q}\\equiv -1\\pmod q$"
+      },
+      {
+        "name": "n",
+        "type": "int",
+        "domain": "$n=\\operatorname{lcm}(d_p,d_q)p^{A-1}q^{B-1}$",
+        "purpose": "structured exponent linking order data to valuation targets"
+      },
+      {
+        "name": "M",
+        "type": "int",
+        "domain": "$M=p^{A+1}q^{B+1}$",
+        "purpose": "modulus enabling independent prime-power analysis and CRT recombination"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "order2_bridge_to_negative_one",
+        "depends_on": [
+          "q",
+          "d_q"
+        ],
+        "statement": "If $\\operatorname{ord}_q(x)=2d_q$ then $x^{d_q}$ has order $2$ modulo $q$, hence $x^{d_q}\\equiv -1\\pmod q$ and $q\\mid(x^{d_q}+1)$."
+      },
+      {
+        "name": "parity_gate_for_sum_LTE",
+        "depends_on": [
+          "d_p",
+          "d_q",
+          "n"
+        ],
+        "statement": "The condition $n/d_q$ is odd is required for the odd-exponent LTE formula for $v_q(x^n+1)$."
+      },
+      {
+        "name": "LTE_depth_reduction",
+        "depends_on": [
+          "p",
+          "q",
+          "d_p",
+          "d_q",
+          "n"
+        ],
+        "statement": "Under the order constraints and parity gate, $v_p(x^n-1)=v_p(x^{d_p}-1)+v_p(n/d_p)$ and $v_q(x^n+1)=v_q(x^{d_q}+1)+v_q(n/d_q)$."
+      },
+      {
+        "name": "prime_square_first_digit",
+        "depends_on": [
+          "p",
+          "q",
+          "d_p",
+          "d_q"
+        ],
+        "statement": "If $v_p(x^{d_p}-1)=1$ then there is a unique $a\\in(\\mathbb{Z}/p\\mathbb{Z})^\\times$ with $x^{d_p}\\equiv 1+pa\\pmod{p^2}$, and if $v_q(x^{d_q}+1)=1$ then there is a unique $b\\in(\\mathbb{Z}/q\\mathbb{Z})^\\times$ with $x^{d_q}\\equiv -1+qb\\pmod{q^2}$."
+      },
+      {
+        "name": "affine_first_digit_bijection",
+        "depends_on": [
+          "p",
+          "q"
+        ],
+        "statement": "For fixed $y_0$ modulo an odd prime $r$ with $y_0^m\\equiv \\pm 1\\pmod r$ and $r\\nmid m$, the lifts $y_0+rk$ modulo $r^2$ make the digit $(y^m\\mp 1)/r$ run through all classes modulo $r$ bijectively."
+      },
+      {
+        "name": "quadratic_character_balance",
+        "depends_on": [
+          "p",
+          "q"
+        ],
+        "statement": "Exactly half of $(\\mathbb{Z}/r\\mathbb{Z})^\\times$ are quadratic residues for an odd prime $r$."
+      },
+      {
+        "name": "CRT_sign_coupling",
+        "depends_on": [
+          "p",
+          "q"
+        ],
+        "statement": "CRT gives a bijection between residues modulo $p^{A+1}q^{B+1}$ and pairs modulo $p^{A+1}$ and $q^{B+1}$, and the only cross-condition is $(\\frac{a}{p})=(\\frac{b}{q})$."
+      }
+    ],
+    "operator(s)": [
+      "multiplicative_order_mod_prime",
+      "p_adic_valuation",
+      "LTE_difference_of_powers",
+      "LTE_sum_of_powers_odd_exponent",
+      "binomial_expansion_mod_prime_square",
+      "legendre_symbol",
+      "chinese_remainder_theorem"
+    ],
+    "essential_assumption(s)": [
+      "$p$ and $q$ are odd primes, so LTE applies in the standard odd-prime forms.",
+      "$n/d_q$ is odd so the sum-LTE formula applies at $q$.",
+      "$p\\nmid d_p$ and $q\\nmid d_q$, so the first-digit map has nonzero slope modulo the prime."
+    ],
+    "uniqueness_certificate(s)": [
+      "The LTE identities force the prime-square exactness conditions $v_p(x^{d_p}-1)=1$ and $v_q(x^{d_q}+1)=1$. Lemma 1 makes the first digits $a$ and $b$ uniformly distributed among nonzero residues when lifting from modulo a prime to modulo the prime square, and Lemma 2 forces an exact half split by Legendre sign. Higher lifts preserve these first digits. CRT recombines the local counts, and the sign-coupling constraint selects a unique total count, giving a unique $N$ modulo $1000$."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "order_count_in_cyclic_group_mod_prime",
+        "inputs": [
+          "$d_p\\mid(p-1)$",
+          "$2d_q\\mid(q-1)$"
+        ],
+        "purpose": "Count residues of exact orders $d_p$ and $2d_q$ modulo $p$ and $q$.",
+        "outputs": [
+          "$\\varphi(d_p)$ and $\\varphi(2d_q)$ counts at the prime layer"
+        ]
+      },
+      {
+        "name": "order2_to_negative_one_bridge",
+        "inputs": [
+          "$\\operatorname{ord}_q(x)=2d_q$"
+        ],
+        "purpose": "Force $x^{d_q}\\equiv -1\\pmod q$ to start the sum-of-powers valuation chain.",
+        "outputs": [
+          "$q\\mid(x^{d_q}+1)$"
+        ]
+      },
+      {
+        "name": "LTE_difference_of_powers",
+        "inputs": [
+          "$p\\mid(x^{d_p}-1)$",
+          "$p\\nmid x$"
+        ],
+        "purpose": "Relate $v_p(x^n-1)$ to $v_p(x^{d_p}-1)$ and $v_p(n/d_p)$.",
+        "outputs": [
+          "$v_p(x^n-1)=v_p(x^{d_p}-1)+v_p(n/d_p)$"
+        ]
+      },
+      {
+        "name": "parity_gate_for_sum_LTE",
+        "inputs": [
+          "$n/d_q$"
+        ],
+        "purpose": "Check that $n/d_q$ is odd so LTE for $a^m+b^m$ applies.",
+        "outputs": [
+          "$n/d_q$ odd"
+        ]
+      },
+      {
+        "name": "LTE_sum_of_powers_odd_exponent",
+        "inputs": [
+          "$q\\mid(x^{d_q}+1)$",
+          "odd exponent $n/d_q$"
+        ],
+        "purpose": "Relate $v_q(x^n+1)$ to $v_q(x^{d_q}+1)$ and $v_q(n/d_q)$.",
+        "outputs": [
+          "$v_q(x^n+1)=v_q(x^{d_q}+1)+v_q(n/d_q)$"
+        ]
+      },
+      {
+        "name": "first_digit_affine_bijection_mod_prime_square",
+        "inputs": [
+          "lifts $y=y_0+rk$"
+        ],
+        "purpose": "Show first digits modulo $r$ run bijectively, with exactly one excluded lift of higher depth.",
+        "outputs": [
+          "uniform distribution of $a$ and $b$ in $(\\mathbb{Z}/r\\mathbb{Z})^\\times$"
+        ]
+      },
+      {
+        "name": "quadratic_residue_balance",
+        "inputs": [
+          "odd prime $r$"
+        ],
+        "purpose": "Split $(\\mathbb{Z}/r\\mathbb{Z})^\\times$ evenly by Legendre sign.",
+        "outputs": [
+          "exactly $(r-1)/2$ residues of each sign"
+        ]
+      },
+      {
+        "name": "CRT_coupled_count",
+        "inputs": [
+          "signed local counts at $p$ and $q$"
+        ],
+        "purpose": "Combine local counts under the sign coupling using CRT.",
+        "outputs": [
+          "$|S|$ and $|S|\\bmod 1000$"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "cyclicity_of_units_mod_odd_prime",
+        "role": "$(\\mathbb{Z}/r\\mathbb{Z})^\\times$ is cyclic; enables exact-order counting."
+      },
+      {
+        "name": "unique_element_of_order_2_in_cyclic_group",
+        "role": "In $(\\mathbb{Z}/q\\mathbb{Z})^\\times$, the unique element of order $2$ is $-1$."
+      },
+      {
+        "name": "LTE_difference_of_powers_for_odd_prime",
+        "role": "If odd prime $r\\mid(a-b)$ and $r\\nmid ab$ then $v_r(a^m-b^m)=v_r(a-b)+v_r(m)$."
+      },
+      {
+        "name": "LTE_sum_of_powers_for_odd_prime_odd_exponent",
+        "role": "If odd prime $r\\mid(a+b)$, $r\\nmid ab$, and $m$ is odd then $v_r(a^m+b^m)=v_r(a+b)+v_r(m)$."
+      },
+      {
+        "name": "binomial_expansion_mod_prime_square",
+        "role": "$(y_0+rk)^m\\equiv y_0^m+m y_0^{m-1}rk\\pmod{r^2}$; gives the affine digit map."
+      },
+      {
+        "name": "count_quadratic_residues_mod_prime",
+        "role": "Exactly $(r-1)/2$ nonzero residues are quadratic residues modulo an odd prime $r$."
+      },
+      {
+        "name": "chinese_remainder_theorem_coprime_moduli",
+        "role": "CRT gives a bijection for coprime moduli and enables product counting with a coupling filter."
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "Use local-to-global structure: reduce global congruence and valuation conditions to independent prime-power constraints, then recombine via CRT with a character-level coupling invariant."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Use mixed LTE: difference at $p$ and sum at $q$ unlocked by an even-order bridge and an odd-exponent parity gate.",
+      "Introduce prime-square first digits and force a Legendre-sign coupling, turning the count into a signed CRT product."
+    ],
+    "finish_type": "counting_argument"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "math",
+        "reason": "$\\gcd$, $\\operatorname{lcm}$, modular exponentiation, integer arithmetic."
+      },
+      {
+        "name": "itertools",
+        "reason": "Enumerate units modulo $p^2$ and $q^2$ to verify local signed counts."
+      }
+    ],
+    "import_hint(s)": [
+      "import math",
+      "import itertools"
+    ],
+    "task(s)": [
+      {
+        "name": "local_prime_square_enumeration",
+        "reason": "Enumerate all units modulo $13^2$ and $31^2$, filter by order conditions modulo $13$ and $31$, check prime-square exactness for $x^3-1$ and $x^{15}+1$, compute the digits $a$ and $b$, compute Legendre symbols by Euler's criterion, and tally signed counts. Multiply by lift factors $13^2$ and $31^2$ and apply the CRT sign coupling to recover $|S|$."
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "p": 13,
+      "q": 31,
+      "A": 3,
+      "B": 3,
+      "d_p": 3,
+      "d_q": 15,
+      "n": 2436135,
+      "M": 26376683281
+    },
+    "final_answer": {
+      "value": 467737920,
+      "normalized": 920
+    }
+  }
+}
