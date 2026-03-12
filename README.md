@@ -85,6 +85,19 @@ Desktop UI (Qt default):
 .\run_ui.ps1
 ```
 
+Linux XRDP note:
+- If Qt WebEngine is unstable under XRDP, keep using Tk with `-LegacyTk` while testing Qt from the same desktop session.
+- If you are not using the repo-local `.venv`, set `ATHENA_PYTHON_EXE` or activate your preferred Linux environment before launching.
+- Qt smoketest:
+
+```bash
+cd /path/to/AEN5
+python qt_webengine_smoketest.py
+```
+
+- Qt bootstrap log:
+  - `~/.athena_v5/logs/qt_bootstrap.log`
+
 Desktop UI (Tk fallback forced):
 ```powershell
 .\run_ui.ps1 -LegacyTk

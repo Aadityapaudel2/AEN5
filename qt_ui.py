@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import stat
 import sys
 import threading
 from collections import deque
@@ -16,40 +17,95 @@ from uuid import uuid4
 ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT
 
-# Quiet + software-safe defaults for Windows QtWebEngine.
-os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
-os.environ.setdefault(
-    "QT_LOGGING_RULES",
-    "qt.webenginecontext.warning=false;qt.webenginecontext.info=false;qt.webenginecontext.debug=false;qt.qpa.gl=false",
-)
-_required_qt_flags = [
-    "--no-sandbox",
-    "--disable-gpu-sandbox",
-    "--disable-gpu",
-    "--disable-gpu-compositing",
-    "--use-angle=swiftshader",
-    "--disable-logging",
-    "--log-level=3",
-]
-_existing_qt_flags = os.environ.get("QTWEBENGINE_CHROMIUM_FLAGS", "").strip()
-_flag_set = set(_existing_qt_flags.split()) if _existing_qt_flags else set()
-for _flag in _required_qt_flags:
-    if _flag not in _flag_set:
-        _existing_qt_flags = f"{_existing_qt_flags} {_flag}".strip()
-os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = _existing_qt_flags
-os.environ.setdefault("QT_OPENGL", "software")
-os.environ.setdefault("QT_QUICK_BACKEND", "software")
+def _append_env_flags(var_name: str, required_flags: list[str]) -> None:
+    existing = os.environ.get(var_name, "").strip()
+    flag_set = set(existing.split()) if existing else set()
+    for flag in required_flags:
+        if flag not in flag_set:
+            existing = f"{existing} {flag}".strip()
+    os.environ[var_name] = existing
+
+
+def _ensure_private_runtime_dir() -> None:
+    runtime_dir = os.environ.get("XDG_RUNTIME_DIR", "").strip()
+    if runtime_dir:
+        try:
+            mode = stat.S_IMODE(os.stat(runtime_dir).st_mode)
+            if mode == 0o700:
+                return
+        except OSError:
+            pass
+    fallback = Path.home() / ".cache" / "athena_qt_runtime"
+    fallback.mkdir(parents=True, exist_ok=True)
+    fallback.chmod(0o700)
+    os.environ["XDG_RUNTIME_DIR"] = str(fallback)
+
+
+def _configure_qt_runtime() -> None:
+    os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
+    os.environ.setdefault("QT_OPENGL", "software")
+    os.environ.setdefault("QT_QUICK_BACKEND", "software")
+    os.environ.setdefault("QT_XCB_GL_INTEGRATION", "none")
+    os.environ.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")
+    os.environ.setdefault("MESA_LOADER_DRIVER_OVERRIDE", "llvmpipe")
+    os.environ.setdefault("QSG_RHI_BACKEND", "software")
+    os.environ.setdefault(
+        "QT_LOGGING_RULES",
+        "qt.webenginecontext.warning=false;qt.webenginecontext.info=false;qt.webenginecontext.debug=false;qt.qpa.gl=false",
+    )
+    if sys.platform.startswith("linux"):
+        _ensure_private_runtime_dir()
+        if os.environ.get("DISPLAY") and not os.environ.get("QT_QPA_PLATFORM"):
+            os.environ["QT_QPA_PLATFORM"] = "xcb"
+    _append_env_flags(
+        "QTWEBENGINE_CHROMIUM_FLAGS",
+        [
+            "--no-sandbox",
+            "--disable-gpu-sandbox",
+            "--disable-gpu",
+            "--disable-gpu-compositing",
+            "--disable-features=VizDisplayCompositor",
+            "--disable-logging",
+            "--log-level=3",
+        ],
+    )
+
+
+_configure_qt_runtime()
 
 
 def _candidate_venv_pythons() -> list[Path]:
-    return [
-        p
-        for p in (
+    candidates: list[Path] = []
+    explicit = os.environ.get("ATHENA_PYTHON_EXE", "").strip()
+    if explicit:
+        candidates.append(Path(explicit).expanduser())
+    virtual_env = os.environ.get("VIRTUAL_ENV", "").strip()
+    if virtual_env:
+        candidates.extend(
+            [
+                Path(virtual_env) / "bin" / "python",
+                Path(virtual_env) / "Scripts" / "python.exe",
+            ]
+        )
+    candidates.extend(
+        [
+            PROJECT_ROOT / ".venv" / "bin" / "python",
+            PROJECT_ROOT.parent / ".venv" / "bin" / "python",
             PROJECT_ROOT / ".venv" / "Scripts" / "python.exe",
             PROJECT_ROOT.parent / ".venv" / "Scripts" / "python.exe",
-        )
-        if p.exists()
-    ]
+        ]
+    )
+    deduped: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        resolved = str(candidate.resolve())
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        deduped.append(candidate)
+    return deduped
 
 
 def ensure_project_venv() -> None:
@@ -71,6 +127,8 @@ ensure_project_venv()
 try:
     from PySide6.QtCore import QObject, QTimer, Qt, Signal  # pyright: ignore[reportMissingImports]
     from PySide6.QtGui import QFont, QImage, QKeyEvent, QPixmap  # pyright: ignore[reportMissingImports]
+    from PySide6.QtWebEngineCore import QWebEngineProfile  # pyright: ignore[reportMissingImports]
+    from PySide6.QtWebEngineQuick import QtWebEngineQuick  # pyright: ignore[reportMissingImports]
     from PySide6.QtWebEngineWidgets import QWebEngineView  # pyright: ignore[reportMissingImports]
     from PySide6.QtWidgets import (  # pyright: ignore[reportMissingImports]
         QApplication,
@@ -87,8 +145,8 @@ try:
 except Exception as exc:
     print(
         "PySide6 + QtWebEngine is required for qt_ui.py.\n"
-        "Install in your project venv:\n"
-        "  D:\\AthenaPlayground\\.venv\\Scripts\\python.exe -m pip install PySide6\n"
+        "Install in your active environment:\n"
+        "  python -m pip install PySide6 PySide6-Addons\n"
         f"Import error: {exc}",
         file=sys.stderr,
     )
@@ -107,6 +165,7 @@ LOG_DIR = Path(os.environ.get("ATHENA_LOG_DIR", str(Path.home() / ".athena_v5" /
 RAW_LOG = LOG_DIR / "raw.log"
 CLEAN_LOG = LOG_DIR / "clean.log"
 UI_EVENTS_LOG = LOG_DIR / "ui_events.jsonl"
+QT_BOOTSTRAP_LOG = LOG_DIR / "qt_bootstrap.log"
 ASSETS_HTML = (ROOT / "assets" / "chat_shell.html").resolve()
 LOGGING_ENABLED = True
 CHAR_STREAM_INTERVAL_MS = 14
@@ -130,9 +189,17 @@ def ensure_logs() -> None:
         RAW_LOG.touch(exist_ok=True)
         CLEAN_LOG.touch(exist_ok=True)
         UI_EVENTS_LOG.touch(exist_ok=True)
+        QT_BOOTSTRAP_LOG.touch(exist_ok=True)
         LOGGING_ENABLED = True
     except Exception:
         LOGGING_ENABLED = False
+
+
+def append_qt_bootstrap_log(message: str) -> None:
+    if not LOGGING_ENABLED:
+        return
+    with open(QT_BOOTSTRAP_LOG, "a", encoding="utf-8", errors="replace") as fh:
+        fh.write(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] {message}\n")
 
 
 def append_log(path: Path, label: str, text: str) -> None:
@@ -943,8 +1010,41 @@ def main() -> None:
     parser.add_argument("--model-dir", default="", help="Optional model path override for this UI instance.")
     args = parser.parse_args()
     model_dir = Path(args.model_dir).expanduser().resolve() if args.model_dir else None
+    ensure_logs()
 
+    if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+        append_qt_bootstrap_log("launch aborted: DISPLAY missing in headless shell")
+        print(
+            "Qt UI requires a desktop/X11 session on Linux.\n"
+            "Launch it from XRDP/X11, or use the Tk fallback from SSH with `run_ui.ps1 -LegacyTk`.",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
+
+    append_qt_bootstrap_log(
+        json.dumps(
+            {
+                "event": "launch",
+                "python": sys.executable,
+                "display": os.environ.get("DISPLAY", ""),
+                "xdg_runtime_dir": os.environ.get("XDG_RUNTIME_DIR", ""),
+                "qt_qpa_platform": os.environ.get("QT_QPA_PLATFORM", ""),
+                "qt_opengl": os.environ.get("QT_OPENGL", ""),
+                "qt_quick_backend": os.environ.get("QT_QUICK_BACKEND", ""),
+                "qt_xcb_gl_integration": os.environ.get("QT_XCB_GL_INTEGRATION", ""),
+                "qtwebengine_flags": os.environ.get("QTWEBENGINE_CHROMIUM_FLAGS", ""),
+            },
+            ensure_ascii=False,
+        )
+    )
+
+    QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
+    QtWebEngineQuick.initialize()
     app = QApplication(sys.argv)
+    try:
+        QWebEngineProfile.defaultProfile()
+    except Exception as exc:
+        append_qt_bootstrap_log(f"default profile init failed: {exc}")
     ui = AthenaQtUI(model_dir=model_dir)
     ui.show()
     try:

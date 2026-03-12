@@ -17,9 +17,25 @@ $BootstrapScript = Join-Path $ProjectRoot "scripts\bootstrap_mathjax.ps1"
 $Requirements = Join-Path $ProjectRoot "requirements.txt"
 
 function Resolve-PythonExe {
+    if ($env:ATHENA_PYTHON_EXE -and (Test-Path -LiteralPath $env:ATHENA_PYTHON_EXE)) {
+        return (Resolve-Path -LiteralPath $env:ATHENA_PYTHON_EXE).Path
+    }
+    if ($env:VIRTUAL_ENV) {
+        $VenvCandidates = @(
+            (Join-Path $env:VIRTUAL_ENV "Scripts/python.exe"),
+            (Join-Path $env:VIRTUAL_ENV "bin/python")
+        )
+        foreach ($Candidate in $VenvCandidates) {
+            if (Test-Path -LiteralPath $Candidate) {
+                return (Resolve-Path -LiteralPath $Candidate).Path
+            }
+        }
+    }
     $Candidates = @(
-        (Join-Path $ProjectRoot ".venv\Scripts\python.exe"),
-        (Join-Path (Split-Path -Parent $ProjectRoot) ".venv\Scripts\python.exe")
+        (Join-Path $ProjectRoot ".venv/Scripts/python.exe"),
+        (Join-Path (Split-Path -Parent $ProjectRoot) ".venv/Scripts/python.exe"),
+        (Join-Path $ProjectRoot ".venv/bin/python"),
+        (Join-Path (Split-Path -Parent $ProjectRoot) ".venv/bin/python")
     )
     foreach ($Candidate in $Candidates) {
         if (Test-Path -LiteralPath $Candidate) {
@@ -53,19 +69,28 @@ function Invoke-MathJaxBootstrap {
     if ($NoMathJaxBootstrap) { return }
     if (-not (Test-Path -LiteralPath $BootstrapScript)) { return }
     if ($BootstrapVerbose) { Write-Host "[bootstrap] running MathJax bootstrap..." }
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $BootstrapScript -ProjectRoot $ProjectRoot
+    $BootstrapHost = if ($IsWindows) { "powershell.exe" } else { "pwsh" }
+    & $BootstrapHost -NoProfile -ExecutionPolicy Bypass -File $BootstrapScript -ProjectRoot $ProjectRoot
 }
 
 $PythonExe = Resolve-PythonExe
 $LaunchTk = [bool]$LegacyTk
 $ExitCode = 0
 $ResolvedModelDir = ""
+$HasDisplay = $true
+if (-not $IsWindows) {
+    $HasDisplay = [bool]($env:DISPLAY -and $env:DISPLAY.Trim().Length -gt 0)
+}
 if ($ModelDir -and $ModelDir.Trim().Length -gt 0) {
     $Candidate = if ([System.IO.Path]::IsPathRooted($ModelDir)) { $ModelDir } else { Join-Path $ProjectRoot $ModelDir }
     if (-not (Test-Path -LiteralPath $Candidate)) {
         throw "Model path not found: $Candidate"
     }
     $ResolvedModelDir = (Resolve-Path -LiteralPath $Candidate).Path
+}
+
+if (-not $HasDisplay) {
+    throw "No DISPLAY detected. Launch desktop UIs from XRDP/X11, not a headless SSH shell."
 }
 
 if (-not $LaunchTk) {
@@ -94,6 +119,10 @@ if (-not $LaunchTk) {
     if (-not $env:QTWEBENGINE_DISABLE_SANDBOX) { $env:QTWEBENGINE_DISABLE_SANDBOX = "1" }
     if (-not $env:QT_OPENGL) { $env:QT_OPENGL = "software" }
     if (-not $env:QT_QUICK_BACKEND) { $env:QT_QUICK_BACKEND = "software" }
+    if (-not $env:QT_XCB_GL_INTEGRATION) { $env:QT_XCB_GL_INTEGRATION = "none" }
+    if (-not $env:LIBGL_ALWAYS_SOFTWARE) { $env:LIBGL_ALWAYS_SOFTWARE = "1" }
+    if (-not $env:MESA_LOADER_DRIVER_OVERRIDE) { $env:MESA_LOADER_DRIVER_OVERRIDE = "llvmpipe" }
+    if (-not $env:QSG_RHI_BACKEND) { $env:QSG_RHI_BACKEND = "software" }
 
     $QtArgs = @($QtUi)
     if ($ResolvedModelDir) { $QtArgs += @("--model-dir", $ResolvedModelDir) }
@@ -123,4 +152,3 @@ if ($MyInvocation.InvocationName -eq ".") {
     return
 }
 exit $ExitCode
-
