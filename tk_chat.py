@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import queue
 import threading
 from dataclasses import dataclass
 from pathlib import Path
@@ -276,31 +277,49 @@ class LocalStreamer:
             self.tokenizer,
             skip_special_tokens=True,
             skip_prompt=True,
-            timeout=5.0,
+            timeout=None,
         )
         self.active_streamer = streamer
 
         stopping_criteria = StoppingCriteriaList([_StopOnEvent(self.stop_event)])
+        generation_errors: list[BaseException] = []
 
         def generate() -> None:
-            with torch.no_grad(), self.accelerator.autocast():
-                self.model.generate(
-                    **inputs,
-                    generation_config=cfg,
-                    streamer=streamer,
-                    stopping_criteria=stopping_criteria,
-                )
+            try:
+                with torch.no_grad(), self.accelerator.autocast():
+                    self.model.generate(
+                        **inputs,
+                        generation_config=cfg,
+                        streamer=streamer,
+                        stopping_criteria=stopping_criteria,
+                    )
+            except BaseException as exc:
+                generation_errors.append(exc)
+            finally:
+                try:
+                    streamer.end()
+                except Exception:
+                    pass
 
         thread = threading.Thread(target=generate, daemon=True)
         thread.start()
 
-        for chunk in streamer:
-            if not chunk:
-                continue
-            callback(chunk)
+        try:
+            for chunk in streamer:
+                if not chunk:
+                    continue
+                callback(chunk)
+        except queue.Empty as exc:
+            if generation_errors:
+                raise RuntimeError(str(generation_errors[0])) from generation_errors[0]
+            raise RuntimeError("Generation stalled before producing output.") from exc
+        finally:
+            thread.join(timeout=0.1)
+            self.active_streamer = None
+            self.stop_event.clear()
 
-        self.active_streamer = None
-        self.stop_event.clear()
+        if generation_errors:
+            raise RuntimeError(str(generation_errors[0])) from generation_errors[0]
 
     def stream(self, prompt: str, callback: Callable[[str], None], images: Optional[list[Any]] = None) -> None:
         """Stream model output for a *fully-rendered* prompt string."""

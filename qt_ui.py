@@ -48,7 +48,7 @@ def _configure_qt_runtime() -> None:
     os.environ.setdefault("QT_XCB_GL_INTEGRATION", "none")
     os.environ.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")
     os.environ.setdefault("MESA_LOADER_DRIVER_OVERRIDE", "llvmpipe")
-    os.environ.setdefault("QSG_RHI_BACKEND", "software")
+    os.environ.pop("QSG_RHI_BACKEND", None)
     os.environ.setdefault(
         "QT_LOGGING_RULES",
         "qt.webenginecontext.warning=false;qt.webenginecontext.info=false;qt.webenginecontext.debug=false;qt.qpa.gl=false",
@@ -127,9 +127,6 @@ ensure_project_venv()
 try:
     from PySide6.QtCore import QObject, QTimer, Qt, Signal  # pyright: ignore[reportMissingImports]
     from PySide6.QtGui import QFont, QImage, QKeyEvent, QPixmap  # pyright: ignore[reportMissingImports]
-    from PySide6.QtWebEngineCore import QWebEngineProfile  # pyright: ignore[reportMissingImports]
-    from PySide6.QtWebEngineQuick import QtWebEngineQuick  # pyright: ignore[reportMissingImports]
-    from PySide6.QtWebEngineWidgets import QWebEngineView  # pyright: ignore[reportMissingImports]
     from PySide6.QtWidgets import (  # pyright: ignore[reportMissingImports]
         QApplication,
         QCheckBox,
@@ -151,6 +148,19 @@ except Exception as exc:
         file=sys.stderr,
     )
     raise SystemExit(1)
+
+QT_WEBENGINE_IMPORT_ERROR: str = ""
+QT_WEBENGINE_AVAILABLE = True
+try:
+    from PySide6.QtWebEngineCore import QWebEngineProfile  # pyright: ignore[reportMissingImports]
+    from PySide6.QtWebEngineQuick import QtWebEngineQuick  # pyright: ignore[reportMissingImports]
+    from PySide6.QtWebEngineWidgets import QWebEngineView  # pyright: ignore[reportMissingImports]
+except Exception as exc:
+    QT_WEBENGINE_AVAILABLE = False
+    QT_WEBENGINE_IMPORT_ERROR = str(exc)
+    QWebEngineProfile = None  # type: ignore[assignment]
+    QtWebEngineQuick = None  # type: ignore[assignment]
+    QWebEngineView = None  # type: ignore[assignment]
 
 sys.path.append(str(ROOT))
 
@@ -180,6 +190,25 @@ ASCII_AVATAR_BY_STATE = {
     "stopped": "[x_x]",
     "error": "[>_<]",
 }
+
+
+def _prefer_plain_qt_renderer() -> bool:
+    if os.environ.get("ATHENA_FORCE_QT_WEBENGINE", "").strip() == "1":
+        return False
+    if os.environ.get("ATHENA_FORCE_QT_PLAIN", "").strip() == "1":
+        return True
+    return sys.platform.startswith("linux")
+
+
+def _render_plain_transcript_text(transcript: list[dict[str, str]]) -> str:
+    blocks: list[str] = []
+    for item in transcript:
+        role = str(item.get("role") or "assistant").strip().title()
+        content = str(item.get("content") or "").strip()
+        if not content:
+            content = "[empty]"
+        blocks.append(f"{role}:\n{content}")
+    return "\n\n" + ("\n\n" + ("-" * 72) + "\n\n").join(blocks)
 
 
 def ensure_logs() -> None:
@@ -344,6 +373,8 @@ class AthenaQtUI(QMainWindow):
 
         self.is_streaming = False
         self._current_assistant_idx: Optional[int] = None
+        self._prefer_plain_renderer = _prefer_plain_qt_renderer()
+        self._use_web_renderer = QT_WEBENGINE_AVAILABLE and not self._prefer_plain_renderer
         self._web_ready = False
         self._stop_requested = False
         self._last_full_html: str = ""
@@ -380,8 +411,19 @@ class AthenaQtUI(QMainWindow):
             "launch_start",
             mode="qt-web",
             model_dir=str(self.streamer.model_dir),
-            details={"renderer_mode": self.settings.renderer_mode},
+            details={
+                "renderer_mode": self.settings.renderer_mode,
+                "webengine_available": QT_WEBENGINE_AVAILABLE,
+                "use_web_renderer": self._use_web_renderer,
+                "webengine_import_error": QT_WEBENGINE_IMPORT_ERROR,
+            },
         )
+        if not self._use_web_renderer:
+            reason = "plain Qt renderer enabled for Linux stability"
+            if not QT_WEBENGINE_AVAILABLE and QT_WEBENGINE_IMPORT_ERROR:
+                reason = f"plain Qt renderer enabled because QtWebEngine is unavailable: {QT_WEBENGINE_IMPORT_ERROR}"
+            append_qt_bootstrap_log(reason)
+            self.set_status(f"Ready | {reason}")
 
     def _build_ui(self) -> None:
         self.setWindowTitle(f"Athena V5  -  {self.streamer.model_label}")
@@ -398,11 +440,20 @@ class AthenaQtUI(QMainWindow):
         top_layout.setContentsMargins(0, 0, 0, 0)
         top_layout.setSpacing(10)
 
-        self.web = QWebEngineView(self)
-        self.web.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.web.loadFinished.connect(self._on_web_loaded)
-        self.web.setUrl(ASSETS_HTML.as_uri())
-        top_layout.addWidget(self.web, stretch=1)
+        self.web = None
+        self.transcript_view = None
+        if self._use_web_renderer and QWebEngineView is not None:
+            self.web = QWebEngineView(self)
+            self.web.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            self.web.loadFinished.connect(self._on_web_loaded)
+            self.web.setUrl(ASSETS_HTML.as_uri())
+            top_layout.addWidget(self.web, stretch=1)
+        else:
+            self.transcript_view = QTextEdit(self)
+            self.transcript_view.setReadOnly(True)
+            self.transcript_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            self.transcript_view.setFont(QFont("Consolas", 10))
+            top_layout.addWidget(self.transcript_view, stretch=1)
 
         side = QWidget(self)
         side.setFixedWidth(220)
@@ -545,7 +596,7 @@ class AthenaQtUI(QMainWindow):
     def _on_web_loaded(self, ok: bool) -> None:
         self._web_ready = bool(ok)
         self._render_now()
-        if ok and not (ROOT / "assets" / "mathjax" / "es5" / "tex-mml-chtml.js").exists():
+        if ok and self.web is not None and not (ROOT / "assets" / "mathjax" / "es5" / "tex-mml-chtml.js").exists():
             self.web.page().runJavaScript("window.AthenaUI && window.AthenaUI.notifyMathjaxMissing();")
 
     def _status_text(self, state: str) -> str:
@@ -661,7 +712,19 @@ class AthenaQtUI(QMainWindow):
         self.set_status("Ready")
 
     def _render_now(self) -> None:
-        if not self._web_ready:
+        if not self._use_web_renderer:
+            if self.transcript_view is None:
+                return
+            plain = _render_plain_transcript_text(self.transcript)
+            if plain == self._last_full_html:
+                return
+            self.transcript_view.setPlainText(plain)
+            cursor = self.transcript_view.textCursor()
+            cursor.movePosition(cursor.MoveOperation.End)
+            self.transcript_view.setTextCursor(cursor)
+            self._last_full_html = plain
+            return
+        if not self._web_ready or self.web is None:
             return
         body_html = render_transcript_html(self.transcript)
         if body_html == self._last_full_html:
@@ -671,7 +734,10 @@ class AthenaQtUI(QMainWindow):
         self._last_full_html = body_html
 
     def _render_latest_assistant_body(self, force_typeset: bool = False) -> None:
-        if not self._web_ready or self._current_assistant_idx is None:
+        if not self._use_web_renderer:
+            self._render_now()
+            return
+        if not self._web_ready or self._current_assistant_idx is None or self.web is None:
             return
         if self._current_assistant_idx >= len(self.transcript):
             return
@@ -1039,12 +1105,14 @@ def main() -> None:
     )
 
     QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
-    QtWebEngineQuick.initialize()
+    if QT_WEBENGINE_AVAILABLE and not _prefer_plain_qt_renderer() and QtWebEngineQuick is not None:
+        QtWebEngineQuick.initialize()
     app = QApplication(sys.argv)
-    try:
-        QWebEngineProfile.defaultProfile()
-    except Exception as exc:
-        append_qt_bootstrap_log(f"default profile init failed: {exc}")
+    if QT_WEBENGINE_AVAILABLE and not _prefer_plain_qt_renderer() and QWebEngineProfile is not None:
+        try:
+            QWebEngineProfile.defaultProfile()
+        except Exception as exc:
+            append_qt_bootstrap_log(f"default profile init failed: {exc}")
     ui = AthenaQtUI(model_dir=model_dir)
     ui.show()
     try:

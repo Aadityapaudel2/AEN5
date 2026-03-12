@@ -19,11 +19,26 @@ PROJECT_ROOT = ROOT
 
 
 def _candidate_venv_pythons() -> list[Path]:
-    # Prefer repo-local venv, then workspace-level venv used in this project.
-    candidates = [
-        PROJECT_ROOT / ".venv" / "Scripts" / "python.exe",
-        PROJECT_ROOT.parent / ".venv" / "Scripts" / "python.exe",
-    ]
+    candidates = []
+    explicit = os.environ.get("ATHENA_PYTHON_EXE", "").strip()
+    if explicit:
+        candidates.append(Path(explicit).expanduser())
+    virtual_env = os.environ.get("VIRTUAL_ENV", "").strip()
+    if virtual_env:
+        candidates.extend(
+            [
+                Path(virtual_env) / "bin" / "python",
+                Path(virtual_env) / "Scripts" / "python.exe",
+            ]
+        )
+    candidates.extend(
+        [
+            PROJECT_ROOT / ".venv" / "bin" / "python",
+            PROJECT_ROOT.parent / ".venv" / "bin" / "python",
+            PROJECT_ROOT / ".venv" / "Scripts" / "python.exe",
+            PROJECT_ROOT.parent / ".venv" / "Scripts" / "python.exe",
+        ]
+    )
     existing: list[Path] = []
     for p in candidates:
         if p.exists():
