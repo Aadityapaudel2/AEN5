@@ -1,0 +1,6 @@
+﻿On a blackboard, Ken starts off by writing a positive integer n and then applies the following move until he first reaches 1. Given that the number on the board is m, he chooses a base b, where 2 <= b <= m, and considers the unique base-b representation of m,
+
+m = sum_{k=0}^infinity a_k * b^k,
+
+where a_k are non-negative integers and 0 <= a_k < b for each k. Ken then erases m on the blackboard and replaces it with sum_{k=0}^infinity a_k.
+Across all choices of 1 <= n <= 10^(10^5), the largest possible number of moves Ken could make is M. What is the remainder when M is divided by 10^5?

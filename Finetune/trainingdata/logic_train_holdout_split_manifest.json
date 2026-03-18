@@ -1,0 +1,60 @@
+{
+  "source_root": "D:\\AthenaPlayground\\AthenaV5\\testdata_unpublished_2026-03-09\\logic_working_2026-03-09",
+  "train_output": "D:\\AthenaPlayground\\AthenaV5\\Finetune\\trainingdata\\logic_train33_sources",
+  "holdout_output": "D:\\AthenaPlayground\\AthenaV5\\testdata\\logic_holdout_internal",
+  "locked_eval_logic_root": "D:\\AthenaPlayground\\AthenaV5\\testdata\\logic",
+  "locked_eval_logic_count": 7,
+  "locked_eval_source_names": [
+    "corelogic_v10367.txt",
+    "corelogic_v10391.txt",
+    "corelogic_v10431.txt",
+    "corelogic_v10642.txt",
+    "formal_truth_grid_a.txt",
+    "formal_truth_grid_b.txt",
+    "formal_truth_grid_c.txt",
+    "title Amber Labyrinth Puzzle v11429.txt",
+    "title Cerulean Scepter Puzzle v1084.txt",
+    "title Sapphire Crown Puzzle v11027.txt"
+  ],
+  "candidate_pool_count": 34,
+  "selected_train_count": 33,
+  "held_out_count": 1,
+  "held_out_names": [
+    "title Vortex Pharos Problem v13007..txt"
+  ],
+  "known_bad_excluded_count": 8,
+  "known_bad_excluded": [
+    {
+      "source_name": "corelogic_v10523.txt",
+      "reason": "answer_mismatch:2!=4"
+    },
+    {
+      "source_name": "corelogic_v10561.txt",
+      "reason": "answer_mismatch:2!=6"
+    },
+    {
+      "source_name": "corelogic_v10537.txt",
+      "reason": "answer_mismatch:3!=9"
+    },
+    {
+      "source_name": "corelogic_v10397.txt",
+      "reason": "answer_mismatch:652!=854"
+    },
+    {
+      "source_name": "corelogic_v10447.txt",
+      "reason": "answer_mismatch:724!=51"
+    },
+    {
+      "source_name": "title Azure Relic Puzzle v10799.txt",
+      "reason": "verification_error:Expected unique culprit for title Azure Relic Puzzle v10799.txt, found []"
+    },
+    {
+      "source_name": "title Crimson Orb Puzzle v10913.txt",
+      "reason": "verification_error:Expected unique culprit for title Crimson Orb Puzzle v10913.txt, found []"
+    },
+    {
+      "source_name": "title Obsidian Labyrinth Puzzle v11.txt",
+      "reason": "verification_error:Expected unique culprit for title Obsidian Labyrinth Puzzle v11.txt, found []"
+    }
+  ]
+}

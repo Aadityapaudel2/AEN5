@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import threading
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,8 +10,23 @@ from typing import Any, Callable, Iterable, Optional, Sequence
 from athena_paths import get_default_chat_model_dir, get_gui_config, get_gui_config_path, get_system_prompt_path
 from desktop_engine.events import EngineEvent
 from desktop_engine.runtime import AthenaRuntime, ChatTurnResult, RuntimeMessage
+from desktop_engine.vllm_openai_runtime import VllmOpenAIRuntime
 
 EventListener = Callable[[EngineEvent], None]
+
+
+def _runtime_backend_name() -> str:
+    raw = (os.getenv("ATHENA_RUNTIME_BACKEND") or "transformers").strip().lower()
+    if raw in {"vllm", "vllm_openai", "openai_compat"}:
+        return "vllm_openai"
+    return "transformers"
+
+
+def _build_runtime(*, model_dir: Path, tools_enabled: bool) -> AthenaRuntime | VllmOpenAIRuntime:
+    backend = _runtime_backend_name()
+    if backend == "vllm_openai":
+        return VllmOpenAIRuntime(model_dir=model_dir, tools_enabled=tools_enabled)
+    return AthenaRuntime(model_dir=model_dir, tools_enabled=tools_enabled)
 
 
 def _message_dict(message: RuntimeMessage) -> dict[str, str]:
@@ -46,7 +62,7 @@ class ChatWorker:
         self.tools_enabled = bool(tools_enabled)
         self.load_model = bool(load_model)
         self._lock = threading.Lock()
-        self._runtime: AthenaRuntime | None = None
+        self._runtime: AthenaRuntime | VllmOpenAIRuntime | None = None
         self._model_load_error = ""
 
     @property
@@ -76,12 +92,13 @@ class ChatWorker:
 
     def runtime_snapshot(self) -> dict[str, Any]:
         if self._runtime is None:
-            gui_config = get_gui_config()
-            system_prompt_path = get_system_prompt_path()
-            return {
+            gui_config = get_gui_config(self.model_dir)
+            system_prompt_path = get_system_prompt_path(self.model_dir)
+            backend = _runtime_backend_name()
+            snapshot = {
                 "model_dir": str(self.model_dir),
                 "model_label": self.model_dir.name,
-                "gui_config_path": str(get_gui_config_path()),
+                "gui_config_path": str(get_gui_config_path(self.model_dir)),
                 "system_prompt_path": str(system_prompt_path),
                 "system_prompt_format": system_prompt_path.suffix.lower().lstrip(".") or "text",
                 "temperature": float(gui_config["temperature"]),
@@ -89,11 +106,27 @@ class ChatWorker:
                 "top_p": float(gui_config["top_p"]),
                 "top_k": int(gui_config["top_k"]),
                 "repetition_penalty": float(gui_config["repetition_penalty"]),
+                "no_repeat_ngram_size": int(gui_config["no_repeat_ngram_size"]),
                 "tools_enabled": self.tools_enabled,
                 "sampling_enabled": float(gui_config["temperature"]) > 0.0,
+                "runtime_scope": (os.getenv("ATHENA_RUNTIME_SCOPE") or ("private" if os.getenv("ATHENA_PRIVATE_MODE") else "shared")).strip() or "shared",
                 "model_loaded": False,
                 "model_load_error": self._model_load_error,
+                "runtime_backend": backend,
+                "runtime_backend_label": "vLLM OpenAI-compatible" if backend == "vllm_openai" else "Transformers local runtime",
             }
+            if backend == "vllm_openai":
+                snapshot.update(
+                    {
+                        "model_dir": (os.getenv("ATHENA_VLLM_BASE_URL") or "").strip() or str(self.model_dir),
+                        "model_label": (os.getenv("ATHENA_VLLM_MODEL") or "").strip() or self.model_dir.name,
+                        "device": "remote:vllm",
+                        "supports_vision": False,
+                        "image_processor_loaded": False,
+                        "image_support_error": "",
+                    }
+                )
+            return snapshot
         data = self._runtime.runtime_config()
         data["model_loaded"] = True
         data["model_load_error"] = self._model_load_error
@@ -161,7 +194,7 @@ class ChatWorker:
         if self._runtime is not None:
             return
         try:
-            self._runtime = AthenaRuntime(model_dir=self.model_dir, tools_enabled=self.tools_enabled)
+            self._runtime = _build_runtime(model_dir=self.model_dir, tools_enabled=self.tools_enabled)
         except Exception as exc:
             self._model_load_error = str(exc)
             raise
@@ -312,3 +345,4 @@ class DesktopEngine:
 
     def warm_start(self) -> None:
         self._chat_worker.warm_start()
+

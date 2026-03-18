@@ -1,0 +1,231 @@
+{
+  "schema_id": "distillator_dsl.math.v2.1",
+  "schema_version": 1,
+  "identity": {
+    "family_id": "formal_truth_grid_a__formal_symbolic_truth_teller_puzzle",
+    "instance_id": "formal_truth_grid_a__rederived_verified_instance",
+    "short_name": "Formal Truth Grid A",
+    "generation": 1
+  },
+  "taxonomy": {
+    "domain": "discrete_math",
+    "subdomain(s)": [
+      "propositional_logic",
+      "truth_tellers_and_liars",
+      "constraint_satisfaction"
+    ],
+    "topic_path": [
+      "discrete_math",
+      "logic_puzzles",
+      "symbolic_truth_teller_systems"
+    ],
+    "tags": [
+      "four_agents",
+      "truth_tellers_and_liars",
+      "unique_culprit",
+      "symbolic_statements",
+      "finite_case_split",
+      "self_referential_statements",
+      "biconditional",
+      "liar_culprit_distinct"
+    ]
+  },
+  "problem_spec": {
+    "summary": "Determine the guilty agent in a four-agent truth-teller system specified directly by propositional formulas, with exactly one universal liar and exactly one guilty agent.",
+    "object(s)": [
+      {
+        "name": "agents",
+        "type": "set",
+        "role": "given",
+        "dependency": "independent"
+      },
+      {
+        "name": "L",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "T",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "G",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "P",
+        "type": "function",
+        "role": "unknown",
+        "dependency": "dependent"
+      },
+      {
+        "name": "S",
+        "type": "function",
+        "role": "aux",
+        "dependency": "dependent"
+      },
+      {
+        "name": "culprit_index",
+        "type": "integer",
+        "role": "output",
+        "dependency": "dependent"
+      }
+    ],
+    "givens": [
+      "Agents are labeled 1, 2, 3, and 4.",
+      "Exactly one agent is the universal liar and exactly one agent is guilty.",
+      "Every statement made by the liar is false; every statement made by each other agent is true.",
+      "The liar and the guilty agent are distinct.",
+      "Notation: Li = agent i is the liar, Ti = agent i is truthful, Gi = agent i is guilty, Pi = agent i was present at the event.",
+      "Notation: S(a,b) = statement b made by agent a is true.",
+      "Agent 1:",
+      "(1) (L2 -> not G3)",
+      "(2) (P4 -> not L2)",
+      "(3) not S(3,2)",
+      "(4) not G1",
+      "Agent 2:",
+      "(1) G2",
+      "(2) P2",
+      "(3) L3",
+      "(4) (P4 -> not L1)",
+      "Agent 3:",
+      "(1) L2",
+      "(2) not P4",
+      "(3) (P2 <-> L4)",
+      "(4) (G2 -> L4)",
+      "Agent 4:",
+      "(1) not G4",
+      "(2) P4",
+      "(3) (L1 <-> G3)",
+      "(4) (L1 -> G2)"
+    ],
+    "ask": [
+      "Determine the guilty agent. Return a single digit from 1 to 4."
+    ]
+  },
+  "answer_spec": {
+    "type": "integer",
+    "normalization": "none"
+  },
+  "family_structure": {
+    "parameter(s)": [
+      {
+        "name": "statement_count_per_agent",
+        "type": "other",
+        "domain": "list of four positive integers",
+        "purpose": "records the number of statements made by each agent"
+      },
+      {
+        "name": "liar_culprit_coupling",
+        "type": "enum",
+        "domain": {
+          "distinct": true,
+          "unconstrained": false
+        },
+        "purpose": "records whether the liar and culprit must be different agents"
+      }
+    ],
+    "invariant(s)": [
+      {
+        "name": "unique_liar",
+        "depends_on": [
+          "L"
+        ],
+        "statement": "Exactly one agent is the universal liar, and every statement made by that agent is false."
+      },
+      {
+        "name": "unique_culprit",
+        "depends_on": [
+          "G"
+        ],
+        "statement": "Exactly one agent is guilty."
+      }
+    ],
+    "operator(s)": [
+      "case_split_on_liar_identity",
+      "propositional_constraint_propagation",
+      "implication",
+      "biconditional",
+      "truth_value_fixed_point"
+    ],
+    "essential_assumption(s)": [
+      "Each agent is globally truthful or globally dishonest across all of their statements.",
+      "The liar and the guilty agent are distinct."
+    ],
+    "uniqueness_certificate(s)": [
+      "Exhaustive world search leaves a unique guilty label after enforcing all statement truths and any referenced statement-truth variables."
+    ]
+  },
+  "reasoning_components": {
+    "technique(s)": [
+      {
+        "name": "exhaustive_world_search",
+        "inputs": [
+          "liar identity",
+          "guilty identity",
+          "presence variables",
+          "referenced truth variables"
+        ],
+        "purpose": "test all candidate worlds against the statement set and keep only consistent assignments",
+        "outputs": [
+          "surviving worlds",
+          "unique culprit label"
+        ]
+      }
+    ],
+    "theorem(s)": [
+      {
+        "name": "classical_propositional_semantics",
+        "role": "determines the truth of each statement under a candidate world"
+      }
+    ],
+    "closest_first_principle_concept_applied": [
+      "A finite symbolic world model can be checked exactly by exhaustive enumeration."
+    ]
+  },
+  "solution_signature": {
+    "critical_trick(s)": [
+      "Represent the puzzle as a finite constraint system and search over all liar/guilty assignments until only one culprit label survives."
+    ],
+    "finish_type": "finite_enumeration"
+  },
+  "computational_context": {
+    "preferred_language": "python",
+    "library(s)": [
+      {
+        "name": "itertools",
+        "reason": "enumerate liar, guilty, presence, and referenced truth-value assignments exactly"
+      }
+    ],
+    "import_hint(s)": [
+      "from itertools import product"
+    ],
+    "task(s)": [
+      {
+        "name": "symbolic_world_search",
+        "reason": "verify the culprit by exhaustive propositional evaluation"
+      }
+    ]
+  },
+  "well_posed": "yes",
+  "instance_snapshot": {
+    "parameter_value(s)": {
+      "statement_count_per_agent": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "distinct_liar_and_culprit": true
+    },
+    "final_answer": {
+      "value": "2",
+      "normalized": "2"
+    }
+  }
+}

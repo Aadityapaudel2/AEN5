@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ meta_description }}" />
+    <link rel="stylesheet" href="{{ request.url_for('portal-static', path='portal.css') }}?v={{ asset_version }}" />
+  </head>
+  <body class="portal-landing document-page{% if desktop_shell %} desktop-shell{% endif %}">
+    <div class="shell portal-landing">
+      <header class="topbar landing-topbar">
+        <div class="brand-wrap">
+          <div class="brand-badge">NeohmLabs</div>
+          <div class="title-wrap">
+            <h1>{{ assistant_label }}</h1>
+            <div class="title-subline">AthenaV5 is part of AEN.</div>
+          </div>
+        </div>
+        <div class="user-wrap">
+          <nav class="landing-nav" aria-label="Document navigation">
+            <a class="nav-link" href="{{ path_prefix }}">Portal</a>
+            <a class="nav-link" href="{{ path_prefix }}/aen">AEN</a>
+            <a class="nav-link" href="{{ path_prefix }}/swarm">SWARM</a>
+            <a class="nav-link" href="{{ path_prefix }}/mission">Mission</a>
+            <a class="nav-link" href="{{ path_prefix }}/privacy">Privacy</a>
+            <a class="nav-link" href="{{ path_prefix }}/terms">Terms</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="legal-shell">
+        <section class="legal-hero">
+          <div class="section-kicker">{{ page_kicker }}</div>
+          <h2>{{ page_title }}</h2>
+          <p class="section-copy">{{ page_body }}</p>
+          <div class="cta-row">
+            <a class="btn primary" href="{{ path_prefix }}">Back to portal</a>
+            <a class="btn ghost" href="{{ institution_email_href }}">Contact NeohmLabs</a>
+          </div>
+        </section>
+
+        <section class="legal-content-card">
+          {% for paragraph in page_paragraphs %}
+          <p>{{ paragraph }}</p>
+          {% endfor %}
+          <ul class="policy-list">
+            {% for item in page_points %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

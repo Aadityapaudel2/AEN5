@@ -1,0 +1,237 @@
+AIMO WIN PLAN
+Date: 2026-03-12
+
+Purpose
+This document captures the current AIMO strategy after the key result from today's work:
+
+- Qwen3.5-9B solo failed a hard number theory problem and produced 604.
+- The 2-body protocol corrected the error and produced the canonical answer 124.
+
+This changes the project direction. The main bottleneck is no longer "teach the model more math problems." The main bottleneck is reasoning protocol, verification discipline, and collaborative structure.
+
+Core Thesis
+Winning AIMO is unlikely to come from raw math SFT on public problem/solution corpora alone.
+
+Reasons:
+- Qwen already has very strong public math priors.
+- AIMO problems are original and designed to resist simple benchmark overfitting.
+- More solved-problem SFT risks bias, style drift, and degraded reasoning.
+- The major observed failures are structural:
+  - wrong initial assumption
+  - wrong modular reduction
+  - unchecked local arithmetic
+  - verifier accepting an invalid chain
+
+Therefore, the strongest path is:
+- keep strong open models
+- impose a stronger collaborative reasoning protocol
+- collect successful rescue traces
+- later distill those traces into process-SFT, not answer-memorization SFT
+
+Canonical Findings From Today
+1. Qwen3.5-4B local single-body and early 2-body experiments were too weak on a hard number theory case.
+2. Qwen3.5-9B solo handled the global structure better, but still failed due to a local modular arithmetic error.
+3. Qwen3.5-9B under the 2-body protocol recovered the correct answer 124.
+4. This demonstrates that architecture can outperform solo inference on the same base model.
+5. The current free-flow loop is still too slow and too chatty for AIMO use. It needs a bounded protocol and hard stop conditions.
+
+Implication
+The immediate priority is not adding a third body and not full-scale raw math finetuning.
+The immediate priority is building a competition-grade 2-body reasoning protocol.
+
+Strategic Model Direction
+Local canonical development model:
+- Qwen3.5-4B
+
+Competition-grade solver candidate:
+- Qwen3.5-9B on H100
+
+Reason:
+- 4B is still the best affordable local development target.
+- 9B on local 16 GB VRAM is awkward and slow.
+- AIMO3 provides H100 competition hardware, so the submission ceiling is higher than the local machine ceiling.
+
+Current working assumption:
+- develop architecture on 4B
+- validate final solver quality on 9B
+- if 9B materially outperforms 4B, use 9B for submission
+
+Protocol Direction
+The system must emulate strong human mathematical solving behavior.
+The critical separation between generic and elite solving happens before the first solution line is written.
+
+Required protocol:
+Phase 1. Extract
+- What is given?
+- What is asked?
+- What hidden constraints matter?
+
+Phase 2. Explore
+- List candidate approaches.
+- Identify likely dead ends.
+- Challenge unsafe assumptions.
+
+Phase 3. Commit
+- Choose the best plan.
+- Explain why this plan is preferred.
+- State the first concrete step.
+
+Phase 4. Solve
+- Execute the chosen plan carefully.
+
+Phase 5. Verify
+- Check whether the executed solution matches the chosen plan.
+- Check arithmetic, local reductions, case coverage, and hidden assumptions.
+
+Non-negotiable rule:
+- No full solution is allowed until a plan artifact exists.
+
+Why This Matters
+The failed 124 problem was not primarily a tool-calling failure.
+It was a reasoning-discipline failure.
+
+Observed failure modes:
+- solver assumed a false structural property
+- verifier failed to challenge that property
+- solo 9B made a local modular reduction error
+
+Observed success mode:
+- second body forced correction and recovered the right answer
+
+This supports the idea that the winning edge comes from:
+- plan discipline
+- challenge discipline
+- verification discipline
+- bounded repair loops
+
+Tool Policy
+Tool use is useful, but it is secondary.
+
+Current position:
+- tool calling is helpful for exact arithmetic and local checks
+- tool calling is not the main source of gains on hard AIMO reasoning
+- protocol quality matters more than tool availability
+
+Therefore:
+- do not block progress on mastering tool calling first
+- use tools narrowly for exact checks
+- keep the main focus on reasoning structure
+
+SFT Direction
+The current view is that future finetuning should focus on behavior and process, not raw math-answer imitation.
+
+Do not prioritize:
+- more generic public solved math problems
+- larger public answer corpora for answer-style imitation
+
+Do prioritize:
+- how to dissect a problem
+- how to identify givens and target
+- how to generate candidate paths
+- how to reject weak paths
+- how to form a plan
+- how to verify a solution
+- how to challenge unsupported assumptions
+- how to stop after verification
+
+This means future SFT should target:
+- planner behavior
+- solver behavior
+- verifier behavior
+- evaluator behavior
+
+Research Goal
+We now have a strong research direction:
+
+- show repeatable cases where 9B solo fails
+- show the same 9B under a 2-body protocol succeeds
+- hold model, problem, and runtime budget fixed
+- isolate the gain to architecture
+
+If repeatable across domains, this becomes paper-worthy evidence.
+
+Immediate evaluation set to build:
+- algebra
+- combinatorics
+- geometry
+- logic
+
+For each case, run:
+- 9B solo
+- 9B 2-body protocol
+
+For each run, log:
+- final answer
+- correct/incorrect
+- latency
+- turns used
+- first major error type
+- whether verifier changed the outcome
+- whether loop stopped correctly
+
+Current Engineering Priorities
+1. Fix evaluator loop control.
+- hard stop immediately on VERIFIED
+- no extra post-verification chatter
+
+2. Preserve loop context.
+- Continue Loop must resume from prior history
+- prompt injection must work as side-specific steering
+
+3. Enforce protocol structure.
+- extract
+- explore
+- commit
+- solve
+- verify
+
+4. Benchmark carefully.
+- build a small fixed hard-case pack
+- compare solo vs 2-body
+
+5. Use H100 strategically.
+- validate 9B speed and protocol behavior on Linux/H100
+- treat local machine as development surface, not final competition ceiling
+
+6. Distill only after architecture stabilizes.
+- once rescue cases are repeatable, turn those traces into process-SFT data
+
+Scaling Plan
+Near term:
+- stabilize the 2-body protocol
+- collect successful rescue cases
+- prove that architecture beats solo inference on meaningful problems
+
+Mid term:
+- build planner/solver/verifier datasets from successful traces
+- finetune behavior, not memorized problem solving
+- optionally test heterogeneous pairings if a strong complementary open model emerges
+
+Competition path:
+- local development on 4B
+- submission-grade inference on 9B if it clearly performs better on H100
+- package the bounded 2-body system, not a free-form chat swarm
+
+Simple decision rule:
+- if solo 9B is enough, keep it simple
+- if 2-body consistently rescues solo 9B on hard cases, ship the 2-body architecture
+
+Working Belief
+The path to AIMO strength is now:
+
+strong base model
++ disciplined collaborative protocol
++ bounded verification
++ trace-driven process SFT later
+
+not
+
+more generic solved math corpora
++ larger raw answer imitation
+
+Final Statement
+The project direction is now clear:
+
+We are building a structured multi-body mathematical reasoning system whose main advantage comes from better thinking discipline, not just bigger weights.
+
+If we can repeatedly show that the same strong open model fails alone and succeeds with our protocol, then the architecture itself is the contribution.

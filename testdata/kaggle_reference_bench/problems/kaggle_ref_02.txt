@@ -1,0 +1,2 @@
+﻿A 500 x 500 square is divided into k rectangles, each having integer side lengths. Given that no two of these rectangles have the same perimeter, the largest possible value of k is K.
+What is the remainder when K is divided by 10^5?

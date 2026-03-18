@@ -1,0 +1,5 @@
+﻿Let f : Z_{>=1} -> Z_{>=1} be a function such that for all positive integers m and n,
+
+f(m) + f(n) = f(m + n + mn).
+
+Across all functions f such that f(n) <= 1000 for all n <= 1000, how many different values can f(2024) take?

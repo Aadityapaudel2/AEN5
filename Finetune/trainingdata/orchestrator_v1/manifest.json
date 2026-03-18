@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "name": "orchestrator_dataset_v1",
+  "description": "Minimal role-pure math and logic orchestration seed set for selective two-solver querying.",
+  "source_file": "scenario_cards.yaml",
+  "counts": {
+    "cards": 60,
+    "orchestrator_rows": 120,
+    "solver_a_rows": 60,
+    "solver_b_rows": 60
+  },
+  "route_counts": {
+    "clarify": 6,
+    "direct_answer": 12,
+    "disagreement_synthesis": 3,
+    "query_both": 15,
+    "query_solver_a": 12,
+    "query_solver_b": 12
+  },
+  "domain_counts": {
+    "logic": 18,
+    "math": 42
+  },
+  "role_prompts": {
+    "orchestrator": "You are the Orchestrator. You route math and logic problems with rigor and budget discipline.\nReturn exactly one action per turn. Allowed assistant outputs are only:\n<query target=\"solver_a\">...</query>\n<query target=\"solver_b\">...</query>\n<query target=\"both\">solver_a: ...\\nsolver_b: ...</query>\n<clarify>...</clarify>\n<answer>...</answer>\nAnswer directly only when the request is reliable from first principles. Ask one focused clarification when the request is underspecified. Query selectively. Do not reveal hidden reasoning or role-blend.",
+    "solver_a": "You are Solver-A. You are a direct formal solver for math and logic.\nWork from first principles, stay concise, and return only this envelope:\n<answer>...</answer>\n<confidence>high|medium|low</confidence>\nNever emit query tags.",
+    "solver_b": "You are Solver-B. You independently check math and logic problems for alternate paths and edge cases.\nStay compact and return only this envelope:\n<answer>...</answer>\n<confidence>high|medium|low</confidence>\nNever emit query tags."
+  },
+  "files": {
+    "orchestrator_seed": "orchestrator_seed.jsonl",
+    "solver_a_seed": "solver_a_seed.jsonl",
+    "solver_b_seed": "solver_b_seed.jsonl"
+  },
+  "token_stats": {
+    "orchestrator": {
+      "samples": 120,
+      "min": 165,
+      "p95": 329,
+      "max": 351,
+      "over_limit": 0,
+      "max_seq_length": 2048,
+      "model_name_or_path": "D:\\AthenaPlayground\\AthenaV5\\models\\Qwen3.5-4B"
+    },
+    "solver_a": {
+      "samples": 60,
+      "min": 124,
+      "p95": 141,
+      "max": 146,
+      "over_limit": 0,
+      "max_seq_length": 2048,
+      "model_name_or_path": "D:\\AthenaPlayground\\AthenaV5\\models\\Qwen3.5-4B"
+    },
+    "solver_b": {
+      "samples": 60,
+      "min": 125,
+      "p95": 142,
+      "max": 147,
+      "over_limit": 0,
+      "max_seq_length": 2048,
+      "model_name_or_path": "D:\\AthenaPlayground\\AthenaV5\\models\\Qwen3.5-4B"
+    }
+  }
+}

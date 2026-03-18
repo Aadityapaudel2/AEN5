@@ -4,40 +4,59 @@ from __future__ import annotations
 import argparse
 import inspect
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
 import torch
 from torch.utils.data import Dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
+from peft import LoraConfig, TaskType, get_peft_model, prepare_model_for_kbit_training
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, Trainer, TrainingArguments
 
 ROLES = {"system", "user", "assistant"}
-FLAG_ARGS = ("save_only_model", "strict_no_truncation", "bf16", "fp16", "gradient_checkpointing")
+FLAG_ARGS = (
+    "save_only_model",
+    "strict_no_truncation",
+    "bf16",
+    "fp16",
+    "gradient_checkpointing",
+    "use_lora",
+    "load_in_4bit",
+)
 
 
 @dataclass(frozen=True)
-class NumericArg:
+class ScalarArg:
     name: str
     arg_type: type
     default: int | float | str
 
 
-NUMERIC_ARGS = (
-    NumericArg("max_seq_length", int, 2048),
-    NumericArg("per_device_train_batch_size", int, 1),
-    NumericArg("gradient_accumulation_steps", int, 8),
-    NumericArg("learning_rate", float, 2e-5),
-    NumericArg("num_train_epochs", float, 3.0),
-    NumericArg("warmup_ratio", float, 0.03),
-    NumericArg("lr_scheduler_type", str, "linear"),
-    NumericArg("weight_decay", float, 0.0),
-    NumericArg("max_grad_norm", float, 1.0),
-    NumericArg("logging_steps", int, 10),
-    NumericArg("save_steps", int, 200),
-    NumericArg("save_total_limit", int, 2),
-    NumericArg("expected_samples", int, 0),
-    NumericArg("seed", int, 777),
+SCALAR_ARGS = (
+    ScalarArg("max_seq_length", int, 2048),
+    ScalarArg("per_device_train_batch_size", int, 1),
+    ScalarArg("gradient_accumulation_steps", int, 8),
+    ScalarArg("learning_rate", float, 2e-5),
+    ScalarArg("num_train_epochs", float, 3.0),
+    ScalarArg("warmup_ratio", float, 0.03),
+    ScalarArg("lr_scheduler_type", str, "linear"),
+    ScalarArg("weight_decay", float, 0.0),
+    ScalarArg("max_grad_norm", float, 1.0),
+    ScalarArg("logging_steps", int, 10),
+    ScalarArg("save_steps", int, 200),
+    ScalarArg("save_total_limit", int, 2),
+    ScalarArg("expected_samples", int, 0),
+    ScalarArg("seed", int, 777),
+    ScalarArg("max_steps", int, 0),
+    ScalarArg("optim", str, "adamw_torch"),
+    ScalarArg("optim_args", str, ""),
+    ScalarArg("optim_target_modules", str, ""),
+    ScalarArg("torch_empty_cache_steps", int, 0),
+    ScalarArg("lora_r", int, 16),
+    ScalarArg("lora_alpha", int, 32),
+    ScalarArg("lora_dropout", float, 0.05),
+    ScalarArg("lora_target_modules", str, "q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj"),
 )
 
 
@@ -45,7 +64,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Compact Qwen chat SFT trainer")
     for name in ("model_name_or_path", "train_file", "output_dir"):
         parser.add_argument(f"--{name}", required=True)
-    for arg in NUMERIC_ARGS:
+    for arg in SCALAR_ARGS:
         parser.add_argument(f"--{arg.name}", type=arg.arg_type, default=arg.default)
     for name in FLAG_ARGS:
         parser.add_argument(f"--{name}", action="store_true")
@@ -150,14 +169,82 @@ def print_length_stats(lengths: list[int], max_seq_length: int) -> int:
     return over_limit
 
 
-def build_training_args(args: argparse.Namespace) -> TrainingArguments:
+def resolve_torch_dtype(args: argparse.Namespace) -> torch.dtype | None:
+    if args.bf16:
+        return torch.bfloat16
+    if args.fp16:
+        return torch.float16
+    return None
+
+
+def build_model(args: argparse.Namespace) -> AutoModelForCausalLM:
+    if args.load_in_4bit and not args.use_lora:
+        raise ValueError("load_in_4bit requires --use_lora because dense 4-bit finetuning is not supported here")
+
+    model_kwargs: dict[str, object] = {"low_cpu_mem_usage": True}
+    torch_dtype = resolve_torch_dtype(args)
+
+    if args.load_in_4bit:
+        if not torch.cuda.is_available():
+            raise ValueError("load_in_4bit requires a CUDA device")
+        compute_dtype = torch_dtype or torch.float16
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_compute_dtype=compute_dtype,
+        )
+        model_kwargs["device_map"] = {"": 0}
+        model_kwargs["dtype"] = compute_dtype
+    elif torch_dtype is not None:
+        model_kwargs["dtype"] = torch_dtype
+
+    model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, **model_kwargs)
+
+    if args.use_lora:
+        target_modules = [item.strip() for item in args.lora_target_modules.split(",") if item.strip()]
+        if not target_modules:
+            raise ValueError("LoRA training requires at least one target module")
+        if args.load_in_4bit:
+            model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
+        lora_config = LoraConfig(
+            task_type=TaskType.CAUSAL_LM,
+            r=args.lora_r,
+            lora_alpha=args.lora_alpha,
+            lora_dropout=args.lora_dropout,
+            bias="none",
+            target_modules=target_modules,
+        )
+        model = get_peft_model(model, lora_config)
+        model.print_trainable_parameters()
+
+    if args.gradient_checkpointing:
+        model.gradient_checkpointing_enable()
+    if hasattr(model, "config") and model.config is not None:
+        model.config.use_cache = False
+    return model
+
+
+def estimate_total_train_steps(args: argparse.Namespace, dataset_size: int) -> int:
+    if args.max_steps > 0:
+        return args.max_steps
+    effective_batch = max(args.per_device_train_batch_size * args.gradient_accumulation_steps, 1)
+    steps_per_epoch = max(math.ceil(dataset_size / effective_batch), 1)
+    return max(math.ceil(args.num_train_epochs * steps_per_epoch), 1)
+
+
+def build_training_args(args: argparse.Namespace, dataset_size: int) -> TrainingArguments:
+    warmup_steps = math.ceil(estimate_total_train_steps(args, dataset_size) * args.warmup_ratio) if args.warmup_ratio > 0 else 0
+    optim_target_modules = None
+    if args.optim_target_modules.strip():
+        optim_target_modules = [item.strip() for item in args.optim_target_modules.split(",") if item.strip()]
     return TrainingArguments(
         output_dir=args.output_dir,
         per_device_train_batch_size=args.per_device_train_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         learning_rate=args.learning_rate,
         num_train_epochs=args.num_train_epochs,
-        warmup_ratio=args.warmup_ratio,
+        warmup_steps=warmup_steps,
         lr_scheduler_type=args.lr_scheduler_type,
         weight_decay=args.weight_decay,
         max_grad_norm=args.max_grad_norm,
@@ -165,8 +252,13 @@ def build_training_args(args: argparse.Namespace) -> TrainingArguments:
         save_steps=args.save_steps,
         save_total_limit=args.save_total_limit,
         save_only_model=args.save_only_model,
+        max_steps=args.max_steps if args.max_steps > 0 else -1,
+        optim=args.optim,
+        optim_args=args.optim_args.strip() or None,
+        optim_target_modules=optim_target_modules,
         bf16=args.bf16,
         fp16=args.fp16,
+        torch_empty_cache_steps=args.torch_empty_cache_steps if args.torch_empty_cache_steps > 0 else None,
         report_to=[],
         remove_unused_columns=False,
         seed=args.seed,
@@ -198,6 +290,8 @@ def build_trainer(
 def main() -> None:
     args = parse_args()
     torch.manual_seed(args.seed)
+    if args.bf16 and args.fp16:
+        raise ValueError("Enable either --bf16 or --fp16, not both")
 
     dataset = ChatDataset(args.train_file)
     print(f"Loaded samples: {len(dataset)}")
@@ -210,9 +304,7 @@ def main() -> None:
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token if tokenizer.eos_token is not None else "<|pad|>"
 
-    model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path)
-    if args.gradient_checkpointing:
-        model.gradient_checkpointing_enable()
+    model = build_model(args)
 
     lengths = token_lengths(tokenizer, dataset.samples)
     over_limit = print_length_stats(lengths, args.max_seq_length)
@@ -224,7 +316,7 @@ def main() -> None:
 
     trainer = build_trainer(
         model=model,
-        training_args=build_training_args(args),
+        training_args=build_training_args(args, len(dataset)),
         dataset=dataset,
         collator=build_collator(tokenizer, args.max_seq_length),
         tokenizer=tokenizer,

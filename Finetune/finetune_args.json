@@ -1,8 +1,29 @@
 {
   "paths": {
-    "model_path": "models/Qwen3-1.7B",
-    "train_file": "Finetune/trainingdata/samples/sftathena/athena_conditioning_train.jsonl",
-    "output_dir": "models/tuned/AthenaV7.02"
+    "model_path": "models/Qwen3.5-4B",
+    "train_file": "Finetune/trainingdata/training_dataset_1_history_verbatim.jsonl",
+    "output_dir": "D:/AthenaPlayground/AthenaV5/models/tuned/Athena_History_4B_canonical_dataset1_sprint"
+  },
+  "metadata": {
+    "run_name": "athena_history_4b_canonical_dataset1_sprint",
+    "training_mode": "Canonical 4B Full SFT Baseline",
+    "intent": "Canonical private full-SFT baseline for Qwen3.5-4B.",
+    "reason_for_finetune": "Reference 4B run configuration for future follow-on tuning.",
+    "expected_behavior": [
+      "Load as a standalone tuned checkpoint inside models/tuned.",
+      "Serve as the canonical 4B baseline for future follow-on tuning and comparison."
+    ],
+    "notes": [
+      "This remains a true full-model SFT profile, not an adapter profile.",
+      "The output target is D:/AthenaPlayground/AthenaV5/models/tuned/Athena_History_4B_canonical_dataset1_sprint.",
+      "The active train file remains the canonical dataset 1 JSONL.",
+      "No rows in the active train file exceed the 1024-token target under the Qwen3.5-4B tokenizer.",
+      "This file is the active canonical baseline configuration for future 4B tuning."
+    ],
+    "source_snapshot_files": [
+      "Finetune/trainingdata/training_dataset_1_history_verbatim.jsonl",
+      "Finetune/trainingdata/training_dataset_1_history_verbatim_manifest.json"
+    ]
   },
   "accelerate": {
     "num_processes": 1,
@@ -12,23 +33,34 @@
   },
   "train": {
     "max_seq_length": 1024,
-    "expected_samples": 300,
+    "expected_samples": 157,
     "strict_no_truncation": true,
     "per_device_train_batch_size": 1,
-    "gradient_accumulation_steps": 8,
+    "gradient_accumulation_steps": 1,
     "learning_rate": 5e-6,
-    "num_train_epochs": 4,
-    "warmup_ratio": 0.05,
-    "lr_scheduler_type": "constant_with_warmup",
+    "num_train_epochs": 1,
+    "max_steps": 157,
+    "warmup_ratio": 0.0,
+    "lr_scheduler_type": "constant",
+    "optim": "adamw_torch",
+    "optim_args": "",
+    "optim_target_modules": "",
+    "torch_empty_cache_steps": 10,
     "weight_decay": 0.01,
     "max_grad_norm": 1.0,
-    "logging_steps": 5,
-    "save_steps": 25,
-    "save_total_limit": 2,
+    "logging_steps": 1,
+    "save_steps": 20,
+    "save_total_limit": 3,
     "save_only_model": true,
     "bf16": true,
     "fp16": false,
     "gradient_checkpointing": true,
-    "seed": 777
+    "seed": 29,
+    "use_lora": false,
+    "load_in_4bit": false,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "lora_target_modules": "q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj"
   }
 }

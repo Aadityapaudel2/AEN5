@@ -1,0 +1,13 @@
+{
+  "temperature": 0.25,
+  "max_new_tokens": 4096,
+  "top_p": 0.75,
+  "top_k": 16,
+  "repetition_penalty": 1.15,
+  "no_repeat_ngram_size": 8,
+  "tools_enabled": false,
+  "enable_thinking": false,
+  "hide_thoughts": true,
+  "renderer_mode": "qt_web",
+  "render_throttle_ms": 75
+}

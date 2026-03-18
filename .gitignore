@@ -13,6 +13,7 @@ data/clipboard_images/
 data/compare_runs/
 models/
 Finetune/output/
+Finetune/runs/
 Finetune/trainingdata/output/
 Finetune/math_finetune_workspace/
 Finetune/adapters/*
@@ -21,10 +22,16 @@ Finetune/adapters/*
 temp
 temp_compile/
 temp_portal*.log
+build/
+dist/
 *.zip
 *.tmp
 portal_auth.env
 .env.portal
+.local/
+random/
+exclusive/
+kaggle_aimo3/ 
 
 # Local workspace scratch
 codexcontext.txt
@@ -54,3 +61,17 @@ Finetune/trainingdata/**/dataset_persona_chat.jsonl
 assets/mathjax/
 system_prompt_math.txt
 googleauthcloud.txt
+exclusive/
+browser/config/portal_auth.env
+browser/config/.env.portal
+.wsl_venv/
+data/desktop_images/
+codebase.txt
+sendtotodd.txt
+institutions/**/raw/canvas_export/*.imscc
+
+# Institution/course data and pilot overlays should stay local unless explicitly scrubbed.
+institutions/*/institution.json
+institutions/*/raw/
+institutions/*/courses/*/derived/
+institutions/*/courses/*/pilot/

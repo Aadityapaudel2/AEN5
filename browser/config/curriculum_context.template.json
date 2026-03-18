@@ -1,0 +1,23 @@
+﻿{
+  "institution_name": "Example University",
+  "role_context": "student or educator",
+  "current_course": "MTH 025 College Algebra",
+  "current_unit": "Factoring, quadratics, and test review",
+  "allowed_methods": [
+    "Stay within covered course methods when possible",
+    "Prefer guided steps before full worked solutions on likely graded work"
+  ],
+  "restricted_help": [
+    "Do not bypass instructor policy for graded assessments",
+    "Avoid introducing advanced methods before they are taught unless requested"
+  ],
+  "assessment_style": [
+    "short quizzes",
+    "review sheets",
+    "worked examples"
+  ],
+  "notes": [
+    "This file is an optional future hook for LMS or admin-side provisioning.",
+    "Per-user runtime location: data/users/<user>/memory/curriculum_context.json"
+  ]
+}

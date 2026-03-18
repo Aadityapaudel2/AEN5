@@ -1,18 +1,125 @@
-<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ title }}</title>
+    <meta name="description" content="{{ meta_description }}" />
     <link rel="stylesheet" href="{{ request.url_for('portal-static', path='portal.css') }}?v={{ asset_version }}" />
   </head>
-  <body>
+  <body class="portal-landing portal-login-page">
     <main class="login-shell">
-      <section class="login-card">
-        <h1 class="login-title">Welcome to Athena V5</h1>
-        <p class="login-copy">Sign in to use the public portal. Local development runs with auth disabled.</p>
-        <a class="btn primary login-btn" href="{{ path_prefix }}/auth/login">Sign in with Google</a>
-        <p class="login-note">Your session history is stored on this host under your workspace profile.</p>
+      <section class="login-card login-card-primary">
+        <span class="login-kicker">Institution sign-in</span>
+        <h1 class="login-title">Sign in to Artificial Evaluation Network</h1>
+        <p class="login-copy">{{ mission_copy }}</p>
+        <p class="login-mission">Athena is the model. Athena V5 is the current teaching surface inside AEN.</p>
+        {% if login_error %}
+        <p class="login-error">{{ login_error }}</p>
+        {% endif %}
+
+        <div class="login-provider-block login-provider-block-equal">
+          <p class="login-subhead">Choose a sign-in method</p>
+          <div class="login-method-grid">
+            {% if pilot_google_enabled and "google" in auth_providers %}
+            <a class="btn login-btn oauth-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/login/google">
+              <span class="login-btn-mark">MU</span>
+              <span class="login-btn-copy">
+                <strong>{{ pilot_google_label }}</strong>
+                <span>MiamiOH is detected automatically after sign-in</span>
+              </span>
+            </a>
+            {% elif "google" in auth_providers %}
+            <a class="btn login-btn oauth-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/login/google">
+              <span class="login-btn-mark">G</span>
+              <span class="login-btn-copy">
+                <strong>Continue with Google</strong>
+                <span>General Google sign-in</span>
+              </span>
+            </a>
+            {% endif %}
+
+            {% if "github" in auth_providers %}
+            <a class="btn login-btn oauth-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/login/github">
+              <span class="login-btn-mark">GH</span>
+              <span class="login-btn-copy">
+                <strong>Continue with GitHub</strong>
+                <span>Developer and general portal access</span>
+              </span>
+            </a>
+            {% endif %}
+
+            {% if guest_login_enabled %}
+            <a class="btn login-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/guest">
+              <span class="login-btn-mark">GS</span>
+              <span class="login-btn-copy">
+                <strong>Continue as Guest</strong>
+                <span>Limited prompts without full sign-in</span>
+              </span>
+            </a>
+            {% endif %}
+
+            <a class="btn login-btn login-btn-rich login-choice-btn" href="{{ institution_email_href }}">
+              <span class="login-btn-mark">@</span>
+              <span class="login-btn-copy">
+                <strong>Institution access</strong>
+                <span>Contact NeohmLabs for broader rollout</span>
+              </span>
+            </a>
+          </div>
+        </div>
+
+        {% if institutions %}
+        <form class="login-actions institution-login-form institution-login-form-inline" method="get" action="{{ path_prefix }}/auth/login/institution">
+          <label class="institution-field">
+            <span class="institution-label">Institution Canvas sign-in</span>
+            <select class="institution-select" name="institution_key">
+              {% for institution in institutions %}
+              <option value="{{ institution.institution_key }}" {% if institution.institution_key == default_institution_key %}selected{% endif %}>
+                {{ institution.label }}
+              </option>
+              {% endfor %}
+            </select>
+          </label>
+          <button class="btn login-btn login-btn-neutral" type="submit">Open Canvas sign-in</button>
+        </form>
+        {% else %}
+        <p class="login-note">Canvas institution sign-in is not configured on this host yet. MiamiOH students should use Google for today’s pilot.</p>
+        {% endif %}
+
+        {% if default_institution_key == "miamioh" %}
+        <p class="login-inline-note">Miami University is the first pilot institution. Sign in with Google and Athena will automatically attach MiamiOH course context when the account is `@miamioh.edu`.</p>
+        {% endif %}
+        {% if guest_login_enabled and guest_prompt_limit > 0 %}
+        <p class="login-note">Guest sessions are limited to {{ guest_prompt_limit }} prompts before a full institutional sign-in is required.</p>
+        {% endif %}
+        <p class="signin-disclosure">{{ signin_disclosure }} <a href="{{ path_prefix }}/terms">Terms</a> | <a href="{{ path_prefix }}/privacy">Privacy</a></p>
+      </section>
+
+      <section class="login-directory login-directory-below">
+        <div class="login-directory-head">
+          <span class="panel-kicker">Separate pages</span>
+          <h2>Read architecture and policy separately.</h2>
+          <p>The login page should stay clean. Use the dedicated pages below for architecture, mission, privacy, and terms.</p>
+        </div>
+        <div class="login-directory-links">
+          {% for item in home_reading_links %}
+          <a class="directory-link" href="{{ path_prefix }}{{ item.href }}">
+            <span class="story-kicker">{{ item.kicker }}</span>
+            <strong class="directory-link-title">{{ item.title }}</strong>
+            <span class="directory-link-body">{{ item.body }}</span>
+          </a>
+          {% endfor %}
+          <a class="directory-link" href="{{ path_prefix }}/privacy">
+            <span class="story-kicker">Privacy</span>
+            <strong class="directory-link-title">Privacy Notice</strong>
+            <span class="directory-link-body">Review how conversation memory and institutional data are handled.</span>
+          </a>
+          <a class="directory-link" href="{{ path_prefix }}/terms">
+            <span class="story-kicker">Terms</span>
+            <strong class="directory-link-title">Terms of use</strong>
+            <span class="directory-link-body">See where Athena helps, and where the user still remains responsible.</span>
+          </a>
+        </div>
       </section>
     </main>
   </body>

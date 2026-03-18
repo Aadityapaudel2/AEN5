@@ -1,0 +1,3 @@
+﻿Alice and Bob are each holding some integer number of sweets. Alice says to Bob: "If we each added the number of sweets we are holding to our (positive integer) age, my answer would be double yours. If we took the product, then my answer would be four times yours."
+Bob replies: "Why do not you give me five of your sweets because then both our sum and product would be equal."
+What is the product of Alice and Bob's ages?

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # 1) Prepare conversation dataset for Athena-as-assistant (student role)
-python prepare_data.py \
+python tooling/prepare/prepare_data.py \
   --input athena_apprentice.jsonl \
   --output train_athena.jsonl \
   --assistant_role student

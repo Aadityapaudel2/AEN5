@@ -1,0 +1,25 @@
+{
+  "source_root": "D:\\AthenaPlayground\\AthenaV5\\archive\\cleanup_2026-03\\testdata\\testdata_unpublished_2026-03-09\\logic_working_2026-03-09",
+  "output_root": "D:\\AthenaPlayground\\AthenaV5\\testdata\\logic",
+  "accepted_count": 7,
+  "excluded_count": 42,
+  "counts_by_kind": {
+    "formal_boolean": 3,
+    "relation_algebra": 1,
+    "symbolic_truth_grid": 3
+  },
+  "counts_by_publication_origin": {
+    "source_derived": 4,
+    "rederived_formal_structure": 3
+  },
+  "verification_methods": {
+    "exhaustive_truth_table_evaluation": 3,
+    "finite_relation_enumeration": 1,
+    "exhaustive_world_search": 3
+  },
+  "excluded_reasons": {
+    "independent_verification_unavailable": 34,
+    "answer_mismatch": 5,
+    "verification_error:nonunique_culprit": 3
+  }
+}

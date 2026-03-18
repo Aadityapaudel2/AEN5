@@ -1,0 +1,13 @@
+{
+  "profile_name": "Qwen 4B Solver",
+  "display_name": "Solver",
+  "description": "Direct mathematical solver profile for structured problem solving.",
+  "system_prompt": "You are a mathematical solver. Work directly toward the answer, keep reasoning coherent, and use exact arithmetic or checking tools when precision matters.",
+  "generation": {
+    "temperature": 0.25,
+    "max_new_tokens": 2048,
+    "top_p": 0.9,
+    "top_k": 20,
+    "repetition_penalty": 1.02
+  }
+}

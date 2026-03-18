@@ -21,7 +21,14 @@ from transformers import (
     TextIteratorStreamer,
 )
 
-from athena_paths import get_default_chat_model_dir, get_gui_config, get_gui_config_path, get_system_prompt_path, get_tools_enabled_default
+from athena_paths import (
+    get_default_chat_model_dir,
+    get_gui_config,
+    get_gui_config_path,
+    get_orchestrator_model_dir,
+    get_system_prompt_path,
+    get_tools_enabled_default,
+)
 from desktop_engine.events import EngineEvent
 from . import tools as athena_tools
 
@@ -34,6 +41,7 @@ THINK_TAG_RE = re.compile(r"</?think>", re.IGNORECASE)
 MARKDOWN_PREFIX_RE = re.compile(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)+")
 MARKDOWN_DECORATION_RE = re.compile(r"^(?:\*\*|__|`)+")
 PROMPT_IMAGE_RE = re.compile(r"!\[[^\]]*\]\([^)]+\)")
+WORD_LOOP_RE = re.compile(r"\b(?P<word>[a-zA-Z]{3,})\b(?:\s+\1\b){7,}", re.IGNORECASE)
 
 META_PREFIXES = tuple(
     item.lower()
@@ -294,8 +302,8 @@ def _render_system_prompt_from_json(cfg: dict[str, Any]) -> str:
     return text or DEFAULT_SYSTEM_PROMPT
 
 
-def _load_system_prompt() -> tuple[str, str, str]:
-    path = get_system_prompt_path()
+def _load_system_prompt(model_dir: Path | None = None) -> tuple[str, str, str]:
+    path = get_system_prompt_path(model_dir)
     prompt_format = "text"
     try:
         if path.suffix.lower() == ".json":
@@ -320,6 +328,50 @@ def clean_assistant_text(text: str) -> str:
     visible = THINK_TAG_RE.sub("", visible).strip()
     visible = re.sub(r"\n{3,}", "\n\n", visible)
     return visible
+
+
+def _looks_like_repeated_tail(text: str) -> bool:
+    sample = re.sub(r"\s+", " ", text or "").strip().lower()
+    if len(sample) < 120:
+        return False
+    if WORD_LOOP_RE.search(sample):
+        return True
+    for width in (24, 32, 48, 64, 96, 128, 160):
+        if len(sample) < width * 3:
+            continue
+        tail = sample[-width:]
+        if len(tail.strip()) < max(12, width // 2):
+            continue
+        if sample.endswith(tail * 3):
+            return True
+    lines = [re.sub(r"\s+", " ", line).strip().lower() for line in (text or "").splitlines() if len(line.strip()) >= 24]
+    return len(lines) >= 3 and lines[-1] == lines[-2] == lines[-3]
+
+
+def _trim_repeated_tail(text: str) -> str:
+    output = (text or "").rstrip()
+    if not output:
+        return ""
+    for width in (160, 128, 96, 64, 48, 32, 24):
+        if len(output) < width * 3:
+            continue
+        tail = output[-width:]
+        if len(tail.strip()) < max(12, width // 2):
+            continue
+        while output.endswith(tail * 2):
+            output = output[:-width].rstrip()
+        if output != (text or "").rstrip():
+            return output
+    lines = output.splitlines()
+    while len(lines) >= 3:
+        a = lines[-1].strip()
+        b = lines[-2].strip()
+        c = lines[-3].strip()
+        if a and a == b == c and len(a) >= 24:
+            lines.pop()
+            continue
+        break
+    return "\n".join(lines).rstrip()
 
 
 def sanitize_user_text(text: str) -> str:
@@ -360,20 +412,31 @@ class AthenaRuntime:
             raise FileNotFoundError(f"Model directory not found: {self.model_dir}")
 
         self.model_label = self.model_dir.name
-        self.tools_enabled = get_tools_enabled_default() if tools_enabled is None else bool(tools_enabled)
-        self.system_prompt, self.system_prompt_path, self.system_prompt_format = _load_system_prompt()
+        self.tools_enabled = get_tools_enabled_default(self.model_dir) if tools_enabled is None else bool(tools_enabled)
+        self.system_prompt, self.system_prompt_path, self.system_prompt_format = _load_system_prompt(self.model_dir)
         self.stop_event = threading.Event()
-        self.gui_config = get_gui_config()
-        self.gui_config_path = get_gui_config_path()
+        self.gui_config = get_gui_config(self.model_dir)
+        self.gui_config_path = get_gui_config_path(self.model_dir)
         self.temperature = float(self.gui_config["temperature"])
         self.max_new_tokens = int(self.gui_config["max_new_tokens"])
         self.top_p = float(self.gui_config["top_p"])
         self.top_k = int(self.gui_config["top_k"])
         self.repetition_penalty = float(self.gui_config["repetition_penalty"])
+        self.no_repeat_ngram_size = int(self.gui_config["no_repeat_ngram_size"])
 
-        self._cfg = AutoConfig.from_pretrained(str(self.model_dir), trust_remote_code=False)
+        self.adapter_dir: Path | None = None
+        self.overlay_state_dict_path: Path | None = None
+        self.overlay_source_dir: Path | None = None
+        self.overlay_missing_keys: list[str] = []
+        self.overlay_unexpected_keys: list[str] = []
+        self.base_model_dir = self.model_dir
+        self._resolve_adapter_mode()
+        self._resolve_multimodal_overlay_mode()
+
+        self._cfg = AutoConfig.from_pretrained(str(self.base_model_dir), trust_remote_code=False)
         self.supports_vision = bool(getattr(self._cfg, "vision_config", None))
-        self.tokenizer = AutoTokenizer.from_pretrained(str(self.model_dir), trust_remote_code=False)
+        tokenizer_source = self.model_dir if (self.model_dir / "tokenizer.json").exists() else self.base_model_dir
+        self.tokenizer = AutoTokenizer.from_pretrained(str(tokenizer_source), trust_remote_code=False)
         if self.tokenizer.pad_token_id is None and self.tokenizer.eos_token_id is not None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
@@ -382,10 +445,69 @@ class AthenaRuntime:
         self.model = self._load_model()
         self.model.eval()
 
+    def _resolve_adapter_mode(self) -> None:
+        adapter_config_path = self.model_dir / "adapter_config.json"
+        if not adapter_config_path.exists():
+            return
+        raw = json.loads(adapter_config_path.read_text(encoding="utf-8-sig"))
+        if not isinstance(raw, dict):
+            raise ValueError(f"Invalid adapter_config.json in {self.model_dir}")
+        base_path = str(raw.get("base_model_name_or_path") or "").strip()
+        if not base_path:
+            raise ValueError(f"Adapter config missing base_model_name_or_path in {self.model_dir}")
+        resolved_base = Path(base_path).expanduser().resolve()
+        if not resolved_base.is_dir():
+            raise FileNotFoundError(f"Adapter base model not found: {resolved_base}")
+        self.adapter_dir = self.model_dir
+        self.base_model_dir = resolved_base
+
+    def _resolve_multimodal_overlay_mode(self) -> None:
+        if self.adapter_dir is not None:
+            return
+        state_dict_path = self.model_dir / "model.safetensors"
+        if not state_dict_path.exists():
+            return
+        try:
+            tuned_cfg = AutoConfig.from_pretrained(str(self.model_dir), trust_remote_code=False)
+        except Exception:
+            return
+        tuned_arch = [str(item) for item in getattr(tuned_cfg, "architectures", []) or []]
+        tuned_model_type = str(getattr(tuned_cfg, "model_type", "") or "")
+        if "Qwen3_5ForCausalLM" not in tuned_arch and tuned_model_type != "qwen3_5_text":
+            return
+
+        candidate_base = get_orchestrator_model_dir()
+        if not candidate_base.is_dir() or candidate_base == self.model_dir:
+            return
+        try:
+            base_cfg = AutoConfig.from_pretrained(str(candidate_base), trust_remote_code=False)
+        except Exception:
+            return
+        text_cfg = getattr(base_cfg, "text_config", None)
+        if text_cfg is None or not getattr(base_cfg, "vision_config", None):
+            return
+
+        tuned_hidden = int(getattr(tuned_cfg, "hidden_size", 0) or 0)
+        base_hidden = int(getattr(text_cfg, "hidden_size", 0) or 0)
+        tuned_layers = int(getattr(tuned_cfg, "num_hidden_layers", 0) or 0)
+        base_layers = int(getattr(text_cfg, "num_hidden_layers", 0) or 0)
+        tuned_vocab = int(getattr(tuned_cfg, "vocab_size", 0) or 0)
+        base_vocab = int(getattr(text_cfg, "vocab_size", 0) or 0)
+        if not (tuned_hidden and tuned_hidden == base_hidden and tuned_layers and tuned_layers == base_layers and tuned_vocab and tuned_vocab == base_vocab):
+            return
+
+        self.overlay_state_dict_path = state_dict_path
+        self.overlay_source_dir = self.model_dir
+        self.base_model_dir = candidate_base
+
     def runtime_config(self) -> dict[str, Any]:
         return {
             "model_dir": str(self.model_dir),
             "model_label": self.model_label,
+            "base_model_dir": str(self.base_model_dir),
+            "adapter_dir": str(self.adapter_dir) if self.adapter_dir else "",
+            "overlay_source_dir": str(self.overlay_source_dir) if self.overlay_source_dir else "",
+            "overlay_state_dict_path": str(self.overlay_state_dict_path) if self.overlay_state_dict_path else "",
             "device": str(self.device),
             "dtype": "float16",
             "temperature": self.temperature,
@@ -393,6 +515,7 @@ class AthenaRuntime:
             "top_p": self.top_p,
             "top_k": self.top_k,
             "repetition_penalty": self.repetition_penalty,
+            "no_repeat_ngram_size": self.no_repeat_ngram_size,
             "tools_enabled": self.tools_enabled,
             "supports_vision": self.supports_vision,
             "image_processor_loaded": self.processor is not None,
@@ -402,6 +525,7 @@ class AthenaRuntime:
             "gui_config_path": str(self.gui_config_path),
             "system_prompt_path": self.system_prompt_path,
             "system_prompt_format": self.system_prompt_format,
+            "runtime_scope": (os.getenv("ATHENA_RUNTIME_SCOPE") or ("private" if os.getenv("ATHENA_PRIVATE_MODE") else "shared")).strip() or "shared",
         }
 
     def warm_start(self) -> None:
@@ -531,7 +655,7 @@ class AthenaRuntime:
             try:
                 from transformers import AutoModelForImageTextToText, AutoProcessor
 
-                self.processor = AutoProcessor.from_pretrained(str(self.model_dir), trust_remote_code=False)
+                self.processor = AutoProcessor.from_pretrained(str(self.base_model_dir), trust_remote_code=False)
                 model_loader = AutoModelForImageTextToText
             except Exception as exc:
                 self.image_support_error = str(exc)
@@ -539,7 +663,7 @@ class AthenaRuntime:
 
         try:
             model = model_loader.from_pretrained(
-                str(self.model_dir),
+                str(self.base_model_dir),
                 dtype=torch.float16,
                 low_cpu_mem_usage=True,
             ).to(self.device)
@@ -549,10 +673,21 @@ class AthenaRuntime:
             self.image_support_error = f"{self.image_support_error}; vision fallback: {exc}".strip("; ")
             self.processor = None
             model = AutoModelForCausalLM.from_pretrained(
-                str(self.model_dir),
+                str(self.base_model_dir),
                 dtype=torch.float16,
                 low_cpu_mem_usage=True,
             ).to(self.device)
+        if self.overlay_state_dict_path is not None:
+            from safetensors.torch import load_file
+
+            state_dict = load_file(str(self.overlay_state_dict_path))
+            missing, unexpected = model.load_state_dict(state_dict, strict=False)
+            self.overlay_missing_keys = [str(item) for item in missing]
+            self.overlay_unexpected_keys = [str(item) for item in unexpected]
+        if self.adapter_dir is not None:
+            from peft import PeftModel
+
+            model = PeftModel.from_pretrained(model, str(self.adapter_dir)).to(self.device)
         return model
 
     def _history_to_turns(self, history: Sequence[RuntimeMessage | dict[str, Any]]) -> list[tuple[str, str]]:
@@ -705,6 +840,8 @@ class AthenaRuntime:
                 top_k=0,
                 do_sample=False,
                 repetition_penalty=self.repetition_penalty,
+                no_repeat_ngram_size=self.no_repeat_ngram_size,
+                renormalize_logits=True,
                 eos_token_id=self._eos_token_ids(),
                 pad_token_id=self.tokenizer.pad_token_id,
             )
@@ -715,6 +852,8 @@ class AthenaRuntime:
             top_k=self.top_k,
             do_sample=True,
             repetition_penalty=self.repetition_penalty,
+            no_repeat_ngram_size=self.no_repeat_ngram_size,
+            renormalize_logits=True,
             eos_token_id=self._eos_token_ids(),
             pad_token_id=self.tokenizer.pad_token_id,
         )
@@ -762,14 +901,20 @@ class AthenaRuntime:
     def _generate_text(self, messages: list[dict[str, Any]], *, on_visible: Optional[Callable[[str], None]] = None) -> str:
         sanitizer = StreamSanitizer()
         pieces: list[str] = []
+        repetition_stop = False
 
         def handle_chunk(chunk: str) -> None:
+            nonlocal repetition_stop
             visible = sanitizer.feed(chunk)
             if not visible:
                 return
             pieces.append(visible)
             if on_visible is not None:
                 on_visible(visible)
+            current = "".join(pieces)
+            if _looks_like_repeated_tail(current):
+                repetition_stop = True
+                self.stop_event.set()
 
         self._stream_generate(messages, handle_chunk)
         tail = sanitizer.flush()
@@ -777,7 +922,10 @@ class AthenaRuntime:
             pieces.append(tail)
             if on_visible is not None:
                 on_visible(tail)
-        return clean_assistant_text("".join(pieces))
+        final_text = clean_assistant_text("".join(pieces))
+        if repetition_stop:
+            final_text = _trim_repeated_tail(final_text)
+        return final_text
 
     def _emit_tool_request(
         self,

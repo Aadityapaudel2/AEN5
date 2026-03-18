@@ -8,6 +8,9 @@ from typing import Iterable
 from markdown_it import MarkdownIt
 
 
+ASSISTANT_LABEL = "Athena"
+
+
 def _new_markdown_renderer() -> MarkdownIt:
     md = MarkdownIt(
         "commonmark",
@@ -28,7 +31,7 @@ _TEX_DELIM_RE = re.compile(r"(?<!\\)\\([()\[\]])")
 
 
 def _preserve_tex_delimiters(text: str) -> str:
-    return _TEX_DELIM_RE.sub(r"\\\\\\1", text)
+    return _TEX_DELIM_RE.sub(lambda match: "\\" + match.group(0), text)
 
 
 def _role_label(role: str, user_label: str | None = None) -> str:
@@ -36,9 +39,9 @@ def _role_label(role: str, user_label: str | None = None) -> str:
         label = (user_label or "").strip()
         return label or "User"
     if role == "assistant":
-        return "Athena"
+        return ASSISTANT_LABEL
     if role == "system":
-        return "System"
+        return "Portal"
     return role.capitalize()
 
 
@@ -78,3 +81,4 @@ def render_transcript_html(messages: Iterable[dict[str, str]], user_label: str |
             )
         )
     return "\n".join(chunks)
+

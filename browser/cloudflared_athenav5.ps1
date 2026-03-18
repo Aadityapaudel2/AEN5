@@ -1,7 +1,7 @@
 ﻿[CmdletBinding()]
 param(
     [int]$Port = 8000,
-    [string]$PathPrefix = "/AthenaV5",
+    [string]$PathPrefix = "/AEN5",
     [string]$Hostname = "",
     [string]$TunnelName = "",
     [switch]$QuickTunnel,

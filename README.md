@@ -1,119 +1,141 @@
-# Athena V5
+# AEN / AthenaV5
 
-Athena V5 is now desktop-first.
+This repo is the local runtime, training, evaluation, and research workspace for AthenaV5 inside the broader AEN architecture.
 
-## Canonical Runtime
-- Canonical product surface: native desktop app
-- Shared engine: `desktop_engine/`
-- Browser surface: thin adapter in `browser/`
-- Active model: `NeohmIdentityV2_fast` (`Qwen3.5-2B` tuned)
-- Prompt source: `system_prompt.json`
-- Tool behavior primer: `tool_behavior_primer.txt`
-- Canonical runtime parameters: `gui_config.json`
+## Canonical Active Surfaces
 
-## Repository Shape
-- `desktop_engine/`: source of truth for model loading, prompt/history assembly, no-CoT sanitation, tool execution, turn lifecycle, and engine events
-- `desktop_app/`: native Qt app with a local `QWebEngineView` transcript renderer
-- `browser/`: FastAPI browser adapter, static assets, templates, auth, and cloudflared helpers
-- `archive/`: legacy desktop runtime, adapter experiments, and old assets kept for reference only
+- `desktop_engine/`
+  - source of truth for model loading, prompt assembly, tool execution, event flow, and no-CoT sanitation
+- `browser/`
+  - thin browser adapter over the shared engine
+- `apps/two_model_dialogue_evaluator/`
+  - standalone local solver/verifier dialogue app
+- `Finetune/`
+  - training scripts, active datasets, manifests, and run configs
+- `research/`
+  - canonical research notes, reports, and source-note map
+- `evaluation/`
+  - canonical published/evaluation datasets
 
-Root shims still exist for continuity:
-- `athena_runtime.py`
-- `athena_tools.py`
-- `portal_server.py`
-- `portal_render.py`
-- `qt_ui.py`
-- `cloudflared_athenav5.ps1`
+Historical and non-canonical material lives under `archive/`.
 
-## Canonical Entrypoints
-Desktop:
+## Active Model State
+
+- Public browser default model:
+  - `models/Qwen3.5-4B`
+- Private Athena desktop model:
+  - `exclusive/AthenaV1` (fallback: `models/tuned/AthenaV1`)
+- Base multimodal models kept active:
+  - `models/Qwen3.5-2B`
+  - `models/Qwen3.5-4B`
+  - `models/Qwen3.5-9B`
+- Public prompt/runtime defaults:
+  - `browser/config/system_prompt.json`
+  - `browser/config/gui_config.json`
+- Private Athena prompt/runtime defaults:
+  - `exclusive/config/system_prompt.json`
+  - `exclusive/config/gui_config.json`
+- Shared tool behavior primer:
+  - `desktop_engine/config/tool_behavior_primer.txt`
+- Private Athena local state:
+  - `exclusive/logs/desktop/*.ndjson`
+  - `exclusive/data/desktop_images/`
+  - `exclusive/` is ignored by git
+
+## Launchers
+
+Private Athena desktop:
 
 ```powershell
 Set-Location D:\AthenaPlayground\AthenaV5
 .\run_ui.ps1
 ```
 
-Desktop with tools:
+Direct private launcher:
+
+```powershell
+Set-Location D:\AthenaPlayground\AthenaV5
+.\run_ui_private.ps1
+```
+
+Private Athena desktop with tools:
 
 ```powershell
 .\run_ui.ps1 -Tools
 ```
 
-Side-by-side model compare:
-
-```powershell
-.\run_compare.ps1
-```
-
-Compare prompt sets:
-- Load a YAML prompt set in the compare UI
-- Step prompts one at a time with `Prev` / `Next`
-- Each compared prompt appends a row to `data/compare_runs/*.csv`
-
-Browser adapter, dev mode:
+Public-facing browser dev:
 
 ```powershell
 .\run_dev.ps1
 ```
 
-Browser adapter, dev mode with tools:
-
-```powershell
-.\run_dev.ps1 -Tools
-```
-
-Browser adapter, prod mode:
+Browser prod:
 
 ```powershell
 .\run_portal.ps1
 ```
 
-Browser launchers:
-- `run_dev.ps1`
-- `run_portal.ps1`
-- `run_compare.ps1`
+Headless math loop:
+
+```powershell
+.\run_math_loop.ps1 -Problem "What is 7 + 8?"
+```
+
+Math loop evaluation:
+
+```powershell
+.\evaluate_math_loop.ps1 -Limit 25
+```
+
+Standalone two-model evaluator:
+
+```powershell
+Set-Location D:\AthenaPlayground\AthenaV5\apps\two_model_dialogue_evaluator
+.\run.ps1
+```
 
 ## Source of Truth
-- Paths and defaults: `athena_paths.py`
-- Canonical runtime config: `gui_config.json`
-- Engine session/events: `desktop_engine/session.py`, `desktop_engine/events.py`
-- Engine runtime: `desktop_engine/runtime.py`
-- Tool execution: `desktop_engine/tools.py`
-- Desktop app: `desktop_app/main.py`
-- Browser adapter: `browser/portal_server.py`
-- Transcript rendering: `browser/render.py`
 
-## Tuning Storage
-- Existing tuned checkpoints stay where they are.
-- Future finetune outputs that target `models/tuned/...` are redirected by `Finetune/run_training.ps1` to the canonical tuned-model root:
-  - `N:\AthenaModels\tuned`
-- Override that root if needed with `ATHENA_TUNED_MODELS_ROOT`.
+- Paths/defaults: `athena_paths.py`
+- Engine runtime: `desktop_engine/runtime.py`
+- Engine session/events: `desktop_engine/session.py`, `desktop_engine/events.py`
+- Tool execution: `desktop_engine/tools.py`
+- Agentic math loop: `desktop_engine/agentic/`
+- Browser adapter: `browser/portal_server.py`
+- Private desktop seed: `archive/shared_archives/private_desktop_seed_2026-03/`
+- Evaluator app: `apps/two_model_dialogue_evaluator/app.py`
+- Canonical 4B finetune report:
+  - `exclusive/AthenaV1/CANONICAL_RUN_REPORT.md`
 
 ## Runtime Rules
-- No chain-of-thought is rendered, persisted, or replayed. This is enforced in the engine.
-- Tool traces stay visible. Tool request cards show the exact calculator request and provenance.
-- Desktop and browser use the same engine contract.
-- Browser is optional and secondary. It is not the runtime center anymore.
 
-## Auth
-Browser prod mode expects:
-- `ATHENA_GOOGLE_CLIENT_ID`
-- `ATHENA_GOOGLE_CLIENT_SECRET`
-- `ATHENA_AUTH_REDIRECT_URI`
-- `ATHENA_PORTAL_SESSION_SECRET`
+- No chain-of-thought is rendered, persisted, or replayed.
+- Tool traces stay visible when tools are used.
+- Public-facing work happens in the browser adapter.
+- Desktop UI is private-only and launches from the local `exclusive/` tree.
+- Desktop and browser consume the same engine contract.
+- The two-model evaluator stays active as a separate app surface.
+- Research/history notes are kept under `research/`, not at the repo root.
 
-The browser auth example lives at `browser/portal_auth.env.example`. A root compatibility copy is also present.
+## Research and Historical Notes
 
-## Logging
-Per-user browser data lives under:
-- `data/users/<user_key>/profile.json`
-- `data/users/<user_key>/sessions/YYYY-MM-DD.ndjson`
-- `data/users/<user_key>/errors/YYYY-MM-DD.ndjson`
-- `data/users/<user_key>/uploads/YYYY-MM-DD/*`
+- Start at:
+  - `research/README.md`
+- Source-note map:
+  - `research/SOURCE_MAP.md`
+- Root history notes were moved to:
+  - `research/source_notes/`
 
-Desktop image staging lives under:
-- `data/desktop_images/`
+## Auth and Local Secrets
+
+- Browser auth examples live in:
+  - `browser/config/portal_auth.env.example`
+- Local-only secrets and private auth materials should stay outside the canonical repo surface.
 
 ## Notes
-- `report.md` is a historical snapshot from before the desktop-first rebuild. Read `handoff.md` for the current architecture summary.
-- Live desktop launch still requires `PySide6` plus `QtWebEngine` in the selected Python environment.
+
+- Canonical browser path prefix is `/AEN5`.
+- `/AthenaV5` is retained only as a legacy compatibility label where still supported.
+- Live desktop launch still requires `PySide6` and `QtWebEngine` in the selected Python environment.
+- Secondary tools removed from the root surface are preserved under `archive/cleanup_2026-03/`.

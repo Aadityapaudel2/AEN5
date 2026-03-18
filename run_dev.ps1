@@ -3,7 +3,7 @@ param(
     [switch]$Tools,
     [bool]$LoadModel = $true,
     [int]$Port = 8000,
-    [string]$PathPrefix = "/AthenaV5",
+    [string]$PathPrefix = "/AEN5",
     [string]$PythonExe = ""
 )
 

@@ -1,0 +1,991 @@
+version: 1
+name: orchestrator_dataset_v1
+description: Minimal role-pure math and logic orchestration seed set for selective two-solver querying.
+role_prompts:
+  orchestrator: |-
+    You are the Orchestrator. You route math and logic problems with rigor and budget discipline.
+    Return exactly one action per turn. Allowed assistant outputs are only:
+    <query target="solver_a">...</query>
+    <query target="solver_b">...</query>
+    <query target="both">solver_a: ...\nsolver_b: ...</query>
+    <clarify>...</clarify>
+    <answer>...</answer>
+    Answer directly only when the request is reliable from first principles. Ask one focused clarification when the request is underspecified. Query selectively. Do not reveal hidden reasoning or role-blend.
+  solver_a: |-
+    You are Solver-A. You are a direct formal solver for math and logic.
+    Work from first principles, stay concise, and return only this envelope:
+    <answer>...</answer>
+    <confidence>high|medium|low</confidence>
+    Never emit query tags.
+  solver_b: |-
+    You are Solver-B. You independently check math and logic problems for alternate paths and edge cases.
+    Stay compact and return only this envelope:
+    <answer>...</answer>
+    <confidence>high|medium|low</confidence>
+    Never emit query tags.
+target_counts:
+  cards: 60
+  orchestrator_rows: 120
+  solver_a_rows: 60
+  solver_b_rows: 60
+cards:
+- id: math_direct_01
+  domain: math
+  difficulty: easy
+  problem: Compute 17 * 19 exactly.
+  gold_answer: '323'
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>323</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>323</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>323</answer>
+- id: math_direct_02
+  domain: math
+  difficulty: easy
+  problem: Simplify 2^5 * 2^3.
+  gold_answer: '256'
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>256</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>256</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>256</answer>
+- id: math_direct_03
+  domain: math
+  difficulty: easy
+  problem: Solve 3x + 5 = 20.
+  gold_answer: x = 5
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>x = 5</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>x = 5</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>x = 5</answer>
+- id: math_direct_04
+  domain: math
+  difficulty: easy
+  problem: A rectangle has length 12 and width 7. What is its area?
+  gold_answer: '84'
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>84</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>84</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>84</answer>
+- id: math_direct_05
+  domain: math
+  difficulty: easy
+  problem: Convert 0.375 to a reduced fraction.
+  gold_answer: 3/8
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>3/8</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>3/8</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>3/8</answer>
+- id: math_direct_06
+  domain: math
+  difficulty: easy
+  problem: Find gcd(84, 126).
+  gold_answer: '42'
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>42</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>42</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>42</answer>
+- id: math_direct_07
+  domain: math
+  difficulty: easy
+  problem: Evaluate (6^2 - 4^2) / (6 - 4).
+  gold_answer: '10'
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>10</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>10</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>10</answer>
+- id: math_direct_08
+  domain: math
+  difficulty: easy
+  problem: Factor x^2 - 9 over the integers.
+  gold_answer: (x - 3)(x + 3)
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>(x - 3)(x + 3)</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>(x - 3)(x + 3)</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>(x - 3)(x + 3)</answer>
+- id: logic_direct_01
+  domain: logic
+  difficulty: easy
+  problem: If every square is a rectangle, does it follow that every rectangle is a square?
+  gold_answer: No.
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>No.</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>No.</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>No.</answer>
+- id: logic_direct_02
+  domain: logic
+  difficulty: easy
+  problem: Exactly one of P or Q is true. If P is true, is Q true?
+  gold_answer: No.
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>No.</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>No.</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>No.</answer>
+- id: logic_direct_03
+  domain: logic
+  difficulty: easy
+  problem: If every rose is a flower and every flower is a plant, is every rose a plant?
+  gold_answer: Yes.
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>Yes.</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>Yes.</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>Yes.</answer>
+- id: logic_direct_04
+  domain: logic
+  difficulty: easy
+  problem: Statement A is "P or Q". If P is true, must A be true?
+  gold_answer: Yes.
+  ambiguity_flag: false
+  recommended_routing: direct_answer
+  solver_a_draft: |-
+    <answer>Yes.</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>Yes.</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>Yes.</answer>
+- id: math_solver_a_01
+  domain: math
+  difficulty: medium
+  problem: Find the sum of the first 20 positive integers.
+  gold_answer: '210'
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>210</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>210</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>210</answer>
+- id: math_solver_a_02
+  domain: math
+  difficulty: medium
+  problem: Solve 2x^2 - 7x + 3 = 0.
+  gold_answer: x = 3 or x = 1/2
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>x = 3 or x = 1/2</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>x = 3 or x = 1/2</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>x = 3 or x = 1/2</answer>
+- id: math_solver_a_03
+  domain: math
+  difficulty: medium
+  problem: The arithmetic sequence is 5, 9, 13, ... . Find the 25th term.
+  gold_answer: '101'
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>101</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>101</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>101</answer>
+- id: math_solver_a_04
+  domain: math
+  difficulty: medium
+  problem: Find the determinant of [[3, 5], [1, 4]].
+  gold_answer: '7'
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>7</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>7</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>7</answer>
+- id: math_solver_a_05
+  domain: math
+  difficulty: medium
+  problem: How many positive divisors does 72 have?
+  gold_answer: '12'
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>12</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>12</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>12</answer>
+- id: math_solver_a_06
+  domain: math
+  difficulty: medium
+  problem: What is the probability of getting exactly 2 heads in 3 fair coin flips?
+  gold_answer: 3/8
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>3/8</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>3/8</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>3/8</answer>
+- id: math_solver_a_07
+  domain: math
+  difficulty: medium
+  problem: Solve the system x + y = 11 and x - y = 3.
+  gold_answer: x = 7, y = 4
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>x = 7, y = 4</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>x = 7, y = 4</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>x = 7, y = 4</answer>
+- id: math_solver_a_08
+  domain: math
+  difficulty: medium
+  problem: Simplify (3/4) / (9/10).
+  gold_answer: 5/6
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>5/6</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>5/6</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>5/6</answer>
+- id: math_solver_a_09
+  domain: math
+  difficulty: medium
+  problem: Find the mean of 4, 7, 9, 10, 20.
+  gold_answer: '10'
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>10</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>10</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>10</answer>
+- id: logic_solver_a_01
+  domain: logic
+  difficulty: medium
+  problem: Exactly one of A, B, and C is true. A is false, and B implies C. Which variable is true?
+  gold_answer: C is true.
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>C is true.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>C is true.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>C is true.</answer>
+- id: logic_solver_a_02
+  domain: logic
+  difficulty: medium
+  problem: If P implies Q, Q implies R, and P is true, is R true?
+  gold_answer: Yes.
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>Yes.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>Yes.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>Yes.</answer>
+- id: logic_solver_a_03
+  domain: logic
+  difficulty: medium
+  problem: Ada says "Ben is a knave." Ben says "Ada and I are opposite types." Who is the knight?
+  gold_answer: Ben is the knight and Ada is the knave.
+  ambiguity_flag: false
+  recommended_routing: query_solver_a
+  solver_a_draft: |-
+    <answer>Ben is the knight and Ada is the knave.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>Ben is the knight and Ada is the knave.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>Ben is the knight and Ada is the knave.</answer>
+- id: math_solver_b_01
+  domain: math
+  difficulty: medium
+  problem: Is 111111 divisible by 3?
+  gold_answer: Yes.
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>Yes.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>Yes.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>Yes.</answer>
+- id: math_solver_b_02
+  domain: math
+  difficulty: medium
+  problem: How many diagonals does a 12-gon have?
+  gold_answer: '54'
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>54</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>54</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>54</answer>
+- id: math_solver_b_03
+  domain: math
+  difficulty: medium
+  problem: Find 15^2 - 14^2.
+  gold_answer: '29'
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>29</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>29</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>29</answer>
+- id: math_solver_b_04
+  domain: math
+  difficulty: medium
+  problem: 'Which is larger: 7/12 or 5/8?'
+  gold_answer: 5/8 is larger.
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>5/8 is larger.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>5/8 is larger.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>5/8 is larger.</answer>
+- id: math_solver_b_05
+  domain: math
+  difficulty: medium
+  problem: Find the remainder when 2^10 is divided by 7.
+  gold_answer: '2'
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>2</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>2</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>2</answer>
+- id: math_solver_b_06
+  domain: math
+  difficulty: medium
+  problem: Find the perimeter of a 6-8-10 triangle.
+  gold_answer: '24'
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>24</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>24</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>24</answer>
+- id: math_solver_b_07
+  domain: math
+  difficulty: medium
+  problem: How many permutations are there of the letters A, B, C, and D?
+  gold_answer: '24'
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>24</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>24</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>24</answer>
+- id: math_solver_b_08
+  domain: math
+  difficulty: medium
+  problem: Solve 2x - 3 > 7.
+  gold_answer: x > 5
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>x > 5</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>x > 5</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>x > 5</answer>
+- id: math_solver_b_09
+  domain: math
+  difficulty: medium
+  problem: Find the median of 2, 8, 3, 10, 9.
+  gold_answer: '8'
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>8</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>8</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>8</answer>
+- id: logic_solver_b_01
+  domain: logic
+  difficulty: medium
+  problem: Some A are B. No B are C. Can some A be C?
+  gold_answer: Yes. Some A outside B could still be C.
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>Yes. Some A outside B could still be C.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>Yes. Some A outside B could still be C.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>Yes. Some A outside B could still be C.</answer>
+- id: logic_solver_b_02
+  domain: logic
+  difficulty: medium
+  problem: If no poets are dull and some teachers are dull, can some teachers be poets?
+  gold_answer: No.
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>No.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>No.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>No.</answer>
+- id: logic_solver_b_03
+  domain: logic
+  difficulty: medium
+  problem: If the statement "At least one of P or Q is false" is false, what follows?
+  gold_answer: P and Q are both true.
+  ambiguity_flag: false
+  recommended_routing: query_solver_b
+  solver_a_draft: |-
+    <answer>P and Q are both true.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>P and Q are both true.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>P and Q are both true.</answer>
+- id: math_both_01
+  domain: math
+  difficulty: medium
+  problem: Compute 13^2 + 14^2.
+  gold_answer: '365'
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>365</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>365</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>365</answer>
+- id: math_both_02
+  domain: math
+  difficulty: medium
+  problem: Solve x^2 - 5x + 6 = 0.
+  gold_answer: x = 2 or x = 3
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>x = 2 or x = 3</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>x = 2 or x = 3</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>x = 2 or x = 3</answer>
+- id: math_both_03
+  domain: math
+  difficulty: medium
+  problem: Evaluate 1/2 + 1/3 + 1/6.
+  gold_answer: '1'
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>1</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>1</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>1</answer>
+- id: math_both_04
+  domain: math
+  difficulty: medium
+  problem: Find the area of a circle with radius 5.
+  gold_answer: 25pi
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>25pi</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>25pi</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>25pi</answer>
+- id: math_both_05
+  domain: math
+  difficulty: medium
+  problem: Find the sum of the interior angles of a hexagon.
+  gold_answer: 720 degrees
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>720 degrees</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>720 degrees</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>720 degrees</answer>
+- id: math_both_06
+  domain: math
+  difficulty: medium
+  problem: Simplify (x^3 y^2) / (x y^5).
+  gold_answer: x^2 / y^3
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>x^2 / y^3</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>x^2 / y^3</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>x^2 / y^3</answer>
+- id: math_both_07
+  domain: math
+  difficulty: medium
+  problem: What is the probability of drawing an ace from a standard 52-card deck?
+  gold_answer: 1/13
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>1/13</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>1/13</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>1/13</answer>
+- id: math_both_08
+  domain: math
+  difficulty: medium
+  problem: Find lcm(18, 24).
+  gold_answer: '72'
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>72</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>72</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>72</answer>
+- id: math_both_09
+  domain: math
+  difficulty: medium
+  problem: If f(x) = 2x + 1, find f(7).
+  gold_answer: '15'
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>15</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>15</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>15</answer>
+- id: math_both_10
+  domain: math
+  difficulty: medium
+  problem: A bag has 3 red and 2 blue marbles. What is the probability of drawing a red marble and then a blue marble without replacement?
+  gold_answer: 3/10
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>3/10</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>3/10</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>3/10</answer>
+- id: logic_both_01
+  domain: logic
+  difficulty: medium
+  problem: If the server is down, the portal is unavailable. The portal is available. Can the server be down?
+  gold_answer: No.
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>No.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>No.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>No.</answer>
+- id: logic_both_02
+  domain: logic
+  difficulty: medium
+  problem: All marbles in box X are blue. Some blue objects are glass. Can you conclude that some marbles in box X are glass?
+  gold_answer: No.
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>No.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>No.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>No.</answer>
+- id: logic_both_03
+  domain: logic
+  difficulty: medium
+  problem: Nora is older than Omar, and Omar is older than Priya. Who is youngest?
+  gold_answer: Priya.
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>Priya.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>Priya.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>Priya.</answer>
+- id: logic_both_04
+  domain: logic
+  difficulty: medium
+  problem: If a card is a king, then it is a face card. This card is not a face card. Can it be a king?
+  gold_answer: No.
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>No.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>No.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>No.</answer>
+- id: logic_both_05
+  domain: logic
+  difficulty: medium
+  problem: A statement says "Both P and Q." If the statement is true and P is true, what must be true about Q?
+  gold_answer: Q is true.
+  ambiguity_flag: false
+  recommended_routing: query_both
+  solver_a_draft: |-
+    <answer>Q is true.</answer>
+    <confidence>medium</confidence>
+  solver_b_draft: |-
+    <answer>Q is true.</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: ''
+  clarification_prompt: ''
+  final_orchestration_action: <answer>Q is true.</answer>
+- id: math_clarify_01
+  domain: math
+  difficulty: easy
+  problem: Solve a x = 12 for x.
+  gold_answer: Need the value of nonzero a.
+  ambiguity_flag: true
+  recommended_routing: clarify
+  solver_a_draft: |-
+    <answer>Insufficient information: What is the value of a? It must be nonzero to solve for x.</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>Insufficient information: What is the value of a? It must be nonzero to solve for x.</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: What is the value of a? It must be nonzero to solve for x.
+  final_orchestration_action: <clarify>What is the value of a? It must be nonzero to solve for x.</clarify>
+- id: math_clarify_02
+  domain: math
+  difficulty: easy
+  problem: Find the area of a triangle with base 10.
+  gold_answer: Need the height of the triangle.
+  ambiguity_flag: true
+  recommended_routing: clarify
+  solver_a_draft: |-
+    <answer>Insufficient information: What is the triangle's height?</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>Insufficient information: What is the triangle's height?</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: What is the triangle's height?
+  final_orchestration_action: <clarify>What is the triangle's height?</clarify>
+- id: math_clarify_03
+  domain: math
+  difficulty: easy
+  problem: Find the average of the list.
+  gold_answer: Need the list values or an equivalent summary.
+  ambiguity_flag: true
+  recommended_routing: clarify
+  solver_a_draft: |-
+    <answer>Insufficient information: What numbers are in the list?</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>Insufficient information: What numbers are in the list?</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: What numbers are in the list?
+  final_orchestration_action: <clarify>What numbers are in the list?</clarify>
+- id: logic_clarify_01
+  domain: logic
+  difficulty: easy
+  problem: Three suspects made statements and exactly one lied. Who took the key?
+  gold_answer: Need the suspects' statements.
+  ambiguity_flag: true
+  recommended_routing: clarify
+  solver_a_draft: |-
+    <answer>Insufficient information: What did each suspect say?</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>Insufficient information: What did each suspect say?</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: What did each suspect say?
+  final_orchestration_action: <clarify>What did each suspect say?</clarify>
+- id: logic_clarify_02
+  domain: logic
+  difficulty: easy
+  problem: Mia finished before Noah. Who won the race?
+  gold_answer: Need more ordering information than one comparison.
+  ambiguity_flag: true
+  recommended_routing: clarify
+  solver_a_draft: |-
+    <answer>Insufficient information: What other race results or comparisons are known?</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>Insufficient information: What other race results or comparisons are known?</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: What other race results or comparisons are known?
+  final_orchestration_action: <clarify>What other race results or comparisons are known?</clarify>
+- id: logic_clarify_03
+  domain: logic
+  difficulty: easy
+  problem: Decide whether the argument is valid.
+  gold_answer: Need the premises and the conclusion.
+  ambiguity_flag: true
+  recommended_routing: clarify
+  solver_a_draft: |-
+    <answer>Insufficient information: What are the premises and what is the conclusion?</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>Insufficient information: What are the premises and what is the conclusion?</answer>
+    <confidence>high</confidence>
+  disagreement_notes: ''
+  clarification_prompt: What are the premises and what is the conclusion?
+  final_orchestration_action: <clarify>What are the premises and what is the conclusion?</clarify>
+- id: math_disagreement_01
+  domain: math
+  difficulty: hard
+  problem: Solve |x - 3| = 5.
+  gold_answer: x = 8 or x = -2
+  ambiguity_flag: false
+  recommended_routing: disagreement_synthesis
+  solver_a_draft: |-
+    <answer>x = 8 or x = -2</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>x = 8</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: Solver B dropped the negative branch of the absolute value equation.
+  clarification_prompt: ''
+  final_orchestration_action: <answer>The solutions are x = 8 and x = -2.</answer>
+- id: math_disagreement_02
+  domain: math
+  difficulty: hard
+  problem: How many real solutions does x^2 = 9 have?
+  gold_answer: '2 real solutions: x = 3 and x = -3'
+  ambiguity_flag: false
+  recommended_routing: disagreement_synthesis
+  solver_a_draft: |-
+    <answer>2 real solutions: x = 3 and x = -3</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>1 real solution: x = 3</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: Solver B kept only the positive square root.
+  clarification_prompt: ''
+  final_orchestration_action: '<answer>There are 2 real solutions: x = 3 and x = -3.</answer>'
+- id: math_disagreement_03
+  domain: math
+  difficulty: hard
+  problem: Evaluate 2^3^2 using standard exponent precedence.
+  gold_answer: '512'
+  ambiguity_flag: false
+  recommended_routing: disagreement_synthesis
+  solver_a_draft: |-
+    <answer>512</answer>
+    <confidence>high</confidence>
+  solver_b_draft: |-
+    <answer>64</answer>
+    <confidence>medium</confidence>
+  disagreement_notes: 'Exponentiation is evaluated from the top exponent first: 2^(3^2), not (2^3)^2.'
+  clarification_prompt: ''
+  final_orchestration_action: <answer>512</answer>

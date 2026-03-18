@@ -1,0 +1,14 @@
+[
+  {
+    "institution_key": "miamioh",
+    "label": "Miami University (Canvas)",
+    "canvas_domain": "miamioh.instructure.com",
+    "oauth_client_id_env": "ATHENA_CANVAS_MIAMIOH_CLIENT_ID",
+    "oauth_client_secret_env": "ATHENA_CANVAS_MIAMIOH_CLIENT_SECRET",
+    "redirect_uri_env": "ATHENA_CANVAS_MIAMIOH_REDIRECT_URI",
+    "bundle_root": "institutions/miamioh",
+    "mapped_course_ids": ["250433"],
+    "course_hints": ["MTH025 H C"],
+    "default_selected": true
+  }
+]

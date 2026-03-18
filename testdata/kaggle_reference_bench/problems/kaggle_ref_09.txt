@@ -1,0 +1,7 @@
+﻿Let F be the set of functions alpha : Z -> Z for which there are only finitely many n in Z such that alpha(n) != 0.
+For two functions alpha and beta in F, define their product alpha star beta to be alpha(n) * beta(n). Also, for n in Z, define a shift operator S_n : F -> F by S_n(alpha)(t) = alpha(t + n) for all t in Z.
+A function alpha in F is called shifty if
+- alpha(m) = 0 for all integers m < 0 and m > 8, and
+- there exists beta in F and integers k != l such that for all n in Z,
+  S_n(alpha) star beta = 1 when n is in {k, l}, and 0 otherwise.
+How many shifty functions are there in F?

@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+logs/*.csv
+logs/*.log
+build/
+dist/
+config/session_state.json
+config/system_prompt_a.txt
+config/system_prompt_b.txt

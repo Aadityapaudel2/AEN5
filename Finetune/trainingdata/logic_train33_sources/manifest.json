@@ -1,0 +1,297 @@
+{
+    "root":  "D:\\AthenaPlayground\\AthenaV5\\Finetune\\trainingdata\\logic_train33_sources",
+    "count":  32,
+    "selection_policy":  "selected from logic_working independent_verification_unavailable pool; excluded known hard failures; ranked by structural quality then by statement/question richness",
+    "files":  [
+                  {
+                      "source_name":  "title Somber Rose Puzzle v31307.93.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  23,
+                      "quality_score":  12,
+                      "quality_flags":  [
+                                            "nand_operator"
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Crimson Labyrinth Puzzle v11407.txt",
+                      "final_answer":  "4",
+                      "statement_count_total":  18,
+                      "quality_score":  12,
+                      "quality_flags":  [
+                                            "xor_operator"
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Tourmaline Crown Puzzle v29.1.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  12,
+                      "quality_score":  12,
+                      "quality_flags":  [
+                                            "xor_operator"
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Verdant Quill Problem v22.47.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  25,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Midnight Reliquary Problem v1.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  23,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Ebony Throne Problem v19.21.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  22,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Obsidian Lantern Puzzle v3792.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  21,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Ivory Phoenix Enigma v10313.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  21,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Amber Mirror Problem v103.47.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  21,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Arcane Phoenix Problem v10331.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  21,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Ebony Grove Problem v22.31.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  20,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Jade Glaive Puzzle v29947.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  20,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Midnight Aster Problem v62.13.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  20,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Cerulean Lyre Problem v28.45.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  20,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Violet Labyrinth Puzzle v1138.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  18,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Gold Eclipse Problem v21.23.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  16,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Carmine Gate Problem v23.41.txt",
+                      "final_answer":  "4",
+                      "statement_count_total":  16,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Violet Moon Problem v61.19.txt",
+                      "final_answer":  "4",
+                      "statement_count_total":  16,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Jade Raven Problem v17.43.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  16,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Obsidian Wreath Problem v29.5.txt",
+                      "final_answer":  "4",
+                      "statement_count_total":  16,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Sapphire Owl Problem v37.11.txt",
+                      "final_answer":  "4",
+                      "statement_count_total":  16,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Ivory Mask Problem v53.11.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  16,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Zircon Harp Problem v31.41.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  12,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Onyx Lyre Problem v17.97.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  12,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Ebony Maze Problem v19.53.txt",
+                      "final_answer":  "3",
+                      "statement_count_total":  12,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Crimson Dagger Problem v17.23.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  12,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Ebony Star Problem v19.59.txt",
+                      "final_answer":  "3",
+                      "statement_count_total":  10,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Ebony Mirror Problem v19.79.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  8,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Ebony Flute Puzzle v19.43.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  6,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Moonlit Halo Puzzle v13.41.txt",
+                      "final_answer":  "3",
+                      "statement_count_total":  6,
+                      "quality_score":  11,
+                      "quality_flags":  [
+
+                                        ]
+                  },
+                  {
+                      "source_name":  "title Midnight Crown Puzzle v30029..txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  20,
+                      "quality_score":  10,
+                      "quality_flags":  [
+                                            "double_dot_filename",
+                                            "nand_operator",
+                                            "xor_operator"
+                                        ]
+                  },
+                  {
+                      "source_name":  "Sapphire Dragon Key Problem v17.19.txt",
+                      "final_answer":  "2",
+                      "statement_count_total":  9,
+                      "quality_score":  8,
+                      "quality_flags":  [
+                                            "missing_title_key"
+                                        ]
+                  }
+              ]
+}

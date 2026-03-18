@@ -1,0 +1,23 @@
+{
+  "published_root": "D:\\AthenaPlayground\\AthenaV5\\testdata",
+  "unpublished_archive_root": "D:\\AthenaPlayground\\AthenaV5\\archive\\cleanup_2026-03\\testdata\\testdata_unpublished_2026-03-09",
+  "dry_run": false,
+  "published_datasets": {
+    "aimo": {
+      "path": "D:\\AthenaPlayground\\AthenaV5\\testdata\\aimo",
+      "accepted_count": 92,
+      "problem_files": 92,
+      "metadata_files": 92,
+      "summary_path": "D:\\AthenaPlayground\\AthenaV5\\testdata\\aimo\\summary.json",
+      "manifest_path": "D:\\AthenaPlayground\\AthenaV5\\testdata\\aimo\\manifest.jsonl"
+    },
+    "logic": {
+      "path": "D:\\AthenaPlayground\\AthenaV5\\testdata\\logic",
+      "accepted_count": 7,
+      "problem_files": 7,
+      "metadata_files": 7,
+      "summary_path": "D:\\AthenaPlayground\\AthenaV5\\testdata\\logic\\summary.json",
+      "manifest_path": "D:\\AthenaPlayground\\AthenaV5\\testdata\\logic\\manifest.jsonl"
+    }
+  }
+}

@@ -4,24 +4,31 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ title }}</title>
+    <meta name="description" content="{{ meta_description }}" />
     <link rel="stylesheet" href="{{ request.url_for('portal-static', path='portal.css') }}?v={{ asset_version }}" />
     <script>
       window.ATHENA_PORTAL = {
         pathPrefix: "{{ path_prefix }}",
         shellMode: "{{ 'desktop' if desktop_shell else 'browser' }}",
+        authProviderLabel: "{{ auth_provider_label }}",
+        authProviders: {{ auth_providers | tojson }},
+        institutions: {{ institutions | tojson }},
+        defaultInstitutionKey: {{ default_institution_key | tojson }},
+        authRequired: {{ auth_required | tojson }},
+        authenticated: {{ authenticated | tojson }},
+        guestLoginEnabled: {{ guest_login_enabled | tojson }},
+        assistantLabel: {{ assistant_label | tojson }},
+        initialHistory: {{ initial_history | tojson }},
       };
     </script>
     <script>
       window.MathJax = {
         tex: {
-          inlineMath: [
-            ["$", "$"],
-            ["\\(", "\\)"],
-          ],
-          displayMath: [
-            ["$$", "$$"],
-            ["\\[", "\\]"],
-          ],
+          inlineMath: [["$", "$"], ["\(", "\)"]],
+          displayMath: [["$$", "$$"], ["\[", "\]"]],
+        },
+        startup: {
+          typeset: false,
         },
         options: {
           skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"],
@@ -31,20 +38,40 @@
     <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script defer src="{{ request.url_for('portal-static', path='portal.js') }}?v={{ asset_version }}"></script>
   </head>
-  <body class="{% if desktop_shell %}desktop-shell{% endif %}">
-    <div class="shell">
-      <header class="topbar">
-        <div class="title-wrap">
-          <h1>{% if desktop_shell %}Athena V5{% else %}Athena Browser{% endif %}</h1>
-          <div id="runtime-line" class="runtime-line">Initializing...</div>
+  <body class="{% if authenticated %}portal-authenticated{% else %}portal-landing portal-index portal-login-page{% endif %}{% if desktop_shell %} desktop-shell{% endif %}">
+    <div class="shell {% if authenticated %}portal-authenticated{% else %}portal-landing{% endif %}">
+      <header class="topbar {% if not authenticated %}landing-topbar landing-topbar-minimal{% endif %}">
+        <div class="brand-wrap">
+          <a class="brand-badge brand-home-link" href="{{ path_prefix }}">NeohmLabs</a>
+          <div class="title-wrap">
+            <h1>{{ assistant_label }} V5</h1>
+            <div class="title-subline">Athena V5 is the current Athena model surface inside AEN.</div>
+            {% if authenticated %}
+            <div id="runtime-line" class="runtime-line">{{ chat_runtime_copy }}</div>
+            {% endif %}
+          </div>
         </div>
         <div class="user-wrap">
+          {% if authenticated %}
           <div id="user-line" class="user-line">User: unknown</div>
+          <div id="auth-btn-group" class="auth-btn-group hidden">
+            <a id="auth-institution-btn" class="btn ghost auth-btn hidden" href="{{ path_prefix }}/login">Institution sign-in</a>
+          </div>
           <button id="logout-btn" class="btn ghost" type="button">Logout</button>
+          {% else %}
+          <nav class="landing-nav landing-nav-minimal" aria-label="Landing navigation">
+            <a class="nav-link" href="{{ path_prefix }}/aen">AEN</a>
+            <a class="nav-link" href="{{ path_prefix }}/swarm">SWARM</a>
+            <a class="nav-link" href="{{ path_prefix }}/mission">Mission</a>
+            <a class="nav-link" href="{{ path_prefix }}/privacy">Privacy</a>
+            <a class="nav-link" href="{{ path_prefix }}/terms">Terms</a>
+          </nav>
+          {% endif %}
         </div>
       </header>
 
-      <main class="main-stack">
+      {% if authenticated %}
+      <main class="main-stack chat-layout">
         <section class="transcript-panel">
           <div id="transcript-scroll" class="transcript-scroll">
             <section id="transcript" class="transcript">{{ initial_transcript_html | safe }}</section>
@@ -52,20 +79,138 @@
         </section>
 
         <section class="composer-panel">
-          <textarea id="prompt-input" rows="2" placeholder="Type your prompt here..."></textarea>
+          <textarea id="prompt-input" rows="2" placeholder="Ask Athena for help with learning, writing, planning, or general tasks..."></textarea>
 
           <div class="btn-row">
             <input id="image-input" type="file" accept="image/*" multiple hidden />
-            <button id="attach-btn" class="btn icon-btn" type="button" title="Attach images" aria-label="Attach images">🖼</button>
-            <button id="clear-images-btn" class="btn icon-btn" type="button" title="Clear pending images" aria-label="Clear pending images">✕</button>
+            <button id="attach-btn" class="btn icon-btn" type="button" title="Attach images" aria-label="Attach images">&#128444;</button>
+            <button id="clear-images-btn" class="btn icon-btn" type="button" title="Clear pending images" aria-label="Clear pending images">&#10005;</button>
             <span id="image-count" class="image-count">0 images</span>
             <button id="send-btn" class="btn primary" type="button">Send</button>
-            <button id="clear-btn" class="btn" type="button">Clear</button>
+            <button id="stop-btn" class="btn btn-stop" type="button" disabled>Stop</button>
+            <button id="clear-btn" class="btn" type="button">New Thread</button>
           </div>
           <div id="status-box" class="status-box">Ready.</div>
           <div id="image-preview" class="image-preview"></div>
         </section>
       </main>
+      {% else %}
+      <main class="login-shell login-shell-landing">
+        <section class="login-card login-card-primary">
+          <span class="login-kicker">{{ hero_kicker }}</span>
+          <h2 class="login-title">Sign in to Artificial Evaluation Network</h2>
+          <p class="login-copy">{{ mission_copy }}</p>
+          <p class="login-mission">Athena is the model. Athena V5 is the current teaching surface inside AEN.</p>
+          {% if login_error %}
+          <p class="login-error">{{ login_error }}</p>
+          {% endif %}
+
+          <div class="login-provider-block login-provider-block-equal">
+            <p class="login-subhead">Choose a sign-in method</p>
+            <div class="login-method-grid">
+              {% if pilot_google_enabled and "google" in auth_providers %}
+              <a class="btn login-btn oauth-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/login/google">
+                <span class="login-btn-mark">MU</span>
+                <span class="login-btn-copy">
+                  <strong>{{ pilot_google_label }}</strong>
+                  <span>MiamiOH is detected automatically after sign-in</span>
+                </span>
+              </a>
+              {% elif "google" in auth_providers %}
+              <a class="btn login-btn oauth-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/login/google">
+                <span class="login-btn-mark">G</span>
+                <span class="login-btn-copy">
+                  <strong>Continue with Google</strong>
+                  <span>General Google sign-in</span>
+                </span>
+              </a>
+              {% endif %}
+
+              {% if "github" in auth_providers %}
+              <a class="btn login-btn oauth-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/login/github">
+                <span class="login-btn-mark">GH</span>
+                <span class="login-btn-copy">
+                  <strong>Continue with GitHub</strong>
+                  <span>Developer and general portal access</span>
+                </span>
+              </a>
+              {% endif %}
+
+              {% if guest_login_enabled %}
+              <a class="btn login-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/guest">
+                <span class="login-btn-mark">GS</span>
+                <span class="login-btn-copy">
+                  <strong>Continue as Guest</strong>
+                  <span>Limited prompts without full sign-in</span>
+                </span>
+              </a>
+              {% endif %}
+
+              <a class="btn login-btn login-btn-rich login-choice-btn" href="{{ institution_email_href }}">
+                <span class="login-btn-mark">@</span>
+                <span class="login-btn-copy">
+                  <strong>Institution access</strong>
+                  <span>Contact NeohmLabs for broader rollout</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          {% if institutions %}
+          <form class="login-actions institution-login-form institution-login-form-inline" method="get" action="{{ path_prefix }}/auth/login/institution">
+            <label class="institution-field">
+              <span class="institution-label">Institution Canvas sign-in</span>
+              <select class="institution-select" name="institution_key">
+                {% for institution in institutions %}
+                <option value="{{ institution.institution_key }}" {% if institution.institution_key == default_institution_key %}selected{% endif %}>
+                  {{ institution.label }}
+                </option>
+                {% endfor %}
+              </select>
+            </label>
+            <button class="btn login-btn login-btn-neutral" type="submit">Open Canvas sign-in</button>
+          </form>
+          {% else %}
+          <p class="login-note">Canvas institution sign-in is not configured on this host yet. MiamiOH students should use Google for today’s pilot.</p>
+          {% endif %}
+
+          {% if default_institution_key == "miamioh" %}
+          <p class="login-inline-note">Miami University is the first pilot institution. Sign in with Google and Athena will automatically attach MiamiOH course context when the account is `@miamioh.edu`.</p>
+          {% endif %}
+          {% if guest_login_enabled and guest_prompt_limit > 0 %}
+          <p class="login-note">Guest sessions are limited to {{ guest_prompt_limit }} prompts before a full institutional sign-in is required.</p>
+          {% endif %}
+          <p class="signin-disclosure">{{ signin_disclosure }} <a href="{{ path_prefix }}/terms">Terms</a> | <a href="{{ path_prefix }}/privacy">Privacy</a></p>
+        </section>
+
+        <section class="login-directory login-directory-below">
+          <div class="login-directory-head">
+            <span class="panel-kicker">Dedicated pages</span>
+            <h3>Read the rest separately.</h3>
+            <p>The front page stays focused on sign-in. Architecture, mission, privacy, and terms each keep their own page.</p>
+          </div>
+          <div class="login-directory-links">
+            {% for item in home_reading_links %}
+            <a class="directory-link" href="{{ path_prefix }}{{ item.href }}">
+              <span class="story-kicker">{{ item.kicker }}</span>
+              <strong class="directory-link-title">{{ item.title }}</strong>
+              <span class="directory-link-body">{{ item.body }}</span>
+            </a>
+            {% endfor %}
+            <a class="directory-link" href="{{ path_prefix }}/privacy">
+              <span class="story-kicker">Privacy</span>
+              <strong class="directory-link-title">How memory and data are handled</strong>
+              <span class="directory-link-body">Review the privacy page before using the portal in academic or institutional settings.</span>
+            </a>
+            <a class="directory-link" href="{{ path_prefix }}/terms">
+              <span class="story-kicker">Terms</span>
+              <strong class="directory-link-title">What responsibility still stays with the user</strong>
+              <span class="directory-link-body">Athena can support classwork and planning, but high-stakes judgment still requires review.</span>
+            </a>
+          </div>
+        </section>
+      </main>
+      {% endif %}
     </div>
   </body>
 </html>

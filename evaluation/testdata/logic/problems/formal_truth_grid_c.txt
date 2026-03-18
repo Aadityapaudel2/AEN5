@@ -1,0 +1,54 @@
+Formal Truth Grid C
+
+Four agents labeled 1, 2, 3, and 4 each make the statements listed below.
+Exactly one agent is the universal liar: every statement made by that agent is false.
+The other three agents make only true statements.
+Exactly one agent is guilty.
+The liar and the guilty agent are distinct.
+
+Notation:
+Li: agent i is the universal liar.
+Ti: agent i is fully truthful.
+Gi: agent i is guilty.
+Pi: agent i was present at the event.
+S(a,b): statement b made by agent a is true.
+
+Statements:
+Agent 1:
+  (1) (L2 -> not G1)
+  (2) (T2 -> P4)
+  (3) (P3 xor L4)
+  (4) (S(2,3) -> G2)
+  (5) (G2 -> not L4)
+Agent 2:
+  (1) not L1
+  (2) (L3 -> (P3 and not P2))
+  (3) (G2 xor L4)
+  (4) (not P4 -> L4)
+  (5) ((P1 or P3) -> not G1)
+Agent 3:
+  (1) not P3
+  (2) (T4 -> P2)
+  (3) (L2 or G1)
+  (4) (S(1,1) -> L1)
+  (5) G3
+Agent 4:
+  (1) not G4
+  (2) P4
+  (3) L3
+  (4) not P2
+  (5) (P3 and S(2,3))
+
+Determine the guilty agent. Return a single digit 1-4.
+
+Solution.
+Enumerate all assignments of the unique liar, the unique guilty agent, the presence bits P1..P4,
+and any referenced truth-value variables until every statement and every truth-reference is evaluated consistently.
+Keep only the worlds in which one speaker has all false statements and the other three speakers have all true statements.
+This leaves 2 consistent worlds.
+All surviving worlds force agent 3 to be the universal liar.
+Every referenced S(a,b) value is simultaneously checked against the truth value of statement (a,b).
+All surviving worlds agree that agent 2 is guilty.
+Therefore the correct answer is 2.
+
+2

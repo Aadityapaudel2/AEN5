@@ -1,0 +1,92 @@
+{
+    "builder_script": "D:\\AthenaPlayground\\AthenaV5\\Finetune\\tooling\\builders\\build_verified_sft_dataset.py",
+    "trainer_path": "D:\\AthenaPlayground\\AthenaV5\\Finetune\\train.py",
+    "format": {
+        "type": "jsonl_messages",
+        "system_message_used": false,
+        "row_shape": {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "<clean problem statement>"
+                },
+                {
+                    "role": "assistant",
+                    "content": "<clean worked solution ending with Final answer: ...>"
+                }
+            ]
+        }
+    },
+    "source_roots": {
+        "aimo": "D:\\AthenaPlayground\\AthenaV5\\evaluation\\testdata\\aimo",
+        "logic_train33": "D:\\AthenaPlayground\\AthenaV5\\Finetune\\trainingdata\\logic_train33_sources",
+        "logic_locked_eval": "D:\\AthenaPlayground\\AthenaV5\\evaluation\\testdata\\logic",
+        "voe_locked_eval": "D:\\AthenaPlayground\\AthenaV5\\testdata_unpublished_2026-03-09\\voe_1"
+    },
+    "output_files": {
+        "aimo_verified_sft.jsonl": "D:\\AthenaPlayground\\AthenaV5\\Finetune\\trainingdata\\aimo_verified_sft.jsonl",
+        "logic_verified_sft.jsonl": "D:\\AthenaPlayground\\AthenaV5\\Finetune\\trainingdata\\logic_verified_sft.jsonl",
+        "math_plus_logic_verified_sft.jsonl": "D:\\AthenaPlayground\\AthenaV5\\Finetune\\trainingdata\\math_plus_logic_verified_sft.jsonl"
+    },
+    "counts": {
+        "aimo_verified_rows": 92,
+        "logic_train33_rows": 32,
+        "combined_rows": 129,
+        "logic_locked_eval_rows": 7,
+        "voe_locked_eval_rows": 25
+    },
+    "aimo_domain_counts": {
+        "algebra": 8,
+        "number_theory": 84
+    },
+    "logic_policy": {
+        "training_source": "selected non-bad logic files from logic_train33_sources",
+        "excluded_known_bad_count": 8,
+        "held_out_internal_count": 1,
+        "held_out_internal_names": [
+            "title Vortex Pharos Problem v13007..txt"
+        ],
+        "locked_eval_excluded_from_training_count": 7
+    },
+    "skipped": {
+        "logic_known_bad": [
+            {
+                "source_name": "corelogic_v10523.txt",
+                "reason": "answer_mismatch:2!=4"
+            },
+            {
+                "source_name": "corelogic_v10561.txt",
+                "reason": "answer_mismatch:2!=6"
+            },
+            {
+                "source_name": "corelogic_v10537.txt",
+                "reason": "answer_mismatch:3!=9"
+            },
+            {
+                "source_name": "corelogic_v10397.txt",
+                "reason": "answer_mismatch:652!=854"
+            },
+            {
+                "source_name": "corelogic_v10447.txt",
+                "reason": "answer_mismatch:724!=51"
+            },
+            {
+                "source_name": "title Azure Relic Puzzle v10799.txt",
+                "reason": "verification_error:Expected unique culprit for title Azure Relic Puzzle v10799.txt, found []"
+            },
+            {
+                "source_name": "title Crimson Orb Puzzle v10913.txt",
+                "reason": "verification_error:Expected unique culprit for title Crimson Orb Puzzle v10913.txt, found []"
+            },
+            {
+                "source_name": "title Obsidian Labyrinth Puzzle v11.txt",
+                "reason": "verification_error:Expected unique culprit for title Obsidian Labyrinth Puzzle v11.txt, found []"
+            }
+        ],
+        "logic_internal_holdout": [
+            "title Vortex Pharos Problem v13007..txt"
+        ]
+    },
+    "ordering_policy": "deterministic_filename_sort; combined dataset is aimo rows followed by logic rows",
+    "ready_for_immediate_use_with_train_py": true
+}

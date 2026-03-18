@@ -1,0 +1,17 @@
+{
+  "root": "D:\\AthenaPlayground\\AthenaV5\\testdata\\logic_holdout_internal",
+  "count": 1,
+  "policy": "held out from logic training selection for internal testing; not part of canonical published logic eval",
+  "files": [
+    {
+      "source_name": "title Vortex Pharos Problem v13007..txt",
+      "final_answer": "2",
+      "statement_count_total": 16,
+      "quality_score": 6,
+      "quality_flags": [
+        "missing_explicit_final_key",
+        "double_dot_filename"
+      ]
+    }
+  ]
+}
