@@ -32,6 +32,7 @@ portal_auth.env
 random/
 exclusive/
 kaggle_aimo3/ 
+archive/
 
 # Local workspace scratch
 codexcontext.txt
