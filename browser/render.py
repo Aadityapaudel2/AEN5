@@ -28,10 +28,42 @@ def _new_markdown_renderer() -> MarkdownIt:
 
 MARKDOWN = _new_markdown_renderer()
 _TEX_DELIM_RE = re.compile(r"(?<!\\)\\([()\[\]])")
+_MATH_SPAN_RE = re.compile(
+    r"(?<!\\)\$\$[\s\S]+?(?<!\\)\$\$"
+    r"|(?<!\\)\\\[[\s\S]+?(?<!\\)\\\]"
+    r"|(?<!\\)\\\([\s\S]+?(?<!\\)\\\)"
+    r"|(?<!\\)\$(?!\s)(?:\\.|[^$\\\n])+?(?<!\s)(?<!\\)\$"
+)
 
 
 def _preserve_tex_delimiters(text: str) -> str:
     return _TEX_DELIM_RE.sub(lambda match: "\\" + match.group(0), text)
+
+
+def _normalize_math_segment(segment: str) -> str:
+    if segment.startswith("$$") and segment.endswith("$$"):
+        return r"\[" + segment[2:-2].strip() + r"\]"
+    if segment.startswith("$") and segment.endswith("$"):
+        return r"\(" + segment[1:-1].strip() + r"\)"
+    return segment
+
+
+def _extract_math_segments(text: str) -> tuple[str, list[str]]:
+    segments: list[str] = []
+
+    def replace(match: re.Match[str]) -> str:
+        token = f"ATHENA_MATH_TOKEN_{len(segments)}"
+        segments.append(_normalize_math_segment(match.group(0)))
+        return token
+
+    return _MATH_SPAN_RE.sub(replace, text), segments
+
+
+def _restore_math_segments(rendered_html: str, segments: list[str]) -> str:
+    result = rendered_html
+    for idx, segment in enumerate(segments):
+        result = result.replace(f"ATHENA_MATH_TOKEN_{idx}", html.escape(segment, quote=False))
+    return result
 
 
 def _role_label(role: str, user_label: str | None = None) -> str:
@@ -56,7 +88,9 @@ def _role_icon(role: str) -> str:
 
 
 def render_message_body_html(content: str) -> str:
-    return MARKDOWN.render(_preserve_tex_delimiters(content or ""))
+    protected_text, math_segments = _extract_math_segments(content or "")
+    rendered = MARKDOWN.render(_preserve_tex_delimiters(protected_text))
+    return _restore_math_segments(rendered, math_segments)
 
 
 def render_transcript_html(messages: Iterable[dict[str, str]], user_label: str | None = None) -> str:
@@ -81,4 +115,3 @@ def render_transcript_html(messages: Iterable[dict[str, str]], user_label: str |
             )
         )
     return "\n".join(chunks)
-

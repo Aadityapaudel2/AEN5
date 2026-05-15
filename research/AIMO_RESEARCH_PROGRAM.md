@@ -12,6 +12,24 @@ This memo consolidates the strongest current research direction from these repo 
 
 It is intended to be the shortest accurate statement of what should be built next.
 
+## Score Target
+
+Working target for the current AIMO3 phase:
+
+- build toward a score of `44+`
+
+That target does not change the engineering standard.
+It sharpens it.
+
+Every protocol change should be judged by:
+
+- expected correctness lift
+- replay stability
+- operator readability
+- implementation cost
+
+If a change adds complexity without a believable path toward the target, it should not become canonical.
+
 ## Core Thesis
 
 Winning or placing strongly on AIMO is unlikely to come from raw answer-style SFT alone.
@@ -31,7 +49,41 @@ Therefore the project should prioritize:
 - bounded verification
 - small, testable orchestration
 
+And on the notebook surface specifically:
+
+- natural visible peer dialogue
+- hidden controller extraction
+- no visible protocol theater
+
 before it scales toward bigger swarms or more tuning complexity.
+
+## 2026-03-22 Notebook Surface Update
+
+The current AEN5 notebook direction is no longer a visible staged `solver` / `verifier` transcript.
+
+The notebook surface should now prefer:
+
+- Athena and Sentinel speaking as peer collaborators
+- one opening objective followed by alternating dialogue
+- hidden answer extraction from natural prose
+- silent retries and saved diagnostics
+- a clean transcript plus a compact final summary
+
+This is not an argument for unbounded free-form conversation.
+It is a bounded two-model controller with a cleaner visible surface.
+
+What changed is:
+
+- the visible contract
+- the prompt shape
+- the answer-extraction strategy
+
+What did not change is:
+
+- the need for bounded rounds
+- the need for stable stop conditions
+- the need for exact answer normalization
+- the need for disciplined evaluation
 
 ## Canonical Build Order
 

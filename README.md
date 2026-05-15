@@ -1,46 +1,45 @@
 # AEN / AthenaV5
 
-This repo is the local runtime, training, evaluation, and research workspace for AthenaV5 inside the broader AEN architecture.
+AthenaV5 is the local-first AEN workspace for model runtime, the browser portal, the private desktop launcher, training utilities, evaluation harnesses, and research notes. The GitHub surface is intentionally clean: source, tests, launchers, config templates, and evidence-indexed documentation belong here; model weights, secrets, local user data, runtime state, and bulky run exports stay local.
 
-## Canonical Active Surfaces
+## Repository Flow
 
-- `desktop_engine/`
-  - source of truth for model loading, prompt assembly, tool execution, event flow, and no-CoT sanitation
-- `browser/`
-  - thin browser adapter over the shared engine
-- `apps/two_model_dialogue_evaluator/`
-  - standalone local solver/verifier dialogue app
-- `Finetune/`
-  - training scripts, active datasets, manifests, and run configs
-- `research/`
-  - canonical research notes, reports, and source-note map
-- `evaluation/`
-  - canonical published/evaluation datasets
+```mermaid
+flowchart TD
+    R[README.md<br/>operator entry point] --> P[athena_paths.py<br/>canonical paths and model routes]
+    P --> D[desktop_engine/<br/>shared runtime, tools, sessions]
+    P --> B[browser/<br/>public portal adapter]
+    P --> F[Finetune/<br/>training scripts and manifests]
+    D --> U[run_ui_private.ps1<br/>private Athena desktop]
+    D --> M[run_math_loop.ps1<br/>headless math loop]
+    B --> V[run_portal.ps1<br/>public browser portal]
+    B --> W[run_dev.ps1<br/>local browser dev]
+    F --> S[apps/finetune_studio/<br/>finetune UI and backend]
+    D --> E[evaluation/<br/>benchmarks and eval scripts]
+    D --> A[apps/two_model_dialogue_evaluator/<br/>solver-verifier dialogue app]
+    X[research/<br/>claim notes and source maps] --> R
+    L[local only<br/>models, exclusive, data, .local, .kaggle] -. ignored by git .-> R
+```
 
-Historical and non-canonical material lives under `archive/`.
+## Clean Repo Contract
 
-## Active Model State
+- Commit source code, tests, launchers, templates, small manifests, and research notes that explain why a change exists.
+- Keep model weights, private desktop state, auth files, user data, generated notebooks, pycache, Kaggle output workspaces, and large run artifacts out of git.
+- Public-facing claims should name the artifact, transcript, score file, or controller state that supports them.
+- Mid-run observations are allowed in research notes, but label them as live or provisional until a packaged export exists.
 
-- Public browser default model:
-  - `models/Qwen3.5-4B`
-- Private Athena desktop model:
-  - `exclusive/AthenaV1` (fallback: `models/tuned/AthenaV1`)
-- Base multimodal models kept active:
-  - `models/Qwen3.5-2B`
-  - `models/Qwen3.5-4B`
-  - `models/Qwen3.5-9B`
-- Public prompt/runtime defaults:
-  - `browser/config/system_prompt.json`
-  - `browser/config/gui_config.json`
-- Private Athena prompt/runtime defaults:
-  - `exclusive/config/system_prompt.json`
-  - `exclusive/config/gui_config.json`
-- Shared tool behavior primer:
-  - `desktop_engine/config/tool_behavior_primer.txt`
-- Private Athena local state:
-  - `exclusive/logs/desktop/*.ndjson`
-  - `exclusive/data/desktop_images/`
-  - `exclusive/` is ignored by git
+## Active Surfaces
+
+- `athena_paths.py` is the canonical path resolver and model-route helper.
+- `desktop_engine/` is the shared engine for runtime calls, session flow, tools, and math-loop support.
+- `browser/` is the browser portal adapter and public-facing config surface.
+- `run_ui_private.ps1` launches the private Athena desktop against the local exclusive model tree.
+- `run_portal.ps1` launches the production browser portal and expects a reachable vLLM sidecar.
+- `Finetune/` contains training scripts, recipes, retained manifests, and dataset builders.
+- `apps/finetune_studio/` is the local finetune studio UI.
+- `apps/two_model_dialogue_evaluator/` is the standalone solver-verifier dialogue app.
+- `evaluation/` and `testdata/` contain committed eval scripts and compact benchmark fixtures.
+- `research/` carries architecture notes, source maps, and claim-boundary documentation.
 
 ## Launchers
 
@@ -61,16 +60,16 @@ Set-Location D:\AthenaPlayground\AthenaV5
 Private Athena desktop with tools:
 
 ```powershell
-.\run_ui.ps1 -Tools
+.\run_ui_private.ps1 -Tools
 ```
 
-Public-facing browser dev:
+Public browser dev:
 
 ```powershell
 .\run_dev.ps1
 ```
 
-Browser prod:
+Public browser prod:
 
 ```powershell
 .\run_portal.ps1
@@ -82,10 +81,10 @@ Headless math loop:
 .\run_math_loop.ps1 -Problem "What is 7 + 8?"
 ```
 
-Math loop evaluation:
+Evaluation scripts:
 
 ```powershell
-.\evaluate_math_loop.ps1 -Limit 25
+.\evaluation\scripts\evaluate_math_loop.ps1 -Limit 25
 ```
 
 Standalone two-model evaluator:
@@ -95,47 +94,92 @@ Set-Location D:\AthenaPlayground\AthenaV5\apps\two_model_dialogue_evaluator
 .\run.ps1
 ```
 
-## Source of Truth
+## Offline Operation
+
+AthenaV5 can be operated without the public browser portal. This is the recommended offline/local path when the model files and private assets already exist on the machine.
+
+Private desktop, no external browser:
+
+```powershell
+Set-Location D:\AthenaPlayground\AthenaV5
+$env:ATHENA_VLLM_ENABLE_THINKING = "0"
+Remove-Item Env:ATHENA_VLLM_REASONING_PARSER -ErrorAction SilentlyContinue
+.\run_ui_private.ps1
+```
+
+Private desktop with tools:
+
+```powershell
+.\run_ui_private.ps1 -Tools
+```
+
+Headless local math loop:
+
+```powershell
+.\run_math_loop.ps1 -Problem "What is 7 + 8?"
+```
+
+Local route/model verification:
+
+```powershell
+python .\verify.py
+```
+
+Offline operation still needs local model assets and a local Linux/WSL vLLM runtime, or an already-running vLLM-compatible endpoint set through `ATHENA_PRIVATE_VLLM_BASE_URL` / `ATHENA_VLLM_BASE_URL`. It does not require Cloudflare, browser auth, or the public portal.
+
+## Thinking-Off Contract
+
+AthenaV5 is configured to suppress Qwen thinking traces by default. Keep all of these settings aligned when running or modifying the app:
+
+- `browser/config/gui_config.json`: `"enable_thinking": false` and `"hide_thoughts": true`
+- `run_ui_private.ps1`: creates the same private GUI defaults under `exclusive/config/gui_config.json`
+- `run_vllm.ps1`: writes `ATHENA_VLLM_ENABLE_THINKING=0` into the runtime env and warms up with `chat_template_kwargs = @{ enable_thinking = $false }`
+- `desktop_engine/vllm_openai_runtime.py`: sends `chat_template_kwargs: {"enable_thinking": false}` unless `ATHENA_VLLM_ENABLE_THINKING` is explicitly enabled
+
+For a clean shell before launch:
+
+```powershell
+$env:ATHENA_VLLM_ENABLE_THINKING = "0"
+Remove-Item Env:ATHENA_VLLM_REASONING_PARSER -ErrorAction SilentlyContinue
+```
+
+Do not set `ATHENA_VLLM_ENABLE_THINKING=1`, do not pass a reasoning parser, and keep `hide_thoughts` true in GUI config if the goal is complete no-thinking/no-CoT operation.
+
+## Runtime Notes
+
+- Windows portal launches require a Linux/WSL vLLM endpoint or `ATHENA_VLLM_BASE_URL` pointing to an external vLLM server.
+- Private desktop launch expects the local `exclusive/` tree and private model assets to exist on the machine. Those assets are intentionally ignored.
+- Default public model routes resolve through `athena_paths.py`; local overrides belong in `.local/config/athena_model_routes.json`.
+- Browser auth examples live at `browser/config/portal_auth.env.example`; real auth files stay ignored.
+- No-thinking operation is controlled by the `Thinking-Off Contract` above.
+
+## Result And Claim Policy
+
+- Do not describe a result as validated without a path to the supporting score, transcript, manifest, or run note.
+- Every transcript analysis should include an id, artifact path, loop count, answer, closeout mode, peer-validation state, and local verdict.
+- Keep public language descriptive: architecture, evidence, limitation, and next test.
+- Research and history notes belong under `research/`, not loose at the repo root.
+
+## Source Of Truth
 
 - Paths/defaults: `athena_paths.py`
-- Engine runtime: `desktop_engine/runtime.py`
+- Engine runtime: `desktop_engine/runtime.py`, `desktop_engine/vllm_openai_runtime.py`
 - Engine session/events: `desktop_engine/session.py`, `desktop_engine/events.py`
 - Tool execution: `desktop_engine/tools.py`
 - Agentic math loop: `desktop_engine/agentic/`
 - Browser adapter: `browser/portal_server.py`
 - Private desktop seed: `archive/shared_archives/private_desktop_seed_2026-03/`
-- Evaluator app: `apps/two_model_dialogue_evaluator/app.py`
-- Canonical 4B finetune report:
-  - `exclusive/AthenaV1/CANONICAL_RUN_REPORT.md`
+- Research index: `research/README.md`, `research/SOURCE_MAP.md`
 
-## Runtime Rules
+## Local-Only Material
 
-- No chain-of-thought is rendered, persisted, or replayed.
-- Tool traces stay visible when tools are used.
-- Public-facing work happens in the browser adapter.
-- Desktop UI is private-only and launches from the local `exclusive/` tree.
-- Desktop and browser consume the same engine contract.
-- The two-model evaluator stays active as a separate app surface.
-- Research/history notes are kept under `research/`, not at the repo root.
+These directories are expected to exist locally on working machines but should not be pushed unless a future cleanup pass creates a scrubbed, compact, intentional artifact:
 
-## Research and Historical Notes
-
-- Start at:
-  - `research/README.md`
-- Source-note map:
-  - `research/SOURCE_MAP.md`
-- Root history notes were moved to:
-  - `research/source_notes/`
-
-## Auth and Local Secrets
-
-- Browser auth examples live in:
-  - `browser/config/portal_auth.env.example`
-- Local-only secrets and private auth materials should stay outside the canonical repo surface.
-
-## Notes
-
-- Canonical browser path prefix is `/AEN5`.
-- `/AthenaV5` is retained only as a legacy compatibility label where still supported.
-- Live desktop launch still requires `PySide6` and `QtWebEngine` in the selected Python environment.
-- Secondary tools removed from the root surface are preserved under `archive/cleanup_2026-03/`.
+- `models/`
+- `exclusive/`
+- `data/`
+- `.local/`
+- `.kaggle/`
+- `colab_outputs/`
+- raw notebook and Kaggle output workspaces
+- generated PDFs, images, pycache, logs, and build products

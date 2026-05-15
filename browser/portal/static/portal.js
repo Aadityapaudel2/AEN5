@@ -367,9 +367,73 @@
     };
   }
 
+  function getArticleRole(article) {
+    if (!article || !article.classList) return "";
+    if (article.classList.contains("user")) return "user";
+    if (article.classList.contains("assistant")) return "assistant";
+    if (article.classList.contains("system")) return "system";
+    return "";
+  }
+
+  function getArticleBody(article) {
+    return article ? article.querySelector(".msg-body") : null;
+  }
+
+  function readMessageIdentity(article) {
+    if (!article) return "";
+    const role = getArticleRole(article);
+    const body = getArticleBody(article);
+    if (!body) return role;
+    const rawB64 = body.getAttribute("data-raw-b64");
+    if (rawB64) return role + "|b64:" + rawB64;
+    const rawText = body.dataset ? body.dataset.rawText || "" : "";
+    if (rawText) return role + "|txt:" + rawText;
+    return role + "|txt:" + (body.textContent || "");
+  }
+
+  function markMessageReveal(article) {
+    if (!article || state.reducedMotion) return;
+    article.classList.add("reveal");
+  }
+
+  function mergeTranscriptHtml(html) {
+    const scratch = document.createElement("div");
+    scratch.innerHTML = html || "";
+
+    const nextMessages = Array.from(scratch.querySelectorAll(":scope > .msg"));
+    const currentMessages = Array.from(transcriptEl.querySelectorAll(":scope > .msg"));
+
+    if (currentMessages.length === 0) {
+      transcriptEl.innerHTML = html || "";
+      return;
+    }
+
+    for (let i = 0; i < nextMessages.length; i += 1) {
+      const nextMsg = nextMessages[i];
+      const currentMsg = currentMessages[i];
+      if (!currentMsg) {
+        markMessageReveal(nextMsg);
+        transcriptEl.appendChild(nextMsg);
+        continue;
+      }
+      if (readMessageIdentity(currentMsg) === readMessageIdentity(nextMsg)) {
+        continue;
+      }
+      markMessageReveal(nextMsg);
+      currentMsg.replaceWith(nextMsg);
+    }
+
+    for (let i = currentMessages.length - 1; i >= nextMessages.length; i -= 1) {
+      const currentMsg = currentMessages[i];
+      if (currentMsg && currentMsg.parentNode === transcriptEl) {
+        currentMsg.remove();
+      }
+    }
+  }
+
   function applyTranscriptHtml(html) {
     if (!transcriptEl) return;
-    transcriptEl.innerHTML = html || "";
+    mergeTranscriptHtml(html);
     relabelRenderedUserMessages();
     decorateCodeBlocks(transcriptEl);
     scrollBottom();

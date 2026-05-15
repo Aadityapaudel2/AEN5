@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1600" viewBox="0 0 1800 1600" role="img" aria-labelledby="title desc">
+  <title id="title">Publication flowchart for the AIMO3 Qwen3.5-9B plus Phi-4-reasoning-vision-15B solver verifier algorithm</title>
+  <desc id="desc">Three-phase flowchart with two-step planning, bounded solving exchanges from two to eleven, and double agreement before reporting the final answer.</desc>
+  <defs>
+    <style>
+      .bg { fill: #ffffff; }
+      .panel { fill: #fbfcfe; stroke: #cbd5e1; stroke-width: 2.2; rx: 24; ry: 24; }
+      .solver { fill: #e0ecff; stroke: #2563eb; stroke-width: 2.2; rx: 18; ry: 18; }
+      .verifier { fill: #fff1d6; stroke: #d97706; stroke-width: 2.2; rx: 18; ry: 18; }
+      .neutral { fill: #edf2f7; stroke: #64748b; stroke-width: 2.2; rx: 18; ry: 18; }
+      .final { fill: #def7e5; stroke: #15803d; stroke-width: 2.4; rx: 18; ry: 18; }
+      .diamond { fill: #ffffff; stroke: #0f172a; stroke-width: 2.2; }
+      .title { font: 700 42px 'Segoe UI', Arial, sans-serif; fill: #12263a; }
+      .subtitle { font: 400 20px 'Segoe UI', Arial, sans-serif; fill: #4b5b68; }
+      .stage { font: 700 26px 'Segoe UI', Arial, sans-serif; fill: #12263a; }
+      .stage-sub { font: 400 17px 'Segoe UI', Arial, sans-serif; fill: #4b5b68; }
+      .label { font: 700 20px 'Segoe UI', Arial, sans-serif; fill: #12263a; }
+      .body { font: 400 18px 'Segoe UI', Arial, sans-serif; fill: #12263a; }
+      .small { font: 400 16px 'Segoe UI', Arial, sans-serif; fill: #4b5b68; }
+      .arrow { fill: none; stroke: #334155; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1800" height="1600"/>
+
+  <text class="title" x="70" y="70">AIMO3 Bounded Solver-Verifier Algorithm</text>
+  <text class="subtitle" x="70" y="108">Solver: Qwen3.5-9B   |   Verifier: Phi-4-reasoning-vision-15B (text-only served)   |   Verifier thinking enabled</text>
+
+  <rect class="panel" x="70" y="135" width="1660" height="95"/>
+  <text class="body" x="100" y="172">Generation policy:</text>
+  <text class="small" x="260" y="172">Solver temperature band 0.23 to 0.30, verifier temperature band 0.23 to 0.30, both models at 4096 max new tokens.</text>
+  <text class="small" x="100" y="205">Planning phase uses a fixed two-step handshake. The verifier is served text-only, and final answer requires 2 consecutive agreement checks on the same integer.</text>
+
+  <rect class="panel" x="60" y="270" width="500" height="1220"/>
+  <text class="stage" x="310" y="320" text-anchor="middle">Planning Stage</text>
+  <text class="stage-sub" x="310" y="348" text-anchor="middle">Two-step plan negotiation before solving</text>
+
+  <rect class="neutral" x="120" y="390" width="380" height="86"/>
+  <text class="label" x="310" y="428" text-anchor="middle">Problem input</text>
+  <text class="body" x="310" y="456" text-anchor="middle">Normalize statement and target answer format</text>
+
+  <rect class="solver" x="120" y="530" width="380" height="100"/>
+  <text class="label" x="310" y="572" text-anchor="middle">Planning pass 1 by solver</text>
+  <text class="body" x="310" y="604" text-anchor="middle">Initial plan, candidate structure, first attack</text>
+
+  <rect class="verifier" x="120" y="690" width="380" height="108"/>
+  <text class="label" x="310" y="732" text-anchor="middle">Planning pass 2 by verifier</text>
+  <text class="body" x="310" y="764" text-anchor="middle">Phi critiques weak assumptions, missing cases, and bad reductions</text>
+
+  <rect class="solver" x="120" y="860" width="380" height="108"/>
+  <text class="label" x="310" y="902" text-anchor="middle">Planning consolidation by solver</text>
+  <text class="body" x="310" y="934" text-anchor="middle">Solver absorbs verifier guidance and produces the working plan</text>
+
+  <polygon class="diamond" points="310,1020 465,1110 310,1200 155,1110"/>
+  <text class="label" x="310" y="1096" text-anchor="middle">Plan aligned?</text>
+  <text class="body" x="310" y="1124" text-anchor="middle">shared path or explicit risk list</text>
+
+  <rect class="neutral" x="120" y="1250" width="380" height="106"/>
+  <text class="label" x="310" y="1292" text-anchor="middle">Locked plan package</text>
+  <text class="body" x="310" y="1324" text-anchor="middle">Working plan plus unresolved risks forwarded into solving</text>
+
+  <path class="arrow" d="M310 476 L310 530"/>
+  <path class="arrow" d="M310 630 L310 690"/>
+  <path class="arrow" d="M310 798 L310 860"/>
+  <path class="arrow" d="M310 968 L310 1020"/>
+  <path class="arrow" d="M310 1200 L310 1250"/>
+  <text class="small" x="470" y="1098">Yes or no, continue with explicit state</text>
+
+  <rect class="panel" x="650" y="270" width="500" height="1220"/>
+  <text class="stage" x="900" y="320" text-anchor="middle">Solving Stage</text>
+  <text class="stage-sub" x="900" y="348" text-anchor="middle">Bounded exchange loop, minimum 2 and maximum 11 exchanges</text>
+
+  <rect class="neutral" x="710" y="390" width="380" height="86"/>
+  <text class="label" x="900" y="428" text-anchor="middle">Initialize exchange counter</text>
+  <text class="body" x="900" y="456" text-anchor="middle">Set e = 0 and load the locked plan package</text>
+
+  <rect class="solver" x="710" y="530" width="380" height="100"/>
+  <text class="label" x="900" y="572" text-anchor="middle">Solver draft and question</text>
+  <text class="body" x="900" y="604" text-anchor="middle">Current solution draft, current integer, optional verifier question</text>
+
+  <rect class="verifier" x="710" y="690" width="380" height="108"/>
+  <text class="label" x="900" y="732" text-anchor="middle">Verifier critique and suggestions</text>
+  <text class="body" x="900" y="764" text-anchor="middle">Phi checks logic, arithmetic, cases, and gives concrete corrections</text>
+
+  <rect class="solver" x="710" y="860" width="380" height="108"/>
+  <text class="label" x="900" y="902" text-anchor="middle">Solver revision</text>
+  <text class="body" x="900" y="934" text-anchor="middle">Solver updates the draft using the verifier response</text>
+
+  <rect class="neutral" x="710" y="1025" width="380" height="86"/>
+  <text class="label" x="900" y="1063" text-anchor="middle">Increment exchange counter</text>
+  <text class="body" x="900" y="1091" text-anchor="middle">Set e = e + 1</text>
+
+  <polygon class="diamond" points="900,1160 1055,1250 900,1340 745,1250"/>
+  <text class="label" x="900" y="1238" text-anchor="middle">e &lt; 2 ?</text>
+  <text class="body" x="900" y="1266" text-anchor="middle">force at least two exchanges</text>
+
+  <polygon class="diamond" points="900,1380 1075,1470 900,1560 725,1470"/>
+  <text class="label" x="900" y="1458" text-anchor="middle">Concrete issue remains</text>
+  <text class="body" x="900" y="1486" text-anchor="middle">and e &lt; 11 ?</text>
+
+  <rect class="neutral" x="710" y="1310" width="380" height="70" visibility="hidden"/>
+
+  <path class="arrow" d="M900 476 L900 530"/>
+  <path class="arrow" d="M900 630 L900 690"/>
+  <path class="arrow" d="M900 798 L900 860"/>
+  <path class="arrow" d="M900 968 L900 1025"/>
+  <path class="arrow" d="M900 1111 L900 1160"/>
+  <path class="arrow" d="M900 1340 L900 1380"/>
+
+  <path class="arrow" d="M745 1250 L660 1250 L660 580 L710 580"/>
+  <text class="small" x="676" y="1228">Yes</text>
+
+  <path class="arrow" d="M1055 1250 L1125 1250 L1125 1470 L1075 1470"/>
+  <text class="small" x="1070" y="1228">No</text>
+
+  <path class="arrow" d="M725 1470 L660 1470 L660 580 L710 580"/>
+  <text class="small" x="676" y="1448">Yes</text>
+
+  <path class="arrow" d="M1075 1470 L1200 1470 L1200 515 L1240 515"/>
+  <text class="small" x="1092" y="1448">No</text>
+
+  <rect class="panel" x="1240" y="270" width="500" height="1220"/>
+  <text class="stage" x="1490" y="320" text-anchor="middle">Final Answer Stage</text>
+  <text class="stage-sub" x="1490" y="348" text-anchor="middle">Agreement must hold twice before reporting</text>
+
+  <rect class="solver" x="1300" y="390" width="380" height="96"/>
+  <text class="label" x="1490" y="432" text-anchor="middle">Final candidate from solver</text>
+  <text class="body" x="1490" y="462" text-anchor="middle">Freeze the best current integer and full justification</text>
+
+  <polygon class="diamond" points="1490,530 1650,620 1490,710 1330,620"/>
+  <text class="label" x="1490" y="608" text-anchor="middle">Agreement check 1</text>
+  <text class="body" x="1490" y="636" text-anchor="middle">Verifier passes the same integer?</text>
+
+  <rect class="solver" x="1300" y="760" width="380" height="96"/>
+  <text class="label" x="1490" y="802" text-anchor="middle">Solver restates locked answer</text>
+  <text class="body" x="1490" y="832" text-anchor="middle">Same integer, tightened justification, no drift allowed</text>
+
+  <polygon class="diamond" points="1490,900 1650,990 1490,1080 1330,990"/>
+  <text class="label" x="1490" y="978" text-anchor="middle">Agreement check 2</text>
+  <text class="body" x="1490" y="1006" text-anchor="middle">Verifier still passes the same integer?</text>
+
+  <rect class="neutral" x="1300" y="1140" width="380" height="104"/>
+  <text class="label" x="1490" y="1182" text-anchor="middle">Return disagreement packet</text>
+  <text class="body" x="1490" y="1214" text-anchor="middle">Failed agreement sends the objection back into the solving loop</text>
+
+  <rect class="final" x="1300" y="1295" width="380" height="104"/>
+  <text class="label" x="1490" y="1337" text-anchor="middle">Report final answer</text>
+  <text class="body" x="1490" y="1369" text-anchor="middle">Emit the integer only after two consecutive agreement checks</text>
+
+  <path class="arrow" d="M1490 486 L1490 530"/>
+  <path class="arrow" d="M1490 710 L1490 760"/>
+  <path class="arrow" d="M1490 856 L1490 900"/>
+  <path class="arrow" d="M1490 1080 L1490 1140"/>
+  <path class="arrow" d="M1490 1080 L1490 1295"/>
+
+  <path class="arrow" d="M1330 620 L1260 620 L1260 1192 L1300 1192"/>
+  <text class="small" x="1282" y="598">No</text>
+
+  <path class="arrow" d="M1650 620 L1700 620 L1700 808 L1680 808"/>
+  <text class="small" x="1660" y="598">Yes</text>
+
+  <path class="arrow" d="M1330 990 L1260 990 L1260 1192 L1300 1192"/>
+  <text class="small" x="1282" y="968">No</text>
+
+  <path class="arrow" d="M1650 990 L1700 990 L1700 1347 L1680 1347"/>
+  <text class="small" x="1660" y="968">Yes</text>
+
+  <path class="arrow" d="M1300 1192 L1180 1192 L1180 580 L1090 580"/>
+
+  <path class="arrow" d="M500 1303 L650 1303 L650 433 L710 433"/>
+
+  <rect class="panel" x="70" y="1510" width="1660" height="55"/>
+  <text class="small" x="100" y="1545">Interpretation for publication: planning is always completed before solving begins; solving must include at least 2 exchanges and may continue until 11 exchanges; final reporting requires the verifier to agree on the same integer twice in succession.</text>
+</svg>

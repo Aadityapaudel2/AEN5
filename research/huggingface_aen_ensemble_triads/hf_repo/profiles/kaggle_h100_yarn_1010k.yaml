@@ -1,0 +1,54 @@
+schema_id: neohm.aen_ensemble_triads.runtime_profile.v1
+profile_id: kaggle_h100_yarn_1010k
+profile_version: 0.1.0
+profile_class: experimental_ultralong
+
+claim_status:
+  blind_benchmark_eligible: profile_dependent
+  answer_aware: profile_dependent
+  public_score_claim_allowed: profile_dependent
+  notes: "Hardware/runtime profile only. Claim status is determined by the dataset and controller profile layered on top."
+
+backend:
+  preferred: vllm_openai
+  fallback: none
+  vllm_version: "0.18.1"
+  trust_remote_code: true
+  language_model_only: true
+
+hardware:
+  target: kaggle_h100_or_equivalent
+  device: cuda
+  tensor_parallel_size: 1
+
+long_context:
+  enabled: true
+  method: yarn
+  context_window_tokens_per_role: 1010000
+  distributed_context_tokens: 3030000
+  rope_parameters:
+    rope_type: yarn
+    factor: 4.0
+    original_max_position_embeddings: 262144
+    rope_theta: 10000000
+    mrope_interleaved: true
+    mrope_section: [11, 11, 10]
+  env:
+    VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+
+roles:
+  athena:
+    runtime_key: solver
+    port: 8000
+    gpu_memory_utilization: "0.30"
+    max_model_len: 1010000
+  artemis:
+    runtime_key: clerk
+    port: 8001
+    gpu_memory_utilization: "0.30"
+    max_model_len: 1010000
+  aria:
+    runtime_key: agent
+    port: 8002
+    gpu_memory_utilization: "0.34"
+    max_model_len: 1010000

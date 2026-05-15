@@ -5,6 +5,7 @@ import argparse
 import inspect
 import json
 import math
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -12,7 +13,7 @@ from typing import Iterable
 import torch
 from torch.utils.data import Dataset
 from peft import LoraConfig, TaskType, get_peft_model, prepare_model_for_kbit_training
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, Trainer, TrainingArguments
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, Trainer, TrainerCallback, TrainingArguments
 
 ROLES = {"system", "user", "assistant"}
 FLAG_ARGS = (
@@ -164,9 +165,17 @@ def print_length_stats(lengths: list[int], max_seq_length: int) -> int:
     print(
         "Token length stats: "
         f"min={lengths[0]} p95={lengths[p95_index]} max={lengths[-1]} "
-        f"over_limit({max_seq_length})={over_limit}"
+        f"over_limit({max_seq_length})={over_limit}",
+        flush=True,
     )
     return over_limit
+
+
+def format_duration(seconds: float) -> str:
+    total = max(int(seconds), 0)
+    hours, remainder = divmod(total, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
 
 def resolve_torch_dtype(args: argparse.Namespace) -> torch.dtype | None:
@@ -249,6 +258,7 @@ def build_training_args(args: argparse.Namespace, dataset_size: int) -> Training
         weight_decay=args.weight_decay,
         max_grad_norm=args.max_grad_norm,
         logging_steps=args.logging_steps,
+        logging_first_step=True,
         save_steps=args.save_steps,
         save_total_limit=args.save_total_limit,
         save_only_model=args.save_only_model,
@@ -263,6 +273,67 @@ def build_training_args(args: argparse.Namespace, dataset_size: int) -> Training
         remove_unused_columns=False,
         seed=args.seed,
     )
+
+
+class StudioProgressCallback(TrainerCallback):
+    def __init__(self, planned_steps: int):
+        self.planned_steps = max(int(planned_steps), 1)
+        self.started_at: float | None = None
+
+    def _elapsed(self) -> float:
+        if self.started_at is None:
+            return 0.0
+        return max(time.time() - self.started_at, 0.0)
+
+    def _eta(self, completed_steps: int) -> str:
+        if completed_steps <= 0:
+            return "unknown"
+        elapsed = self._elapsed()
+        if elapsed <= 0:
+            return "unknown"
+        steps_per_second = completed_steps / elapsed
+        if steps_per_second <= 0:
+            return "unknown"
+        remaining_steps = max(self.planned_steps - completed_steps, 0)
+        return format_duration(remaining_steps / steps_per_second)
+
+    def on_train_begin(self, args, state, control, **kwargs):
+        self.started_at = time.time()
+        total_steps = int(state.max_steps) if int(getattr(state, "max_steps", 0) or 0) > 0 else self.planned_steps
+        self.planned_steps = max(total_steps, 1)
+        print(
+            f"Training progress plan: steps={self.planned_steps} epochs={args.num_train_epochs} "
+            f"batch_size={args.per_device_train_batch_size} grad_accumulation={args.gradient_accumulation_steps}",
+            flush=True,
+        )
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if self.started_at is None:
+            self.started_at = time.time()
+        logs = logs or {}
+        current_step = int(getattr(state, "global_step", 0) or 0)
+        total_steps = int(getattr(state, "max_steps", 0) or 0) or self.planned_steps
+        self.planned_steps = max(total_steps, 1)
+        elapsed = format_duration(self._elapsed())
+        eta = self._eta(current_step)
+        loss = logs.get("loss")
+        learning_rate = logs.get("learning_rate")
+        epoch = logs.get("epoch")
+        items = [f"step={current_step}/{self.planned_steps}", f"elapsed={elapsed}", f"eta={eta}"]
+        if epoch is not None:
+            items.append(f"epoch={float(epoch):.3f}")
+        if loss is not None:
+            items.append(f"loss={float(loss):.6f}")
+        if learning_rate is not None:
+            items.append(f"lr={float(learning_rate):.8g}")
+        print("Training progress: " + " | ".join(items), flush=True)
+
+    def on_train_end(self, args, state, control, **kwargs):
+        elapsed = format_duration(self._elapsed())
+        print(
+            f"Training progress: completed step={int(getattr(state, 'global_step', 0) or 0)}/{self.planned_steps} | elapsed={elapsed}",
+            flush=True,
+        )
 
 
 def build_trainer(
@@ -280,11 +351,17 @@ def build_trainer(
         "data_collator": collator,
     }
     trainer_signature = inspect.signature(Trainer.__init__).parameters
+    progress_callback = StudioProgressCallback(estimate_total_train_steps(training_args, len(dataset)))
+    if "callbacks" in trainer_signature:
+        trainer_kwargs["callbacks"] = [progress_callback]
     if "processing_class" in trainer_signature:
         trainer_kwargs["processing_class"] = tokenizer
     elif "tokenizer" in trainer_signature:
         trainer_kwargs["tokenizer"] = tokenizer
-    return Trainer(**trainer_kwargs)
+    trainer = Trainer(**trainer_kwargs)
+    if "callbacks" not in trainer_signature:
+        trainer.add_callback(progress_callback)
+    return trainer
 
 
 def main() -> None:
@@ -294,16 +371,18 @@ def main() -> None:
         raise ValueError("Enable either --bf16 or --fp16, not both")
 
     dataset = ChatDataset(args.train_file)
-    print(f"Loaded samples: {len(dataset)}")
+    print(f"Loaded samples: {len(dataset)}", flush=True)
     if args.expected_samples and len(dataset) != args.expected_samples:
         raise ValueError(f"Expected {args.expected_samples}, got {len(dataset)}")
 
+    print(f"Loading tokenizer from: {args.model_name_or_path}", flush=True)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, use_fast=True)
     if not hasattr(tokenizer, "apply_chat_template"):
         raise ValueError("Tokenizer must support apply_chat_template()")
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token if tokenizer.eos_token is not None else "<|pad|>"
 
+    print("Loading model...", flush=True)
     model = build_model(args)
 
     lengths = token_lengths(tokenizer, dataset.samples)
@@ -321,9 +400,15 @@ def main() -> None:
         collator=build_collator(tokenizer, args.max_seq_length),
         tokenizer=tokenizer,
     )
+    planned_steps = estimate_total_train_steps(args, len(dataset))
+    stop_reason = f"max_steps={args.max_steps}" if args.max_steps > 0 else f"num_train_epochs={args.num_train_epochs}"
+    print(f"Stop condition: {stop_reason} | planned_optimizer_steps={planned_steps}", flush=True)
+    print("Starting trainer.train()...", flush=True)
     trainer.train(resume_from_checkpoint=args.resume_from_checkpoint.strip() or None)
+    print(f"Saving model to: {args.output_dir}", flush=True)
     trainer.save_model(args.output_dir)
     tokenizer.save_pretrained(args.output_dir)
+    print("Training run finished.", flush=True)
 
 
 if __name__ == "__main__":

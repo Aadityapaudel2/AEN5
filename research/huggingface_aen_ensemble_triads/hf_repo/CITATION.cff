@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use AEN-Ensemble-Triads, please cite this Hugging Face architecture artifact and the underlying base checkpoints."
+title: "AEN-Ensemble-Triads: Agentic Triad Pipelines for Inference-Time Reasoning"
+authors:
+  - family-names: Paudel
+    given-names: Aaditya
+year: 2026
+repository-code: "https://huggingface.co/Neohm/AEN-Ensemble-Triads"
+license: "CC-BY-4.0"

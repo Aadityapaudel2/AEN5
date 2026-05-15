@@ -1,0 +1,11 @@
+schema_id: neohm.aen_ensemble_triads.dataset_registry.v1
+dataset_id: matharena_aime2026
+
+sources:
+  huggingface:
+    id: MathArena/aime_2026
+
+contract:
+  rows: 30
+  answer_contract: exact_integer
+  leaderboard_submission_requires_clean_profile: true

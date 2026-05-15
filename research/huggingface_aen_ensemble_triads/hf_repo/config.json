@@ -1,0 +1,11 @@
+{
+  "model_type": "aen_ensemble_triads",
+  "architectures": ["AENForReasoning"],
+  "aen_manifest": "aen_manifest.yaml",
+  "library_name": "aen_ensemble_triads",
+  "base_model": ["Qwen/Qwen3.5-9B"],
+  "auto_map": {
+    "AutoConfig": "aen_ensemble_triads.configuration_aen.AENConfig",
+    "AutoModel": "aen_ensemble_triads.modeling_aen.AENForReasoning"
+  }
+}

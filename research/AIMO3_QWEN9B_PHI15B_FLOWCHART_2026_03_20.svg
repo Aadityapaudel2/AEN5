@@ -1,0 +1,236 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="2500" viewBox="0 0 1800 2500" role="img" aria-labelledby="title desc">
+  <title id="title">AIMO3 Qwen3.5-9B plus Phi-4-reasoning-vision-15B solver verifier flowchart</title>
+  <desc id="desc">Publication-style flowchart showing the bounded brainstorm, verifier, revision, and finalization pipeline.</desc>
+  <defs>
+    <style>
+      .title { font: 700 42px 'Segoe UI', Inter, Arial, sans-serif; fill: #13222f; }
+      .subtitle { font: 400 20px 'Segoe UI', Inter, Arial, sans-serif; fill: #51606d; }
+      .label { font: 700 18px 'Segoe UI', Inter, Arial, sans-serif; fill: #13222f; }
+      .body { font: 400 18px 'Segoe UI', Inter, Arial, sans-serif; fill: #13222f; }
+      .small { font: 400 16px 'Segoe UI', Inter, Arial, sans-serif; fill: #51606d; }
+      .node-solver { fill: #dbeafe; stroke: #2563eb; stroke-width: 2.2; rx: 18; ry: 18; }
+      .node-verifier { fill: #fff1d6; stroke: #d97706; stroke-width: 2.2; rx: 18; ry: 18; }
+      .node-neutral { fill: #eef2f7; stroke: #64748b; stroke-width: 2.2; rx: 18; ry: 18; }
+      .node-final { fill: #dff7e8; stroke: #15803d; stroke-width: 2.4; rx: 18; ry: 18; }
+      .diamond { fill: #f8fafc; stroke: #0f172a; stroke-width: 2.2; }
+      .panel { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.8; rx: 24; ry: 24; }
+      .arrow { fill: none; stroke: #334155; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrowhead); }
+      .arrow-soft { fill: none; stroke: #64748b; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrowheadSoft); }
+      .guide { stroke: #e2e8f0; stroke-width: 1; stroke-dasharray: 6 6; }
+    </style>
+    <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#334155"/>
+    </marker>
+    <marker id="arrowheadSoft" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1800" height="2500" fill="#ffffff"/>
+
+  <text class="title" x="90" y="80">AIMO3 Bounded Solver-Verifier Pipeline</text>
+  <text class="subtitle" x="90" y="118">Solver: Qwen3.5-9B   |   Verifier: Phi-4-reasoning-vision-15B (text-only served)   |   Date: 2026-03-20</text>
+
+  <rect class="panel" x="90" y="160" width="760" height="180"/>
+  <text class="label" x="120" y="205">Generation policy</text>
+  <text class="body" x="120" y="245">Solver temperatures: 0.23 for Brainstorm A, 0.30 for Brainstorm B, 0.27 for revision</text>
+  <text class="body" x="120" y="277">Verifier temperatures: 0.23 for first check, 0.27 for recheck</text>
+  <text class="body" x="120" y="309">Solver max new tokens: 4096   |   Verifier max new tokens: 4096   |   Verifier thinking: ON, text-only served</text>
+
+  <rect class="panel" x="910" y="160" width="800" height="180"/>
+  <text class="label" x="940" y="205">Design constraints</text>
+  <text class="body" x="940" y="245">1. Bounded loops only: maximum 2 full verifier cycles</text>
+  <text class="body" x="940" y="277">2. Verifier criticism must be concrete before solver spends another pass</text>
+  <text class="body" x="940" y="309">3. Final tie-break prefers stable integers unless verifier provides a real contradiction</text>
+
+  <line class="guide" x1="900" y1="380" x2="900" y2="2350"/>
+
+  <rect class="node-neutral" x="695" y="390" width="410" height="86"/>
+  <text class="label" x="900" y="430" text-anchor="middle">Problem input</text>
+  <text class="body" x="900" y="458" text-anchor="middle">Normalize statement and target integer answer format</text>
+
+  <path class="arrow" d="M900 476 L900 540"/>
+
+  <rect class="node-solver" x="250" y="540" width="500" height="118"/>
+  <text class="label" x="500" y="585" text-anchor="middle">Solver Brainstorm A</text>
+  <text class="body" x="500" y="618" text-anchor="middle">Qwen3.5-9B</text>
+  <text class="small" x="500" y="646" text-anchor="middle">temperature = 0.23, max new tokens = 4096</text>
+
+  <rect class="node-solver" x="1050" y="540" width="500" height="118"/>
+  <text class="label" x="1300" y="585" text-anchor="middle">Solver Brainstorm B</text>
+  <text class="body" x="1300" y="618" text-anchor="middle">Qwen3.5-9B</text>
+  <text class="small" x="1300" y="646" text-anchor="middle">temperature = 0.30, max new tokens = 4096</text>
+
+  <path class="arrow" d="M900 540 L500 540"/>
+  <path class="arrow" d="M900 540 L1300 540"/>
+
+  <path class="arrow" d="M500 658 L500 718"/>
+  <path class="arrow" d="M1300 658 L1300 718"/>
+  <path class="arrow" d="M500 718 L790 718"/>
+  <path class="arrow" d="M1300 718 L1010 718"/>
+
+  <polygon class="diamond" points="900,680 1080,790 900,900 720,790"/>
+  <text class="label" x="900" y="770" text-anchor="middle">Same core answer</text>
+  <text class="body" x="900" y="798" text-anchor="middle">or same plan family?</text>
+
+  <path class="arrow" d="M720 790 L470 790 L470 960"/>
+  <text class="small" x="520" y="770">No</text>
+
+  <rect class="node-neutral" x="250" y="960" width="440" height="110"/>
+  <text class="label" x="470" y="1004" text-anchor="middle">Build explicit dispute list</text>
+  <text class="body" x="470" y="1034" text-anchor="middle">Record disagreement on assumptions, cases, or candidate answers</text>
+
+  <path class="arrow" d="M1080 790 L1330 790 L1330 960"/>
+  <text class="small" x="1285" y="770">Yes</text>
+
+  <rect class="node-solver" x="1110" y="960" width="440" height="110"/>
+  <text class="label" x="1330" y="1004" text-anchor="middle">Build provisional solver draft</text>
+  <text class="body" x="1330" y="1034" text-anchor="middle">Keep the shared answer and concise reasoning skeleton</text>
+
+  <path class="arrow" d="M470 1070 L470 1140 L900 1140"/>
+  <path class="arrow" d="M1330 1070 L1330 1140 L900 1140"/>
+
+  <rect class="node-verifier" x="630" y="1140" width="540" height="118"/>
+  <text class="label" x="900" y="1184" text-anchor="middle">Verifier import or first check</text>
+  <text class="body" x="900" y="1217" text-anchor="middle">Phi-4-reasoning-vision-15B in THINK mode, text-only served</text>
+  <text class="small" x="900" y="1245" text-anchor="middle">temperature = 0.23, max new tokens = 4096</text>
+
+  <path class="arrow" d="M900 1258 L900 1330"/>
+
+  <polygon class="diamond" points="900,1330 1085,1440 900,1550 715,1440"/>
+  <text class="label" x="900" y="1418" text-anchor="middle">Concrete guidance?</text>
+  <text class="body" x="900" y="1446" text-anchor="middle">counterexample, correction, or precise issue</text>
+
+  <path class="arrow" d="M715 1440 L420 1440 L420 1610"/>
+  <text class="small" x="480" y="1420">No</text>
+
+  <rect class="node-neutral" x="170" y="1610" width="500" height="112"/>
+  <text class="label" x="420" y="1654" text-anchor="middle">Best-effort draft plus uncertainty</text>
+  <text class="body" x="420" y="1686" text-anchor="middle">Solver keeps strongest answer and names the unresolved risk</text>
+
+  <path class="arrow" d="M1085 1440 L1380 1440 L1380 1610"/>
+  <text class="small" x="1325" y="1420">Yes</text>
+
+  <rect class="node-solver" x="1130" y="1610" width="500" height="112"/>
+  <text class="label" x="1380" y="1654" text-anchor="middle">Solver resolves dispute</text>
+  <text class="body" x="1380" y="1686" text-anchor="middle">Use verifier guidance to produce a single current best answer</text>
+
+  <path class="arrow" d="M420 1722 L420 1795 L900 1795"/>
+  <path class="arrow" d="M1380 1722 L1380 1795 L900 1795"/>
+
+  <rect class="node-verifier" x="640" y="1795" width="520" height="110"/>
+  <text class="label" x="900" y="1839" text-anchor="middle">Verifier check on current solver draft</text>
+  <text class="body" x="900" y="1871" text-anchor="middle">Pass, revise, or insufficient</text>
+
+  <path class="arrow" d="M900 1905 L900 1982"/>
+
+  <polygon class="diamond" points="900,1982 1075,2088 900,2194 725,2088"/>
+  <text class="label" x="900" y="2070" text-anchor="middle">VERDICT = pass?</text>
+
+  <path class="arrow" d="M1075 2088 L1290 2088"/>
+  <text class="small" x="1142" y="2068">Yes</text>
+
+  <polygon class="diamond" points="1420,2000 1585,2088 1420,2176 1255,2088"/>
+  <text class="label" x="1420" y="2078" text-anchor="middle">Integer answers</text>
+  <text class="body" x="1420" y="2106" text-anchor="middle">match?</text>
+
+  <path class="arrow" d="M1585 2088 L1680 2088 L1680 2330 L1180 2330"/>
+  <text class="small" x="1610" y="2068">Yes</text>
+
+  <rect class="node-final" x="690" y="2285" width="420" height="92"/>
+  <text class="label" x="900" y="2332" text-anchor="middle">Finalize answer</text>
+  <text class="body" x="900" y="2362" text-anchor="middle">Emit integer answer and stop</text>
+
+  <path class="arrow" d="M1255 2088 L1195 2088 L1195 1960 L1510 1960 L1510 1855"/>
+  <text class="small" x="1220" y="2068">No</text>
+
+  <rect class="node-solver" x="1260" y="1755" width="500" height="100"/>
+  <text class="label" x="1510" y="1798" text-anchor="middle">One arbitration solver pass</text>
+  <text class="body" x="1510" y="1828" text-anchor="middle">Force solver to address verifier objection directly</text>
+
+  <path class="arrow" d="M1510 1755 L1510 1670 L1660 1670 L1660 1485 L1085 1485"/>
+
+  <path class="arrow" d="M725 2088 L500 2088"/>
+  <text class="small" x="620" y="2068">No</text>
+
+  <polygon class="diamond" points="360,2000 520,2088 360,2176 200,2088"/>
+  <text class="label" x="360" y="2078" text-anchor="middle">VERDICT =</text>
+  <text class="body" x="360" y="2106" text-anchor="middle">revise?</text>
+
+  <path class="arrow" d="M200 2088 L110 2088 L110 2260 L450 2260 L450 2330 L690 2330"/>
+  <text class="small" x="130" y="2068">No</text>
+
+  <rect class="node-neutral" x="150" y="2205" width="430" height="110"/>
+  <text class="label" x="365" y="2249" text-anchor="middle">Fallback stable solver answer</text>
+  <text class="body" x="365" y="2281" text-anchor="middle">Use the most stable integer if verifier gives only vague criticism</text>
+
+  <path class="arrow" d="M520 2088 L620 2088 L620 1990 L430 1990 L430 1885"/>
+  <text class="small" x="545" y="2068">Yes</text>
+
+  <polygon class="diamond" points="430,1715 610,1810 430,1905 250,1810"/>
+  <text class="label" x="430" y="1798" text-anchor="middle">Concrete issue or</text>
+  <text class="body" x="430" y="1826" text-anchor="middle">correction?</text>
+
+  <path class="arrow" d="M250 1810 L120 1810 L120 1610 L830 1610 L830 1500"/>
+  <text class="small" x="140" y="1790">No</text>
+
+  <rect class="node-neutral" x="650" y="1450" width="360" height="100"/>
+  <text class="label" x="830" y="1493" text-anchor="middle">Strengthen justification once</text>
+  <text class="body" x="830" y="1523" text-anchor="middle">No new math, only repair weak support</text>
+
+  <path class="arrow" d="M610 1810 L780 1810"/>
+  <text class="small" x="645" y="1790">Yes</text>
+
+  <rect class="node-solver" x="740" y="1760" width="460" height="100"/>
+  <text class="label" x="970" y="1803" text-anchor="middle">Solver revision pass</text>
+  <text class="body" x="970" y="1833" text-anchor="middle">Respond directly to verifier's issue or suggested correction</text>
+
+  <path class="arrow" d="M830 1550 L830 1660"/>
+  <path class="arrow" d="M970 1860 L970 1935 L1170 1935 L1170 1650 L900 1650 L900 1550"/>
+
+  <rect class="node-verifier" x="1070" y="1450" width="520" height="100"/>
+  <text class="label" x="1330" y="1493" text-anchor="middle">Verifier recheck</text>
+  <text class="body" x="1330" y="1523" text-anchor="middle">Second and final verifier cycle, temperature = 0.27</text>
+
+  <path class="arrow-soft" d="M1510 1855 L1510 1705 L1330 1705 L1330 1550"/>
+  <path class="arrow-soft" d="M970 1760 L970 1705 L1330 1705 L1330 1550"/>
+  <path class="arrow-soft" d="M830 1550 L1010 1550"/>
+
+  <path class="arrow" d="M1330 1450 L1330 1360 L1600 1360 L1600 1210 L1170 1210"/>
+
+  <polygon class="diamond" points="1480,1125 1650,1210 1480,1295 1310,1210"/>
+  <text class="label" x="1480" y="1200" text-anchor="middle">Agreement reached</text>
+  <text class="body" x="1480" y="1228" text-anchor="middle">after final check?</text>
+
+  <path class="arrow" d="M1650 1210 L1710 1210 L1710 2330 L1110 2330"/>
+  <text class="small" x="1660" y="1190">Yes</text>
+
+  <path class="arrow" d="M1310 1210 L1225 1210 L1225 1065"/>
+  <text class="small" x="1250" y="1190">No</text>
+
+  <polygon class="diamond" points="1225,905 1420,1005 1225,1105 1030,1005"/>
+  <text class="label" x="1225" y="992" text-anchor="middle">Concrete counterexample</text>
+  <text class="body" x="1225" y="1020" text-anchor="middle">or corrected integer exists?</text>
+
+  <path class="arrow" d="M1420 1005 L1550 1005 L1550 890"/>
+  <text class="small" x="1460" y="985">Yes</text>
+
+  <rect class="node-final" x="1310" y="760" width="480" height="130"/>
+  <text class="label" x="1550" y="808" text-anchor="middle">Prefer verifier-backed corrected answer</text>
+  <text class="body" x="1550" y="840" text-anchor="middle">Use verifier correction only when it contains a real contradiction,</text>
+  <text class="body" x="1550" y="868" text-anchor="middle">counterexample, arithmetic fix, or explicit corrected integer</text>
+
+  <path class="arrow" d="M1030 1005 L920 1005 L920 900 L650 900"/>
+  <text class="small" x="955" y="985">No</text>
+
+  <rect class="node-final" x="360" y="760" width="560" height="140"/>
+  <text class="label" x="640" y="808" text-anchor="middle">Prefer most stable solver answer</text>
+  <text class="body" x="640" y="840" text-anchor="middle">Choose the integer that remains most stable across brainstorms,</text>
+  <text class="body" x="640" y="868" text-anchor="middle">draft, revision, and verifier recheck when no concrete contradiction exists</text>
+
+  <path class="arrow-soft" d="M1550 890 L1550 690 L900 690"/>
+  <path class="arrow-soft" d="M640 760 L640 690 L900 690"/>
+
+  <rect class="panel" x="90" y="2385" width="1620" height="70"/>
+  <text class="small" x="120" y="2430">Interpretation: this is not an open-ended debate loop. The verifier must either pass, identify a concrete flaw, or the system falls back to the most stable solver answer after two verifier cycles.</text>
+</svg>

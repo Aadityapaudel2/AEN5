@@ -1,0 +1,54 @@
+schema_id: neohm.aen_ensemble_triads.dataset_registry.v1
+dataset_id: runtimeatboot
+default_revision_policy: pinned
+
+sources:
+  kaggle:
+    id: aadityapaudel/runtimeatboot
+    version: v33
+    role: public_answer_free_boot_and_certification
+  local_reference:
+    path: N:\Research\runtimeatbootdataset
+    version: v33
+
+contract:
+  study_rows_are_answer_key_free: true
+  certification_rows_are_answer_bearing: true
+  certification_rows_are_dataset_components: true
+  certification_rows_must_not_enter_ordinary_solve_prompt: true
+
+files:
+  athena_study:
+    path: boot/athena/Athena_epistemic_boot_100_final_hq.ndjson
+    rows: 100
+    answer_rows: 0
+  athena_certification:
+    path: boot/athena/Athena_epistemic_boot_100_final_certification_hq.ndjson
+    rows: 100
+    answer_rows: 100
+  artemis_study:
+    path: boot/artemis/Artemis_problem_proof_boot_100_final_hq.ndjson
+    rows: 100
+    answer_rows: 0
+  artemis_certification:
+    path: boot/artemis/Artemis_problem_proof_boot_100_final_hq_mcq.ndjson
+    rows: 100
+    answer_rows: 100
+  aria_study:
+    path: boot/aria/Aria_problem_proof_boot_100_final.ndjson
+    rows: 100
+    answer_rows: 0
+  aria_certification:
+    path: boot/aria/Aria_problem_proof_boot_100_final_mcq_2q.ndjson
+    rows: 100
+    answer_rows: 100
+
+boot_mechanics:
+  sequence:
+    - load_answer_free_study_rows
+    - ask_certification_mcqs
+    - score_certification_gate
+    - capture_certified_boot_memory_baseline
+    - reset_problem_boundary_preserving_boot_memory
+    - begin_solve
+  fail_policy: fail_closed

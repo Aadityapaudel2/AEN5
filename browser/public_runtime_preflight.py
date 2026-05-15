@@ -14,7 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from athena_paths import get_default_chat_model_dir
+from athena_paths import get_public_chat_model_dir
 
 
 CONFIG_ENV = REPO_ROOT / "browser" / "config" / "portal_auth.env"
@@ -96,7 +96,7 @@ def main() -> int:
     if not RUN_BROWSER.exists():
         errors.append(f"Missing browser launcher: {RUN_BROWSER}")
 
-    model_dir = get_default_chat_model_dir()
+    model_dir = get_public_chat_model_dir()
     if not model_dir.exists():
         errors.append(f"Resolved chat model directory does not exist: {model_dir}")
 

@@ -1,0 +1,34 @@
+schema_id: neohm.aen_ensemble_triads.runtime_profile.v1
+profile_id: local_cpu_smoke
+profile_version: 0.1.0
+profile_class: smoke_test
+
+claim_status:
+  blind_benchmark_eligible: false
+  answer_aware: false
+  public_score_claim_allowed: false
+  notes: "Local wiring profile only. Not intended for leaderboard claims."
+
+backend:
+  preferred: transformers_local
+  fallback: none
+  trust_remote_code: true
+
+long_context:
+  enabled: false
+  context_window_tokens_per_role: 4096
+
+controller:
+  max_big_loops: 1
+  inner_total_exchanges: 1
+  closeout_confidence_pct: 80
+  athena_open_max_tokens: 512
+  aria_exchange_max_tokens: 512
+  artemis_exchange_max_tokens: 512
+  athena_synthesis_max_tokens: 512
+  athena_final_max_tokens: 128
+  mandatory_finalization_turn: true
+
+runtime_at_boot:
+  enabled: false
+  require_certification: false

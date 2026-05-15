@@ -9,11 +9,36 @@ Use it to decide where to extend an idea instead of creating duplicate notes.
 - `research/README.md`
   - entry point for current research work
 
+- `research/AEN_TRANSCRIPT_REVIEW_INDEX_2026_04_29.md`
+  - April 29 transcript-review index for packaged and mid-run AEN/Athena results
+  - includes the Q17 closeout diagnosis and current strict-early-closeout prompt guidance
+
 - `research/LINUX_H100_PROTOCOL_REPORT.md`
   - Linux/H100 migration and structured two-model protocol report
 
 - `research/AIMO_RESEARCH_PROGRAM.md`
   - consolidated next-step research program
+
+- `research/AIMOAEN11_RUNTIME_STABILIZATION_2026_04_02.md`
+  - current runtime/coherence memo for the AEN11 Kaggle notebook
+  - records the canonical fast-path stack, direct-runtime findings, and the post-vLLM stabilization path
+
+- `research/AIMOAEN11_TRANSFORMERS_SERVE_POSTMORTEM_AND_SGLANG_PIVOT_2026_04_03.md`
+  - postmortem for the failed `transformers serve` pivot in AEN11
+  - should be read before doing any more notebook-side serving hotfixing
+
+- `research/AIMO3_VERIFIER_CONTRACT_2026_03_20.md`
+  - verifier-output contract and text-only serving note for the canonical Qwen9B plus Phi15B Kaggle runtime
+
+- `research/AIMO3_PEER_DIALOGUE_NOTEBOOK_2026_03_22.md`
+  - current notebook-surface note for AEN5
+  - supersedes the strict visible verifier-contract note for the live Athena/Sentinel notebook transcript, while keeping the older verifier-contract document as a historical structured-protocol reference
+
+- `research/AIMO3_QWEN9B_PHI15B_FLOWCHART_2026_03_20.md`
+  - working algorithm note for the bounded Qwen9B plus Phi15B solver-verifier pipeline
+
+- `research/AIMO3_QWEN9B_PHI15B_PUBLICATION_FLOWCHART_2026_03_20.md`
+  - publication-facing summary of the same bounded algorithm and serving assumptions
 
 - `research/CLEANUP_CANONICALIZATION_REPORT.md`
   - report for the March 2026 cleanup/canonicalization pass
@@ -41,6 +66,9 @@ Use it to decide where to extend an idea instead of creating duplicate notes.
 
 - `research/PRIVATE_QWEN4B_INFERENCE_TUNING.md`
   - private-only note for the current working anti-repeat/coherence inference profile on exclusive Athena
+
+- `research/PRIVATE_PERSISTENT_MEMORY_ARCHITECTURE_2026_03_19.md`
+  - private-only note for the local persistent-memory stack, reset controls, and the logs-vs-memory contract on Athena desktop
 
 - `research/PUBLIC_PORTAL_RELEASE_SURFACE.md`
   - note for the public landing redesign, separate legal pages, and AEN/Athena/SWARM release framing
@@ -133,8 +161,9 @@ When adding a new research note:
 - put the new file in `research/`
 - add one line here describing what it is for
 - if it supersedes an older note, say so explicitly
+- if it records a live run before packaging, label it as a mid-run observation and add the packaged artifact path later
 
-- `research/AIMO3_SUBMISSION_PROTOCOL.md` 
+- `research/AIMO3_SUBMISSION_PROTOCOL.md`
   - repo-local summary of Kaggle AIMO3 headless submission constraints, answer format, and build order
 - `research/AIMO3_SMOKE_LOG.md`
   - first terminal-visible 2B and 4B smoke results for the headless Kaggle submission surface

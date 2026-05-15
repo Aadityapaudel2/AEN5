@@ -150,3 +150,24 @@ and it now serializes local desktop image attachments into OpenAI-style multimod
 
 This keeps the private desktop on the same vLLM serving path while restoring multimodal inputs.
 
+## Private Memory Layer
+
+The next pass layered local persistent memory on top of the private vLLM route.
+
+That work did not change the serving contract:
+
+- private runtime still launches through `run_ui_private.ps1`
+- generation still flows through the private vLLM endpoint
+
+What changed is the private continuity layer around it:
+
+- bounded working memory for recent turn pairs
+- structured session memory
+- durable profile memory
+- episodic recall in a local SQLite store
+- explicit desktop controls for export, reset, and full logs+memory wipe
+
+See:
+
+- `research/PRIVATE_PERSISTENT_MEMORY_ARCHITECTURE_2026_03_19.md`
+

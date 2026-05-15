@@ -6,7 +6,11 @@ param(
     [string]$PathPrefix = "/AthenaV5",
     [string]$PythonExe = "",
     [string]$ModelDir = "",
-    [string]$BaseUrl = ""
+    [string]$BaseUrl = "",
+    [double]$GpuMemoryUtilization = 0.85,
+    [int]$MaxModelLen = 128000,
+    [int]$MaxInputTokensPerTurn = 64000,
+    [switch]$ForceRuntimeRestart
 )
 
 Set-StrictMode -Version Latest
@@ -24,20 +28,15 @@ $DataDir = Join-Path $ExclusiveRoot "data"
 $DesktopImageDir = Join-Path $DataDir "desktop_images"
 $TranscriptHtml = Join-Path $PrivateDesktopApp "assets\transcript.html"
 $Requirements = Join-Path $ProjectRoot "requirements.txt"
+$AthenaPathsScript = Join-Path $ProjectRoot "athena_paths.py"
 $DefaultExclusiveModelDir = Join-Path $ExclusiveRoot "AthenaV1"
-$DefaultTrackedModelDir = Join-Path $ProjectRoot "models\tuned\AthenaV1"
-$ResolvedModelDir = if ($ModelDir -and $ModelDir.Trim()) {
-    if ([System.IO.Path]::IsPathRooted($ModelDir)) { $ModelDir.Trim() } else { Join-Path $ProjectRoot $ModelDir.Trim() }
-} elseif (Test-Path -LiteralPath $DefaultExclusiveModelDir) {
-    $DefaultExclusiveModelDir
-} else {
-    $DefaultTrackedModelDir
-}
+$ResolvedModelDir = ""
 $GuiConfigPath = Join-Path $ConfigDir "gui_config.json"
 $SystemPromptPath = Join-Path $ConfigDir "system_prompt.json"
 $PrivateRuntimeName = "private"
 $DefaultPrivateVllmBaseUrl = "http://127.0.0.1:8002/v1"
 $PrivateRuntimeEnvFile = Join-Path $ProjectRoot ".local\runtime\vllm_private_runtime.env"
+$PrivateRuntimeStateFile = Join-Path $ProjectRoot ".local\runtime\vllm_private_runtime.json"
 $PrivateVllmExportRoot = Join-Path $ProjectRoot ".local\runtime\vllm_private_models"
 $PrivateVllmExportScript = Join-Path $ProjectRoot "exclusive\desktop_engine\export_vllm_ready_model.py"
 $SharedVllmLauncher = Join-Path $ProjectRoot "run_vllm.ps1"
@@ -59,6 +58,48 @@ function Resolve-PythonExe {
     $cmd = Get-Command python -ErrorAction SilentlyContinue
     if ($cmd) { return $cmd.Source }
     throw "No Python runtime found. Activate/create a venv first."
+}
+
+function Resolve-AthenaPathQuery {
+    param(
+        [string]$ResolvedPython,
+        [string]$QueryName
+    )
+    if (-not $ResolvedPython -or -not $QueryName -or -not (Test-Path -LiteralPath $AthenaPathsScript)) {
+        return $null
+    }
+    $result = & $ResolvedPython $AthenaPathsScript --query $QueryName 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        return $null
+    }
+    $value = (($result | ForEach-Object { [string]$_ }) -join "").Trim()
+    return $value
+}
+
+function Resolve-PrivateSourceModelDir {
+    param(
+        [string]$ExplicitModelDir,
+        [string]$ResolvedPython
+    )
+    if ($ExplicitModelDir -and $ExplicitModelDir.Trim()) {
+        $candidate = $ExplicitModelDir.Trim()
+        $resolvedCandidate = if ([System.IO.Path]::IsPathRooted($candidate)) { $candidate } else { Join-Path $ProjectRoot $candidate }
+        if (Test-Path -LiteralPath $resolvedCandidate) {
+            return (Resolve-Path -LiteralPath $resolvedCandidate).Path
+        }
+        return $resolvedCandidate
+    }
+    foreach ($queryName in @("authoritative_private_model_dir", "private_vllm_source_model_dir", "private_chat_model_dir")) {
+        $queryResult = Resolve-AthenaPathQuery -ResolvedPython $ResolvedPython -QueryName $queryName
+        if (-not ($queryResult -and $queryResult.Trim())) {
+            continue
+        }
+        if (Test-Path -LiteralPath $queryResult) {
+            return (Resolve-Path -LiteralPath $queryResult).Path
+        }
+        return $queryResult.Trim()
+    }
+    return $DefaultExclusiveModelDir
 }
 
 function Import-EnvFile {
@@ -100,7 +141,11 @@ function Invoke-SharedVllmBootstrap {
         [string]$ResolvedVllmModelDir,
         [string]$ResolvedPython,
         [string]$ResolvedServedModelName,
-        [string]$ResolvedBaseUrl
+        [string]$ResolvedBaseUrl,
+        [double]$ResolvedGpuMemoryUtilization,
+        [int]$ResolvedMaxModelLen,
+        [int]$ResolvedMaxInputTokensPerTurn,
+        [bool]$ForceRestartRuntime
     )
     if (-not (Test-Path -LiteralPath $SharedVllmLauncher)) {
         throw "Shared vLLM launcher not found: $SharedVllmLauncher"
@@ -110,9 +155,15 @@ function Invoke-SharedVllmBootstrap {
         ServedModelName = $ResolvedServedModelName
         RuntimeName = $PrivateRuntimeName
         BaseUrl = $ResolvedBaseUrl
+        GpuMemoryUtilization = $ResolvedGpuMemoryUtilization
+        MaxModelLen = $ResolvedMaxModelLen
+        MaxInputTokensPerTurn = $ResolvedMaxInputTokensPerTurn
     }
     if ($ResolvedPython -and $ResolvedPython.Trim()) {
         $launcherArgs.PythonExe = $ResolvedPython
+    }
+    if ($ForceRestartRuntime) {
+        $launcherArgs.Restart = $true
     }
     & $SharedVllmLauncher @launcherArgs
     if ($LASTEXITCODE -ne 0) {
@@ -210,7 +261,17 @@ function Initialize-ExclusiveDesktop {
 
 $LoadedPrivateRuntimeEnv = Import-EnvFile -FilePath $PrivateRuntimeEnvFile
 $ResolvedPython = Resolve-PythonExe -ExplicitPath $PythonExe
+$ResolvedModelDir = Resolve-PrivateSourceModelDir -ExplicitModelDir $ModelDir -ResolvedPython $ResolvedPython
 Initialize-ExclusiveDesktop
+if (-not $PSBoundParameters.ContainsKey('GpuMemoryUtilization') -and $env:ATHENA_VLLM_GPU_MEMORY_UTILIZATION -and $env:ATHENA_VLLM_GPU_MEMORY_UTILIZATION.Trim()) {
+    $GpuMemoryUtilization = [double]$env:ATHENA_VLLM_GPU_MEMORY_UTILIZATION
+}
+if (-not $PSBoundParameters.ContainsKey('MaxModelLen') -and $env:ATHENA_VLLM_MAX_MODEL_LEN -and $env:ATHENA_VLLM_MAX_MODEL_LEN.Trim()) {
+    $MaxModelLen = [int]$env:ATHENA_VLLM_MAX_MODEL_LEN
+}
+if (-not $PSBoundParameters.ContainsKey('MaxInputTokensPerTurn') -and $env:ATHENA_VLLM_MAX_INPUT_TOKENS -and $env:ATHENA_VLLM_MAX_INPUT_TOKENS.Trim()) {
+    $MaxInputTokensPerTurn = [int]$env:ATHENA_VLLM_MAX_INPUT_TOKENS
+}
 if (-not (Test-Path -LiteralPath $ResolvedModelDir)) {
     throw "Private Athena model not found: $ResolvedModelDir"
 }
@@ -245,7 +306,9 @@ $envNames = @(
     'ATHENA_VLLM_BASE_URL',
     'ATHENA_VLLM_MODEL',
     'ATHENA_VLLM_API_KEY',
-    'ATHENA_VLLM_MODEL_DIR'
+    'ATHENA_VLLM_MODEL_DIR',
+    'ATHENA_VLLM_LANGUAGE_MODEL_ONLY',
+    'ATHENA_VLLM_LIMIT_MM_PER_PROMPT'
 )
 $originalEnv = @{}
 foreach ($name in $envNames) {
@@ -255,10 +318,12 @@ foreach ($name in $envNames) {
 
 try {
     Set-Location -LiteralPath $ProjectRoot
+    $EnableForcedRestart = [bool]$ForceRuntimeRestart
+    if (-not $EnableForcedRestart -and (-not (Test-Path -LiteralPath $PrivateRuntimeStateFile))) {
+        $EnableForcedRestart = $true
+    }
     $ResolvedPrivateBaseUrl = if ($BaseUrl -and $BaseUrl.Trim()) {
         $BaseUrl.Trim().TrimEnd("/")
-    } elseif ($LoadedPrivateRuntimeEnv -and $env:ATHENA_VLLM_BASE_URL -and $env:ATHENA_VLLM_BASE_URL.Trim()) {
-        $env:ATHENA_VLLM_BASE_URL.Trim().TrimEnd("/")
     } elseif ($env:ATHENA_PRIVATE_VLLM_BASE_URL -and $env:ATHENA_PRIVATE_VLLM_BASE_URL.Trim()) {
         $env:ATHENA_PRIVATE_VLLM_BASE_URL.Trim().TrimEnd("/")
     } else {
@@ -278,11 +343,16 @@ try {
     $env:ATHENA_RUNTIME_SCOPE = 'private'
     $env:ATHENA_RUNTIME_BACKEND = 'vllm_openai'
     $env:ATHENA_VLLM_BASE_URL = $ResolvedPrivateBaseUrl
+    $env:ATHENA_VLLM_GPU_MEMORY_UTILIZATION = [string]$GpuMemoryUtilization
+    $env:ATHENA_VLLM_MAX_MODEL_LEN = [string]$MaxModelLen
+    $env:ATHENA_VLLM_MAX_INPUT_TOKENS = [string]$MaxInputTokensPerTurn
+    $env:ATHENA_VLLM_LANGUAGE_MODEL_ONLY = '0'
+    $env:ATHENA_VLLM_LIMIT_MM_PER_PROMPT = '{"image":6}'
     if (-not $env:ATHENA_VLLM_API_KEY -or -not $env:ATHENA_VLLM_API_KEY.Trim()) {
         $env:ATHENA_VLLM_API_KEY = 'athena-local'
     }
     $env:ATHENA_VLLM_MODEL = $ResolvedServedModelName
-    Invoke-SharedVllmBootstrap -ResolvedVllmModelDir $ResolvedVllmModelDir -ResolvedPython $ResolvedPython -ResolvedServedModelName $env:ATHENA_VLLM_MODEL -ResolvedBaseUrl $ResolvedPrivateBaseUrl
+    Invoke-SharedVllmBootstrap -ResolvedVllmModelDir $ResolvedVllmModelDir -ResolvedPython $ResolvedPython -ResolvedServedModelName $env:ATHENA_VLLM_MODEL -ResolvedBaseUrl $ResolvedPrivateBaseUrl -ResolvedGpuMemoryUtilization $GpuMemoryUtilization -ResolvedMaxModelLen $MaxModelLen -ResolvedMaxInputTokensPerTurn $MaxInputTokensPerTurn -ForceRestartRuntime $EnableForcedRestart
 
     if (-not $env:QTWEBENGINE_DISABLE_SANDBOX) { $env:QTWEBENGINE_DISABLE_SANDBOX = '1' }
     if (-not $env:QT_LOGGING_RULES) {
@@ -309,6 +379,10 @@ try {
     Write-Host "prompt=$SystemPromptPath"
     Write-Host "logs=$DesktopLogDir"
     Write-Host "assets=$TranscriptHtml"
+    Write-Host "gpu_memory_utilization=$GpuMemoryUtilization"
+    Write-Host "max_model_len=$MaxModelLen"
+    Write-Host "max_input_tokens_per_turn=$MaxInputTokensPerTurn"
+    Write-Host "force_runtime_restart=$EnableForcedRestart"
     Write-Host "runtime=vllm_openai base_url=$($env:ATHENA_VLLM_BASE_URL) served_model=$($env:ATHENA_VLLM_MODEL)"
 
     & $ResolvedPython @CommandArgs

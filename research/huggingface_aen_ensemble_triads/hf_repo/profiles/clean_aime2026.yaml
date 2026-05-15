@@ -1,0 +1,40 @@
+schema_id: neohm.aen_ensemble_triads.runtime_profile.v1
+profile_id: clean_aime2026
+profile_version: 0.1.0
+profile_class: answer_free_benchmark
+
+claim_status:
+  blind_benchmark_eligible: true
+  answer_aware: false
+  public_score_claim_allowed: true
+  notes: "Default clean profile for answer-free AIME-style benchmark use."
+
+backend:
+  preferred: vllm_openai
+  fallback: transformers_local
+  trust_remote_code: true
+  language_model_only: true
+
+long_context:
+  enabled: auto
+  method: safe_or_yarn_if_available
+  context_window_tokens_per_role: 32768
+
+controller:
+  max_big_loops: 3
+  min_big_loop_for_closeout: 1
+  inner_total_exchanges: 3
+  inner_reasoning_exchanges: 3
+  closeout_confidence_pct: 85
+  athena_open_max_tokens: 5200
+  aria_exchange_max_tokens: 3400
+  artemis_exchange_max_tokens: 3400
+  aria_report_max_tokens: 1500
+  artemis_report_max_tokens: 1500
+  athena_synthesis_max_tokens: 3800
+  athena_final_max_tokens: 768
+  mandatory_finalization_turn: true
+
+runtime_at_boot:
+  enabled: false
+  require_certification: false

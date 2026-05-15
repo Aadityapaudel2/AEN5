@@ -1,0 +1,12 @@
+schema_id: neohm.aen_ensemble_triads.dataset_registry.v1
+dataset_id: voe_2026
+
+sources:
+  huggingface:
+    id: Neohm/VoE-2026
+    doi: https://doi.org/10.57967/hf/8554
+
+contract:
+  public_answer_key: true
+  hidden_benchmark_after_release: false
+  exact_integer_scoring: true

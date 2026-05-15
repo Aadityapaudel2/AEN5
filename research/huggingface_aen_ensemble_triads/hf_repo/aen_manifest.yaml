@@ -1,0 +1,80 @@
+schema_id: neohm.aen_ensemble_triads.manifest.v1
+schema_version: 1
+
+identity:
+  repo_id: Neohm/AEN-Ensemble-Triads
+  architecture_id: aen_ensemble_triads
+  architecture_version: 0.1.0
+  display_name: AEN-Ensemble-Triads
+  architecture_type: inference_time_agentic_triad
+  owner: Neohm
+  author: Aaditya Paudel
+
+claim_boundary:
+  no_new_base_weights: true
+  no_finetuning: true
+  no_rlhf: true
+  no_adapter_training: true
+  no_weight_merge: true
+  submitted_object: controller_plus_runtime_profile
+  base_models_are_dependencies: true
+
+roles:
+  athena:
+    runtime_key: solver
+    display_name: Athena
+    role_type: route_architect_finalizer
+    prompt_file: roles/athena.md
+    schema_family: distillator_dsl.math.v2.1
+  artemis:
+    runtime_key: clerk
+    display_name: Artemis
+    role_type: verifier_auditor
+    prompt_file: roles/artemis.md
+    schema_family: auditlineage_dsl.v2.3
+  aria:
+    runtime_key: agent
+    display_name: Aria
+    role_type: alternate_route_synthesizer
+    prompt_file: roles/aria.md
+    schema_family: prooflineage_dsl.v2.2
+
+base_checkpoints:
+  athena:
+    repo_id: Qwen/Qwen3.5-9B
+    revision: main
+    local_subdir: Qwen3.5-9B-solver
+    served_model_name: Qwen3.5-9B-solver
+    role: Athena
+  artemis:
+    repo_id: Qwen/Qwen3.5-9B
+    revision: main
+    local_subdir: Qwen3.5-9B-clerk
+    served_model_name: Qwen3.5-9B-clerk
+    role: Artemis
+  aria:
+    repo_id: Qwen/Qwen3.5-9B
+    revision: main
+    local_subdir: Qwen3.5-9B-agent
+    served_model_name: Qwen3.5-9B-agent
+    role: Aria
+
+default_profile: clean_aime2026
+
+profiles:
+  clean_aime2026: profiles/clean_aime2026.yaml
+  rab_v33_answer_free: profiles/rab_v33_answer_free.yaml
+  v34_answer_aware_diagnostic: profiles/v34_answer_aware_diagnostic.yaml
+  local_cpu_smoke: profiles/local_cpu_smoke.yaml
+  kaggle_h100_yarn_1010k: profiles/kaggle_h100_yarn_1010k.yaml
+
+datasets:
+  runtimeatboot: datasets/runtimeatboot.yaml
+  voe_2026: datasets/voe_2026.yaml
+  matharena_aime2026: datasets/matharena_aime2026.yaml
+
+interfaces:
+  python_import: aen_ensemble_triads.AEN
+  one_shot_method: solve
+  batch_method: solve_batch
+  matharena_adapter: examples/run_aime2026_matharena.py

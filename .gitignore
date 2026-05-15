@@ -8,14 +8,19 @@ __pycache__/
 .DS_Store
 thumbs.db
 logs/
+.agents/
+.kaggle/
+data/
 data/users/
 data/clipboard_images/
 data/compare_runs/
 models/
+colab_outputs/
 Finetune/output/
 Finetune/runs/
 Finetune/trainingdata/output/
 Finetune/math_finetune_workspace/
+Finetune/books/
 Finetune/adapters/*
 !Finetune/adapters/.gitkeep
 !Finetune/adapters/README.md
@@ -31,11 +36,39 @@ portal_auth.env
 .local/
 random/
 exclusive/
-kaggle_aimo3/ 
+kaggle_aimo3/
+aimo3_official/
 archive/
+codebase.txt
+sendtotodd.txt
 
 # Local workspace scratch
 codexcontext.txt
+_codex_agents/
+
+# Local/generated research, notebook, and benchmark workspaces
+AEN_test_results/
+Algorithm_research/
+current/
+dataset(s)/
+runtimeatbootdataset/
+preprint_paper/
+kaggle_push/
+croissant-checker/
+simpledesktop/
+aimoaen14-v0-2-1.ipynb
+*.ipynb
+run_simple_gui.ps1
+
+# Local training drafts that need explicit review before publication
+Finetune/trainingdata/identitytraining.jsonl
+Finetune/trainingdata/manual_train_ready*.jsonl
+Finetune/trainingdata/okay.jsonl
+
+# Expanded local test/result archives
+testdata/aimo_broad_archive_2026-03-09/
+testdata/logic_working_2026-03-09/
+testdata/voe_1/
 
 # Iteration artifacts / backups (keep canonical datasets only)
 Finetune/trainingdata/math_aimo/
@@ -76,3 +109,24 @@ institutions/*/institution.json
 institutions/*/raw/
 institutions/*/courses/*/derived/
 institutions/*/courses/*/pilot/
+
+# Finetune Studio local state
+apps/finetune_studio/config/session_state.json
+apps/finetune_studio/logs/
+apps/finetune_studio/build/
+apps/finetune_studio/dist/
+
+# Generated notebook, Python, and TeX byproducts
+**/__pycache__/
+*.pyc
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.out.*
+*.toc
+*.toc.*
+*.synctex.gz

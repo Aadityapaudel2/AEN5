@@ -1,0 +1,36 @@
+schema_id: neohm.aen_ensemble_triads.runtime_profile.v1
+profile_id: rab_v33_answer_free
+profile_version: 0.1.0
+profile_class: answer_free_runtime_at_boot
+
+claim_status:
+  blind_benchmark_eligible: true
+  answer_aware: false
+  public_score_claim_allowed: true
+  notes: "Uses Runtime-at-Boot v33 study rows plus certification gate. Certification answers are never injected into solve prompts."
+
+backend:
+  preferred: vllm_openai
+  fallback: transformers_local
+  trust_remote_code: true
+  language_model_only: true
+
+long_context:
+  enabled: auto
+  method: safe_or_yarn_if_available
+  context_window_tokens_per_role: 131072
+
+controller:
+  max_big_loops: 3
+  min_big_loop_for_closeout: 1
+  inner_total_exchanges: 3
+  inner_reasoning_exchanges: 3
+  closeout_confidence_pct: 85
+  mandatory_finalization_turn: true
+
+runtime_at_boot:
+  enabled: true
+  dataset_profile: runtimeatboot_v33
+  require_certification: true
+  preserve_boot_memory_across_problem_reset: true
+  inject_certification_answers_into_solve: false

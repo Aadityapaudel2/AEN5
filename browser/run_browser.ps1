@@ -18,6 +18,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
+$AthenaPathsScript = Join-Path $ProjectRoot "athena_paths.py"
 $PortalScript = Join-Path $PSScriptRoot "portal_server.py"
 $CloudflaredScript = Join-Path $PSScriptRoot "cloudflared_athenav5.ps1"
 $BrowserConfigRoot = Join-Path $PSScriptRoot "config"
@@ -44,6 +45,22 @@ function Resolve-PythonExe {
     throw "python executable not found."
 }
 
+function Resolve-AthenaPathQuery {
+    param(
+        [string]$ResolvedPython,
+        [string]$QueryName
+    )
+    if (-not $ResolvedPython -or -not $QueryName -or -not (Test-Path -LiteralPath $AthenaPathsScript)) {
+        return $null
+    }
+    $result = & $ResolvedPython $AthenaPathsScript --query $QueryName 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        return $null
+    }
+    $value = (($result | ForEach-Object { [string]$_ }) -join "").Trim()
+    return $value
+}
+
 function Import-EnvFile {
     param([string]$FilePath)
     if (-not $FilePath) { return $false }
@@ -62,21 +79,68 @@ function Import-EnvFile {
     return $true
 }
 
+$AllowModelEnvOverrides = $false
+if ($env:ATHENA_ALLOW_MODEL_ENV_OVERRIDES -and $env:ATHENA_ALLOW_MODEL_ENV_OVERRIDES.Trim()) {
+    $AllowModelEnvOverrides = ($env:ATHENA_ALLOW_MODEL_ENV_OVERRIDES.Trim().ToLowerInvariant() -in @("1", "true", "yes", "on"))
+}
+$ExplicitVllmModelDir = if ($AllowModelEnvOverrides -and $env:ATHENA_VLLM_MODEL_DIR) { $env:ATHENA_VLLM_MODEL_DIR.Trim() } else { "" }
+$ExplicitPublicVllmModelName = if ($AllowModelEnvOverrides -and $env:ATHENA_PUBLIC_VLLM_MODEL_NAME) { $env:ATHENA_PUBLIC_VLLM_MODEL_NAME.Trim() } else { "" }
+$ExplicitVllmBaseUrl = ($env:ATHENA_VLLM_BASE_URL -as [string])
+$ExplicitVllmBaseUrl = if ($ExplicitVllmBaseUrl) { $ExplicitVllmBaseUrl.Trim() } else { "" }
+$ExplicitPublicVllmBaseUrl = ($env:ATHENA_PUBLIC_VLLM_BASE_URL -as [string])
+$ExplicitPublicVllmBaseUrl = if ($ExplicitPublicVllmBaseUrl) { $ExplicitPublicVllmBaseUrl.Trim() } else { "" }
 $null = Import-EnvFile -FilePath $SharedRuntimeEnvFile
+if (-not $ExplicitVllmModelDir) {
+    Remove-Item -Path "Env:ATHENA_VLLM_MODEL_DIR" -ErrorAction SilentlyContinue
+}
+Remove-Item -Path "Env:ATHENA_VLLM_MODEL" -ErrorAction SilentlyContinue
+if (-not $ExplicitVllmBaseUrl) {
+    Remove-Item -Path "Env:ATHENA_VLLM_BASE_URL" -ErrorAction SilentlyContinue
+}
+if ($ExplicitPublicVllmBaseUrl) {
+    $env:ATHENA_VLLM_BASE_URL = $ExplicitPublicVllmBaseUrl
+}
 
 function Resolve-VllmModelDir {
-    $candidates = @(
-        $env:ATHENA_VLLM_MODEL_DIR,
-        $env:ATHENA_CHAT_MODEL_DIR,
-        (Join-Path $ProjectRoot "models\Qwen3.5-4B")
+    param([string]$ResolvedPython)
+    $authoritativeCandidates = @(
+        (Resolve-AthenaPathQuery -ResolvedPython $ResolvedPython -QueryName "authoritative_public_model_dir")
     )
-    foreach ($candidate in $candidates) {
+    foreach ($candidate in $authoritativeCandidates) {
         if (-not $candidate) { continue }
         if (Test-Path -LiteralPath $candidate) {
             return (Resolve-Path -LiteralPath $candidate).Path
         }
     }
-    throw "No local model directory was found for the public vLLM runtime. Set ATHENA_VLLM_MODEL_DIR or ATHENA_CHAT_MODEL_DIR."
+    if ($AllowModelEnvOverrides) {
+        foreach ($candidate in @(
+            $env:ATHENA_PUBLIC_VLLM_MODEL_DIR,
+            $env:ATHENA_PUBLIC_CHAT_MODEL_DIR,
+            (Resolve-AthenaPathQuery -ResolvedPython $ResolvedPython -QueryName "public_vllm_model_dir"),
+            (Resolve-AthenaPathQuery -ResolvedPython $ResolvedPython -QueryName "public_chat_model_dir")
+        )) {
+            if (-not $candidate) { continue }
+            if (Test-Path -LiteralPath $candidate) {
+                return (Resolve-Path -LiteralPath $candidate).Path
+            }
+        }
+    }
+    $missingAuthoritativeCandidates = @($authoritativeCandidates | Where-Object { $_ -and $_.Trim().Length -gt 0 })
+    if ($missingAuthoritativeCandidates.Count -gt 0) {
+        Write-Warning "Canonical public model route did not exist; falling back to runtime/default candidates. Missing candidates: $($missingAuthoritativeCandidates -join ', ')"
+    }
+    foreach ($candidate in @(
+        $env:ATHENA_VLLM_MODEL_DIR,
+        $env:ATHENA_CHAT_MODEL_DIR,
+        (Resolve-AthenaPathQuery -ResolvedPython $ResolvedPython -QueryName "public_vllm_model_dir"),
+        (Resolve-AthenaPathQuery -ResolvedPython $ResolvedPython -QueryName "public_chat_model_dir")
+    )) {
+        if (-not $candidate) { continue }
+        if (Test-Path -LiteralPath $candidate) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+    throw "No local model directory was found for the public vLLM runtime. Fix athena_paths.py or set ATHENA_PUBLIC_* model overrides."
 }
 
 function Resolve-VllmEndpoint {
@@ -137,8 +201,10 @@ function Invoke-SharedVllmBootstrap {
     if ($env:ATHENA_VLLM_MODEL -and $env:ATHENA_VLLM_MODEL.Trim()) {
         $launcherArgs.ServedModelName = $env:ATHENA_VLLM_MODEL.Trim()
     }
-    if ($env:ATHENA_VLLM_BASE_URL -and $env:ATHENA_VLLM_BASE_URL.Trim()) {
-        $launcherArgs.BaseUrl = $env:ATHENA_VLLM_BASE_URL.Trim()
+    $launcherArgs.BaseUrl = if ($env:ATHENA_VLLM_BASE_URL -and $env:ATHENA_VLLM_BASE_URL.Trim()) {
+        $env:ATHENA_VLLM_BASE_URL.Trim()
+    } else {
+        "http://127.0.0.1:8001/v1"
     }
     if ($ResolvedPython -and $ResolvedPython.Trim()) {
         $launcherArgs.PythonExe = $ResolvedPython
@@ -213,11 +279,15 @@ try {
     Set-Location $ProjectRoot
 
     if ($LoadModel) {
-        $modelDir = Resolve-VllmModelDir
+        $modelDir = Resolve-VllmModelDir -ResolvedPython $ResolvedPython
         $env:ATHENA_CHAT_MODEL_DIR = $modelDir
-        if (-not $env:ATHENA_VLLM_MODEL -or -not $env:ATHENA_VLLM_MODEL.Trim()) {
+        if ($ExplicitPublicVllmModelName) {
+            $env:ATHENA_VLLM_MODEL = $ExplicitPublicVllmModelName
+        } else {
             $env:ATHENA_VLLM_MODEL = Split-Path -Leaf $modelDir
         }
+        Write-Host "public_resolved_model_dir=$modelDir"
+        Write-Host "public_served_model=$($env:ATHENA_VLLM_MODEL)"
 
         if ($IsWindowsHost) {
             Invoke-SharedVllmBootstrap -ResolvedModelDir $modelDir -ResolvedPython $ResolvedPython
