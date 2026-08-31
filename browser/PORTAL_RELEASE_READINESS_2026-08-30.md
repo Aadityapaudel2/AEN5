@@ -1,7 +1,7 @@
 # Athena V5 Public Portal Release Readiness
 
 Date: 2026-08-30; continuation evidence added 2026-08-31
-Status: Tutor candidate implemented and all non-visual critical gates pass; production rollout is blocked on required in-app visual QA. The candidate is not committed, pushed, deployed, or published.
+Status: Tutor candidate implemented, committed, and pushed after all non-visual critical gates passed; production rollout remains blocked on required browser visual QA.
 
 ## Outcome
 
@@ -207,7 +207,7 @@ Raw command lines were deliberately omitted because runtime arguments can contai
 
 - Final observed branch: `main` at `34d20480f9db33c4dad94b61cda04286af911fd4`.
 - The worktree was already dirty and remains dirty; unrelated modified and untracked material was preserved.
-- No commit or push occurred.
+- At this evidence checkpoint, no commit or push had occurred. Repository publication is recorded in the later section below.
 
 Material candidate surfaces changed or added by the combined public-portal and tutor passes:
 
@@ -228,3 +228,15 @@ The in-app browser inventory returned an empty list on every attempt. The browse
 5. Screenshots of empty, streaming, error, restored, New Thread, export, and Forget states.
 
 Once an in-app browser is available, run those checks against the existing loopback preview. Only if they pass should the exact verified production portal and named tunnel be replaced through `run_portal.ps1`. Then verify local and public `/healthz`, the public `/AEN5` surface, all three sign-in choices, tutor starters, Check my work, educator mode, New Thread, memory export, and confirmed Forget. If any public smoke check fails, stop only the new verified portal process and restore the prior verified command fingerprint.
+
+## August 31 repository publication
+
+After the candidate and evidence above were sealed, the user explicitly authorized staging, committing, and pushing the verified release set.
+
+- Release commit: `73ef635` (`feat: ship public Athena tutor experience`).
+- Published branch: `origin/main`.
+- Scope: the 36 portal, tutor, runtime-profile, security, test, and release-evidence files listed above.
+- Excluded from the commit: unrelated frontier-problem material, local skill material, and the older untracked under-the-hood report.
+- Pre-commit verification: `98/98` tests, both runtime preflights, Python compilation, JavaScript syntax, four PowerShell AST parses, staged whitespace check, and staged privacy/credential-shape scans all passed.
+- Publication is not deployment verification. The candidate was pushed while the public portal and named tunnel remained stopped.
+- The loopback-only candidate remains the visual-QA target; public launch remains gated on a connected supported browser.
