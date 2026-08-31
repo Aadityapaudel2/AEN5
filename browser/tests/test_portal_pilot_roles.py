@@ -206,7 +206,7 @@ class PortalPilotRoleTests(unittest.TestCase):
                 with patch.dict(os.environ, {"ATHENA_GOOGLE_INSTITUTION_AUTO_ATTACH": "1"}, clear=False):
                     response = portal_server._maybe_grounded_public_response(
                         "paudela@miamioh.edu",
-                        "when is exam 2?",
+                        "when was exam 2 last semester?",
                     )
             finally:
                 portal_server.logs = original_logs

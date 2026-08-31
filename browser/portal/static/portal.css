@@ -458,6 +458,29 @@ body.desktop-shell {
   color: var(--muted-strong);
 }
 
+.athena-boot-principles,
+.athena-capability-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.athena-boot-principles {
+  margin-top: 16px;
+}
+
+.athena-boot-principles span,
+.athena-capability-strip span {
+  padding: 9px 11px;
+  border: 1px solid rgba(105, 174, 251, 0.26);
+  border-radius: 11px;
+  background: rgba(12, 29, 52, 0.72);
+  color: #d9e8ff;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .starter-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1533,6 +1556,11 @@ p:last-child {
 }
 
 @media (max-width: 720px) {
+  .athena-boot-principles,
+  .athena-capability-strip {
+    grid-template-columns: 1fr;
+  }
+
   .landing-home-clean {
     padding-top: 18px;
   }
@@ -1635,7 +1663,7 @@ p:last-child {
   line-height: 1.65;
 }
 
-.public-model-note {
+.athena-promise-note {
   margin: 0 0 4px;
   max-width: 78ch;
   padding: 12px 14px;
@@ -1645,6 +1673,11 @@ p:last-child {
   background: rgba(16, 34, 61, 0.62);
   font-size: 13px;
   line-height: 1.65;
+}
+
+.athena-capability-strip {
+  max-width: 720px;
+  margin: 2px 0;
 }
 
 .login-actions {

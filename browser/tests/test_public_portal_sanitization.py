@@ -62,8 +62,9 @@ class PublicPortalSanitizationTests(unittest.TestCase):
         self.assertIn("Continue with Google", body)
         self.assertIn("Continue with GitHub", body)
         self.assertIn("Continue as Guest", body)
-        self.assertIn("Qwen3.5-4B (base)", body)
-        self.assertIn("local-first runtime", body)
+        self.assertIn("Think clearly. Learn deeply. Build with Athena.", body)
+        self.assertIn("Explain with clarity", body)
+        self.assertNotRegex(body.lower(), r"qwen|vllm|model runtime|model checkpoint")
         self.assertNotIn("MiamiOH", body)
         self.assertNotIn("miamioh.edu", body)
         self.assertNotIn("institution-login-form", body)
@@ -80,18 +81,19 @@ class PublicPortalSanitizationTests(unittest.TestCase):
         body = response.body.decode("utf-8")
         self.assertEqual(body.count("login-choice-btn"), 3)
         self.assertIn('href="/AEN5/runtime"', body)
-        self.assertIn("Qwen3.5-4B (base)", body)
+        self.assertIn("Teach for transfer", body)
+        self.assertNotRegex(body.lower(), r"qwen|vllm|model runtime|model checkpoint")
         self.assertNotIn("MiamiOH", body)
         self.assertNotIn("miamioh.edu", body)
 
-    def test_runtime_page_explains_local_first_without_claiming_magic_privacy(self) -> None:
+    def test_service_page_explains_accountability_without_revealing_implementation(self) -> None:
         with patch.object(portal_server, "cfg", self._public_cfg()):
             response = portal_server.runtime_page(self._request(path="/AEN5/runtime"))
         body = response.body.decode("utf-8")
-        self.assertIn(portal_server.PUBLIC_MODEL_LABEL, body)
-        self.assertIn("Local-first", body)
+        self.assertIn("How NeohmLabs operates Athena", body)
         self.assertIn("not a magic privacy or accuracy guarantee", body)
         self.assertIn("Privacy Notice", body)
+        self.assertNotRegex(body.lower(), r"qwen|vllm|model family|model checkpoint|parameter count")
 
     def test_unconfigured_provider_is_not_advertised(self) -> None:
         cfg = self._public_cfg(
@@ -157,9 +159,24 @@ class PublicPortalSanitizationTests(unittest.TestCase):
             with patch.object(portal_server.engine, "runtime_snapshot", return_value=snapshot):
                 payload = portal_server.api_config(request)
         serialized = json.dumps(payload).lower()
-        for forbidden in ("model_dir", "active_model_dir", "log_root", "api_key", "192.168.1.2", "private-course"):
+        for forbidden in (
+            "model_dir",
+            "active_model_dir",
+            "log_root",
+            "api_key",
+            "192.168.1.2",
+            "private-course",
+            "qwen",
+            "vllm",
+            "runtime_backend",
+            "active_model_label",
+            "configured_model_label",
+            "public_model_label",
+            "prompt_profile",
+        ):
             self.assertNotIn(forbidden, serialized)
-        self.assertEqual(payload["public_model_label"], "Qwen3.5-4B (base)")
+        self.assertEqual(payload["service"], "athena")
+        self.assertEqual(payload["status"], "ready")
 
     def test_login_errors_are_generic(self) -> None:
         request = self._request(query_string=b"error=oauth_failed")
@@ -176,7 +193,17 @@ class PublicPortalSanitizationTests(unittest.TestCase):
             Path(portal_server.CONFIG_DIR) / "system_prompt.json",
         )
         combined = "\n".join(path.read_text(encoding="utf-8-sig").lower() for path in files)
-        for marker in ("miamioh", "@miamioh.edu", "athenav11", "athena_v11", "stellar sway"):
+        for marker in (
+            "miamioh",
+            "@miamioh.edu",
+            "athenav11",
+            "athena_v11",
+            "stellar sway",
+            "qwen",
+            "vllm",
+            "public_model_label",
+            "public_model_copy",
+        ):
             self.assertNotIn(marker, combined)
 
 

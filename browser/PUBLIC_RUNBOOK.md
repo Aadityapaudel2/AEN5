@@ -5,8 +5,8 @@ Operator runbook for the public AEN browser portal.
 ## Release contract
 
 - Public interface: Athena V5
-- Public inference model: Qwen3.5-4B base
-- Production backend: OpenAI-compatible vLLM
+- Public implementation identity: not exposed by pages, browser APIs, or Athena responses
+- Production backend and expected served identity: internal operator configuration
 - Tutor prompt: strict named and hashed public profile
 - Default context profile: native / 128000 configured tokens
 - Public sign-in: only fully configured Google, GitHub, Guest, and institution routes
@@ -15,8 +15,8 @@ Operator runbook for the public AEN browser portal.
 ## Required runtime pieces
 
 - Python environment with the portal dependencies
-- reachable WSL/Linux vLLM endpoint
-- local Qwen3.5-4B base weights
+- reachable internal inference endpoint
+- locally configured public-candidate weights
 - a non-default `ATHENA_PORTAL_SESSION_SECRET`
 - at least one usable auth route: complete Google OAuth, complete GitHub OAuth, complete institution OAuth, or enabled Guest access
 
@@ -28,8 +28,7 @@ Authlib is required when any OAuth route is configured. A guest-only deployment 
 ATHENA_RUNTIME_BACKEND=vllm_openai
 ATHENA_PUBLIC_VLLM_ONLY=1
 ATHENA_VLLM_BASE_URL=http://127.0.0.1:8001/v1
-ATHENA_PUBLIC_MODEL_DISPLAY_NAME=Qwen3.5-4B (base)
-ATHENA_PUBLIC_MODEL_EXPECTED_ID=Qwen3.5-4B
+ATHENA_PUBLIC_MODEL_EXPECTED_ID=<exact internal served-model id>
 ATHENA_DEFAULT_INSTITUTION=
 ATHENA_GOOGLE_INSTITUTION_AUTO_ATTACH=0
 ```
@@ -54,7 +53,7 @@ Preflight validates:
 - public model directory exists
 - the served model is reachable when the runtime should already be running
 - any configured institution has complete OAuth values
-- the public tutor prompt contains every required boot, routing, tutoring, educator, memory, mathematics, formatting, and default-mode section
+- the public tutor prompt contains every required boot, identity, routing, tutoring, educator, memory, mathematics, formatting, and default-mode section
 - the native and guarded YaRN context profiles match their expected safety contract
 
 ## Non-disruptive candidate preview
@@ -95,14 +94,14 @@ Check:
 - `GET /healthz`
 - authenticated `GET /AEN5/api/config`
 
-Expected public fields include readiness, the vLLM backend identifier, the sanitized public model label, and the prompt profile name/version/hash/validation state. Responses must not contain prompt text or paths, model directories, backend URLs, log roots, API keys, OAuth secrets, or dormant institution course metadata.
+Expected public fields include readiness, the Athena service identifier, and only the configuration needed by the browser client. Responses must not contain implementation identity, prompt metadata or text, runtime backend identifiers, model directories, backend URLs, log roots, API keys, OAuth secrets, or dormant institution course metadata.
 
 ## Live smoke before announcement
 
 1. Open `/AEN5` in a signed-out browser.
 2. Verify only configured sign-in methods appear.
-3. Verify the page identifies `Qwen3.5-4B (base)` as the public model runtime.
-4. Verify `/AEN5/runtime`, `/AEN5/privacy`, and `/AEN5/terms` load.
+3. Verify the page, `/healthz`, `/AEN5/api/config`, and Athena identity responses contain no model, provider, checkpoint, parameter-count, or backend disclosure.
+4. Verify `/AEN5/runtime`, `/AEN5/privacy`, and `/AEN5/terms` load; the runtime route must describe service principles only.
 5. Exercise each enabled sign-in route.
 6. In chat, exercise Learn a concept, Check my work, Build practice, and Plan instruction; also test formatted output, inline math, `Stop`, and `New Thread`.
 7. Confirm vague math or study requests receive a useful first move rather than a multi-question intake.
@@ -113,6 +112,7 @@ Expected public fields include readiness, the vLLM backend identifier, the sanit
 12. At desktop, tablet, and narrow mobile widths, inspect layout, scrolling, focus visibility, keyboard operation, labels, live regions, and the Memory menu. Repeat with reduced-motion preference enabled.
 13. Verify destructive browser actions reject cross-origin requests and require the portal action header.
 14. Verify memory export is account-scoped, bounded, redacted, downloaded as an attachment, and served with `no-store`; verify an incorrect Forget phrase changes nothing before testing the confirmed phrase.
+15. Test a greeting and a purpose question against an account with archived historical context; neither may resurrect an old course, assessment, date, or open loop.
 
 ## Tests
 

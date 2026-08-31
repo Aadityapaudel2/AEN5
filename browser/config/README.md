@@ -11,22 +11,21 @@ This folder holds public browser-runtime configuration.
 - `portal_auth.env.example`: non-secret auth template
 - `institutions.json`: dormant or active institution integration definitions
 
-## Public runtime
+## Internal runtime configuration
 
-- `ATHENA_RUNTIME_BACKEND=vllm_openai`
+- `ATHENA_RUNTIME_BACKEND=<internal backend>`
 - `ATHENA_PUBLIC_VLLM_ONLY=1`
-- `ATHENA_VLLM_BASE_URL=http://127.0.0.1:8001/v1`
-- `ATHENA_VLLM_MODEL=<served-model-name>` when model discovery is not desired
-- `ATHENA_VLLM_API_KEY=<token>` when the local server requires one
+- `ATHENA_VLLM_BASE_URL=<loopback inference endpoint>`
+- `ATHENA_VLLM_MODEL=<served-model-name>` when discovery is not desired
+- `ATHENA_VLLM_API_KEY=<token>` when the internal server requires one
 - `ATHENA_VLLM_MODEL_DIR=<local model directory>` to select launcher weights
-- `ATHENA_PUBLIC_MODEL_DISPLAY_NAME=Qwen3.5-4B (base)`
-- `ATHENA_PUBLIC_MODEL_EXPECTED_ID=Qwen3.5-4B`
+- `ATHENA_PUBLIC_MODEL_EXPECTED_ID=<exact internal served-model id>` for the private startup gate
 
-The public prompt is a strict, named tutor profile. Production startup fails if required boot, routing, tutoring, educator, memory, mathematics, formatting, or default-mode sections are absent. Public status exposes only the profile name, version, hash, and validation state—not the prompt text or its path.
+The public prompt is a strict, named tutor profile. Production startup fails if required boot, identity, routing, tutoring, educator, memory, mathematics, formatting, or default-mode sections are absent. Browser-facing status exposes readiness only; implementation identity and prompt metadata remain internal.
 
 The default runtime context profile is `native` at 128000 configured tokens. `yarn_1010k` is present for H100-class or equivalent deployments and requires both `-ContextProfile yarn_1010k` and `-AllowExperimentalUltraLongContext`. It is not enabled on the current local public runtime.
 
-Native Windows should use a healthy WSL/Linux vLLM endpoint. See `browser/WSL_VLLM_RUNBOOK.md`.
+Native Windows should use a healthy WSL/Linux inference endpoint. See `browser/WSL_VLLM_RUNBOOK.md`.
 
 ## Auth truthfulness
 

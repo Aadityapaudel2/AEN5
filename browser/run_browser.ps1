@@ -340,7 +340,16 @@ try {
     $TunnelDisplay = if ($LocalPreview) { "skipped(local-preview)" } elseif ($ResolvedTunnelName) { $ResolvedTunnelName } else { "none" }
     Write-Host "mode=$ResolvedMode local_preview=$($LocalPreview.IsPresent) host=$($env:ATHENA_PORTAL_HOST) port=$Port path_prefix=$PathPrefix load_model=$($env:ATHENA_WEB_LOAD_MODEL) tools=$($env:ATHENA_TOOLS_ENABLED) auth=$($env:ATHENA_AUTH_REQUIRED) runtime=$($env:ATHENA_RUNTIME_BACKEND) tunnel=$TunnelDisplay"
 
-    $portalProc = Start-Process -FilePath $ResolvedPython -ArgumentList @($PortalScript) -WorkingDirectory $ProjectRoot -PassThru
+    $portalStart = @{
+        FilePath = $ResolvedPython
+        ArgumentList = @($PortalScript)
+        WorkingDirectory = $ProjectRoot
+        PassThru = $true
+    }
+    if ($IsWindowsHost) {
+        $portalStart.WindowStyle = "Hidden"
+    }
+    $portalProc = Start-Process @portalStart
     Write-Host "Started portal_server.py (pid=$($portalProc.Id)). Waiting for health check..."
 
     $healthUrl = "http://127.0.0.1:$Port/healthz"

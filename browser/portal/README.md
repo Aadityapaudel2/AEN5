@@ -5,15 +5,15 @@ This directory contains the public browser surface for the Artificial Evaluation
 ## Public identity contract
 
 - **Athena V5** is the public interface name.
-- **Qwen3.5-4B (base)** is the expected public inference model.
+- The public interface never names, confirms, or speculates about implementation identity.
 - Private Athena checkpoints, private continuity artifacts, LoRA behavior, and private relationship lore are outside this surface.
 - Public copy must describe only capabilities and sign-in routes that are active in configuration.
 
-The public system prompt reinforces the same boundary: it may identify the assistant as Athena inside AEN, but it may not claim private memory, exclusive relationships, or hidden personal history.
+The internal system prompt reinforces the same boundary: Athena identifies herself through her AEN tutoring purpose, never through backend implementation details, private memory, exclusive relationships, or hidden personal history.
 
 ## Tutor boot contract
 
-The public tutor boots from the strict **public_athena_tutor_v1** profile. One shared compiler is used by the desktop engine and portal; the public portal fails closed instead of silently falling back to a generic one-line persona.
+The public tutor boots from the strict **public_athena_tutor_v2** profile. One shared compiler is used by the desktop engine and portal; the public portal fails closed instead of silently falling back to a generic one-line persona.
 
 The profile and turn router enforce these operating rules:
 
@@ -39,16 +39,15 @@ The login page derives its choices from runtime configuration:
 
 An entry in `browser/config/institutions.json` is only a dormant integration definition. It is not proof that the institution is participating or that its sign-in is active.
 
-## Local-first runtime
+## Internal runtime boundary
 
-The public portal is vLLM-only in production. The expected model is declared with:
+Production startup validates the configured internal runtime and expected served identity. Those values belong in the ignored operator environment, not in the public interface or browser API:
 
 ```text
-ATHENA_PUBLIC_MODEL_DISPLAY_NAME=Qwen3.5-4B (base)
-ATHENA_PUBLIC_MODEL_EXPECTED_ID=Qwen3.5-4B
+ATHENA_PUBLIC_MODEL_EXPECTED_ID=<exact internal served-model id>
 ```
 
-Local-first serving gives NeohmLabs direct control over model version, runtime lifecycle, and request routing. It does not guarantee correctness or override the Privacy Notice. Users reach the public portal over the internet and should independently verify important outputs.
+NeohmLabs retains direct control over releases, runtime lifecycle, and request routing. That does not guarantee correctness or override the Privacy Notice. Users reach the public portal over the internet and should independently verify important outputs.
 
 ## Main files
 
@@ -99,7 +98,7 @@ Institution bundle data lives under `institutions/<institution-key>/`. Dormant b
 
 ## Memory boundary
 
-Public per-user state may include recent turns, summaries, session focus, and relevant recall as described by the Privacy Notice. Memory blocks have explicit precedence and are framed as reference data, never instructions. Prior assistant text is not treated as evidence of a user fact or preference. Signed-in email and authentication-source values are not sent to the model merely to provide continuity.
+Public per-user state may include recent turns, stable learning preferences, session focus, and relevant recall as described by the Privacy Notice. Memory blocks have explicit precedence and are framed as reference data, never instructions. Prior assistant text is not treated as evidence of a user fact or preference. Course codes, institution identity, assessments, dates, and deadlines are not retained as durable learner-profile memory; current facts must come from the current user or verified current institution context. Signed-in email and authentication-source values are not sent to the tutor merely to provide continuity.
 
 `New Thread` clears the current conversation and short-lived session focus while preserving the durable learner profile. The Memory menu can export learner continuity or explicitly delete conversation history, session focus, and durable learner preferences. Authentication profile and configured curriculum context are preserved by that learner-memory action.
 

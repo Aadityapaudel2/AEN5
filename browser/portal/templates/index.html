@@ -46,7 +46,7 @@
           <a class="brand-badge brand-home-link" href="{{ path_prefix }}">NeohmLabs</a>
           <div class="title-wrap">
             <h1>{{ assistant_label }} V5</h1>
-            <div class="title-subline">Public AEN tutor &middot; {{ public_model_label }}</div>
+            <div class="title-subline">AEN tutoring &middot; explain &middot; verify &middot; teach</div>
             {% if authenticated %}
             <div id="runtime-line" class="runtime-line">{{ chat_runtime_copy }}</div>
             {% endif %}
@@ -63,7 +63,7 @@
           <nav class="landing-nav landing-nav-minimal" aria-label="Landing navigation">
             <a class="nav-link" href="{{ path_prefix }}/aen">AEN</a>
             <a class="nav-link" href="{{ path_prefix }}/swarm">SWARM</a>
-            <a class="nav-link" href="{{ path_prefix }}/runtime">Runtime</a>
+            <a class="nav-link" href="{{ path_prefix }}/runtime">Service</a>
             <a class="nav-link" href="{{ path_prefix }}/mission">Mission</a>
             <a class="nav-link" href="{{ path_prefix }}/privacy">Privacy</a>
             <a class="nav-link" href="{{ path_prefix }}/terms">Terms</a>
@@ -77,9 +77,14 @@
         <section class="transcript-panel">
           <div id="transcript-scroll" class="transcript-scroll" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Conversation with Athena">
             <section id="tutor-boot" class="tutor-boot{% if initial_history %} hidden{% endif %}" aria-labelledby="tutor-boot-title">
-              <span class="tutor-boot-kicker">Athena is oriented and ready</span>
-              <h2 id="tutor-boot-title">Make one useful move now.</h2>
-              <p>Bring a concept, an attempt, a document, or a classroom goal. Athena will begin with useful work and ask only what is necessary.</p>
+              <span class="tutor-boot-kicker">Athena &middot; ready from this turn</span>
+              <h2 id="tutor-boot-title">Bring the work. I&rsquo;ll meet you there.</h2>
+              <p>Start with a concept, an attempt, a document, or a classroom goal. I&rsquo;ll make the first useful move, show the reasoning that matters, and ask only what is necessary.</p>
+              <div class="athena-boot-principles" aria-label="Athena response principles">
+                <span>Present-turn first</span>
+                <span>Evidence over guesses</span>
+                <span>Progress you can reuse</span>
+              </div>
               <div class="starter-grid" aria-label="Tutor starting modes">
                 <button class="starter-prompt" type="button" data-prompt="Teach me a concept using one clear example, then check my understanding.">Learn a concept</button>
                 <button class="starter-prompt" type="button" data-prompt="Check my work. Give the verdict first, find the earliest error, and show me how to repair it.">Check my work</button>
@@ -120,11 +125,16 @@
       {% else %}
       <main class="login-shell login-shell-landing">
         <section class="login-card login-card-primary">
-          <span class="login-kicker">{{ hero_kicker }}</span>
-          <h2 class="login-title">Sign in to Artificial Evaluation Network</h2>
+          <span class="login-kicker">Athena &middot; {{ hero_kicker }}</span>
+          <h2 class="login-title">Think clearly. Learn deeply. Build with Athena.</h2>
           <p class="login-copy">{{ mission_copy }}</p>
-          <p class="login-mission">Athena V5 is the public AEN interface. The current public model runtime is {{ public_model_label }}.</p>
-          <p class="public-model-note">{{ public_model_copy }}</p>
+          <p class="login-mission">A coherent tutoring space for explanations, independent checks, purposeful practice, and classroom-ready instruction.</p>
+          <div class="athena-capability-strip" aria-label="Athena tutoring strengths">
+            <span>Explain with clarity</span>
+            <span>Verify with rigor</span>
+            <span>Teach for transfer</span>
+          </div>
+          <p class="athena-promise-note">Athena begins with useful work, keeps questions focused, and treats remembered context as support—not authority.</p>
           {% if login_error %}
           <p class="login-error">{{ login_error }}</p>
           {% endif %}
@@ -136,7 +146,7 @@
           <div class="login-directory-head">
             <span class="panel-kicker">Dedicated pages</span>
             <h3>Read the rest separately.</h3>
-            <p>The front page stays focused on sign-in. Architecture, runtime, mission, privacy, and terms each keep their own page.</p>
+            <p>The front page stays focused on sign-in. Architecture, service principles, mission, privacy, and terms each keep their own page.</p>
           </div>
           <div class="login-directory-links">
             {% for item in home_reading_links %}

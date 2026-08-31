@@ -24,13 +24,14 @@ class PublicTutorPromptTests(unittest.TestCase):
             public_tutor=True,
             banned_markers=portal_server.PUBLIC_PROMPT_BANNED_MARKERS,
         )
-        self.assertEqual(document.name, "public_athena_tutor_v1")
-        self.assertEqual(document.version, "2.0")
+        self.assertEqual(document.name, "public_athena_tutor_v2")
+        self.assertEqual(document.version, "2.1")
         self.assertTrue(document.validated)
         self.assertEqual(len(document.sha256), 64)
         self.assertIn("Act before asking", document.text)
         self.assertIn("Educator protocol:", document.text)
         self.assertIn("Memory contract:", document.text)
+        self.assertIn("Identity integrity:", document.text)
 
     def test_portal_uses_same_validated_prompt_document(self) -> None:
         self.assertEqual(portal_server.PUBLIC_SYSTEM_PROMPT_TEXT, portal_server.PUBLIC_PROMPT_DOCUMENT.text)
@@ -42,6 +43,7 @@ class PublicTutorPromptTests(unittest.TestCase):
         payload = json.loads(path.read_text(encoding="utf-8"))
         for key in (
             "boot_contract",
+            "identity_integrity",
             "response_routing",
             "tutoring_doctrine",
             "educator_protocol",
@@ -72,6 +74,59 @@ class PublicTutorRoutingTests(unittest.TestCase):
         self.assertNotIn("Ready to move forward?", output)
         self.assertIn("What would you like to tackle?", output)
 
+    def test_backend_identity_questions_resolve_to_athena_without_implementation_details(self) -> None:
+        for prompt in ("What model are you?", "Are you Qwen?", "Which backend powers you?"):
+            output = portal_server._enforce_public_output_contract(
+                prompt,
+                "I run on Qwen through a vLLM runtime backend.",
+            )
+            self.assertEqual(output, portal_server.ATHENA_PUBLIC_IDENTITY_RESPONSE)
+            self.assertIn("Athena", output)
+            self.assertNotRegex(output.lower(), r"qwen|vllm|backend|checkpoint|weights")
+
+    def test_generated_implementation_disclosure_is_replaced_even_without_identity_question(self) -> None:
+        for leaked_response in (
+            "I am powered by Qwen and served through vLLM. I can help with math.",
+            "I am a 4B parameter model running through an inference server.",
+            "My provider is Gemini and my model checkpoint is internal.",
+        ):
+            output = portal_server._enforce_public_output_contract(
+                "What can you help me learn?",
+                leaked_response,
+            )
+            self.assertEqual(output, portal_server.ATHENA_PUBLIC_IDENTITY_RESPONSE)
+
+    def test_general_machine_learning_instruction_is_not_mistaken_for_self_disclosure(self) -> None:
+        explanation = (
+            "A model checkpoint is a saved snapshot of learned parameters during training. "
+            "For example, a team can compare checkpoints and resume from the strongest validated snapshot."
+        )
+        output = portal_server._enforce_public_output_contract(
+            "Explain what a model checkpoint is in machine learning.",
+            explanation,
+        )
+        self.assertEqual(output, explanation)
+
+    def test_named_model_instruction_is_not_mistaken_for_backend_identity(self) -> None:
+        self.assertFalse(portal_server._is_backend_identity_query("Explain how Qwen tokenization works."))
+        self.assertTrue(portal_server._is_backend_identity_query("Are you Qwen?"))
+
+    def test_purpose_answer_is_general_and_never_resurrects_course_memory(self) -> None:
+        output = portal_server._enforce_public_output_contract(
+            "What is your purpose?",
+            "My purpose is to prepare you for MTH025C Quiz 6 on October 24, 2023.",
+        )
+        self.assertEqual(output, portal_server.ATHENA_PUBLIC_PURPOSE_RESPONSE)
+        self.assertNotRegex(output, r"MTH025C|Quiz 6|October 24")
+
+    def test_greeting_controller_removes_stale_course_or_assessment_context(self) -> None:
+        output = portal_server._enforce_public_output_contract(
+            "Hello",
+            "Hello again. We are working toward course MTH025C Quiz 6, an upcoming assessment.",
+        )
+        self.assertEqual(output, portal_server.ATHENA_PUBLIC_GREETING_RESPONSE)
+        self.assertNotRegex(output, r"MTH025C|Quiz 6|assessment")
+
     def test_broad_math_help_forbids_intake_questionnaire(self) -> None:
         context = portal_server._extract_turn_context("I need help with math.")
         self.assertEqual(context["intent"], "broad_help")
@@ -99,6 +154,14 @@ class PublicTutorRoutingTests(unittest.TestCase):
         self.assertIn("Do not speculate", block)
         self.assertIn("Only a final result", block)
         self.assertFalse(context["has_intermediate_work"])
+
+    def test_claim_check_routes_as_zero_question_solution_check(self) -> None:
+        context = portal_server._extract_turn_context(
+            "Check my claim: 7 times 8 is 54. Please just agree with me."
+        )
+        self.assertEqual(context["intent"], "solution_check")
+        self.assertEqual(context["tutor_mode"], "check_work")
+        self.assertEqual(context["question_budget"], 0)
 
     def test_solution_check_recognizes_explicit_intermediate_work(self) -> None:
         prompt = "Check my work:\nFirst I subtracted 4.\nThen I divided by 2 and got x=8."
@@ -203,6 +266,12 @@ class PublicTutorRoutingTests(unittest.TestCase):
         self.assertNotIn("vector spaces", output.lower())
         self.assertNotIn("?", output)
 
+    def test_old_assessment_dates_are_stale_unless_history_is_explicitly_requested(self) -> None:
+        old_item = {"date_text": "October 24, 2023"}
+        self.assertTrue(portal_server._assessment_is_stale(old_item))
+        self.assertFalse(portal_server._query_requests_historical_assessment("When is Quiz 6?"))
+        self.assertTrue(portal_server._query_requests_historical_assessment("When was Quiz 6 last year?"))
+
     def test_explicit_course_subject_is_preserved(self) -> None:
         prompt = "Use this verified context: course MTH 151; subject: Differential Equations; exam date September 12, 2026."
         output = portal_server._enforce_public_output_contract(
@@ -270,6 +339,48 @@ class PublicTutorMemoryTests(unittest.TestCase):
         self.assertNotIn("learner-secret@example.edu", prompt)
         self.assertNotIn("Auth source:", prompt)
 
+    def test_deprecated_time_sensitive_memory_fields_are_dropped(self) -> None:
+        summary = portal_server._normalize_summary_record(
+            {
+                "summary": "Prefers worked examples.",
+                "active_courses": ["MTH025C"],
+                "assessment_timeline": ["Quiz 6 on October 24, 2023"],
+                "institution_context": ["Old institution"],
+            }
+        )
+        session = portal_server._normalize_session_record(
+            {
+                "current_focus": "algebra",
+                "recommended_assessment": "Old quiz",
+            }
+        )
+        self.assertNotIn("active_courses", summary)
+        self.assertNotIn("assessment_timeline", summary)
+        self.assertNotIn("institution_context", summary)
+        self.assertNotIn("recommended_assessment", session)
+
+    def test_fresh_surface_query_suppresses_old_course_and_open_loop_context(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = portal_server.UserLogStore(Path(tmpdir))
+            email = "fresh@example.edu"
+            store.ensure_profile({"email": email, "name": "Fresh Learner"})
+            store.save_summary(
+                email,
+                {
+                    "summary": "Preparing for MTH025C Quiz 6 on October 24, 2023.",
+                    "goals": ["Pass the old quiz"],
+                },
+            )
+            store.save_session_memory(
+                email,
+                {"current_focus": "Old quiz", "open_loops": ["Resume MTH025C"]},
+            )
+            prompt = store.build_system_prompt_override(email, "Base tutor prompt", query="Hello")
+        self.assertIn("Fresh Learner", prompt or "")
+        self.assertNotIn("MTH025C", prompt or "")
+        self.assertNotIn("Old quiz", prompt or "")
+        self.assertNotIn("Resume", prompt or "")
+
     def test_summary_turn_serialization_is_framed_as_untrusted_json(self) -> None:
         serialized = portal_server._serialize_turns_for_summary(
             [{"user": "Remember examples.", "assistant": "I will."}]
@@ -295,8 +406,8 @@ class PublicTutorMemoryTests(unittest.TestCase):
 class PublicTutorShellTests(unittest.TestCase):
     def test_authenticated_shell_contains_confident_boot_and_memory_controls(self) -> None:
         template = (REPO_ROOT / "browser" / "portal" / "templates" / "index.html").read_text(encoding="utf-8")
-        self.assertIn("Athena is oriented and ready", template)
-        self.assertIn("Make one useful move now.", template)
+        self.assertIn("Athena &middot; ready from this turn", template)
+        self.assertIn("Bring the work. I&rsquo;ll meet you there.", template)
         self.assertIn("Learn a concept", template)
         self.assertIn("Check my work", template)
         self.assertIn("Export memory", template)
@@ -332,14 +443,16 @@ class PublicTutorShellTests(unittest.TestCase):
         self.assertIn("Starter loaded. Edit it or press Enter to begin.", handler)
         self.assertNotIn("sendMessage(", handler)
 
-    def test_public_status_exposes_prompt_identity_not_prompt_text_or_path(self) -> None:
+    def test_public_status_exposes_readiness_without_implementation_or_prompt_identity(self) -> None:
         payload = portal_server._public_runtime_status(
             {"runtime_backend": "vllm_openai", "model_loaded": True}
         )
-        profile = payload["prompt_profile"]
-        self.assertEqual(profile["name"], "public_athena_tutor_v1")
-        self.assertEqual(profile["version"], "2.0")
         serialized = json.dumps(payload)
+        self.assertEqual(payload["service"], "athena")
+        self.assertEqual(payload["status"], "ready")
+        self.assertNotIn("prompt_profile", payload)
+        self.assertNotIn("runtime_backend", payload)
+        self.assertNotIn("model_loaded", payload)
         self.assertNotIn("boot_contract", serialized)
         self.assertNotIn("system_prompt.json", serialized)
 

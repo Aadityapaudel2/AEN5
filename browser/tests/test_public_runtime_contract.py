@@ -33,20 +33,25 @@ class PublicRuntimeContractTests(unittest.TestCase):
             with patch.dict(os.environ, {"ATHENA_PUBLIC_VLLM_ONLY": "1"}, clear=False):
                 self.assertTrue(portal_server._runtime_ready(snapshot))
 
-    def test_healthz_surfaces_runtime_backend_and_readiness(self) -> None:
+    def test_healthz_surfaces_readiness_without_runtime_or_model_identity(self) -> None:
         snapshot = {
             "runtime_backend": "vllm_openai",
             "runtime_backend_label": "vLLM OpenAI-compatible",
             "model_loaded": True,
-            "model_label": "Qwen3.5-4B",
+            "model_label": "internal-model-id",
             "model_dir": "http://127.0.0.1:8001/v1",
         }
         with patch.object(portal_server.engine, "runtime_snapshot", return_value=snapshot):
             with patch.dict(os.environ, {"ATHENA_PUBLIC_VLLM_ONLY": "1"}, clear=False):
                 payload = portal_server.healthz()
         self.assertTrue(payload["ok"])
-        self.assertEqual(payload["runtime_backend"], "vllm_openai")
-        self.assertEqual(payload["active_model_label"], "Qwen3.5-4B (base)")
+        self.assertEqual(payload["service"], "athena")
+        self.assertEqual(payload["status"], "ready")
+        serialized = str(payload).lower()
+        self.assertNotIn("vllm", serialized)
+        self.assertNotIn("internal-model-id", serialized)
+        self.assertNotIn("runtime_backend", payload)
+        self.assertNotIn("active_model_label", payload)
         self.assertNotIn("configured_model_dir", payload)
         self.assertNotIn("active_model_dir", payload)
         self.assertNotIn("log_root", payload)
@@ -60,7 +65,7 @@ class PublicRuntimeContractTests(unittest.TestCase):
         with patch.object(portal_server, "cfg", replace(portal_server.cfg, load_model=True)):
             with patch.dict(
                 os.environ,
-                {"ATHENA_PUBLIC_VLLM_ONLY": "1", "ATHENA_PUBLIC_MODEL_EXPECTED_ID": "Qwen3.5-4B"},
+                {"ATHENA_PUBLIC_VLLM_ONLY": "1", "ATHENA_PUBLIC_MODEL_EXPECTED_ID": "expected-public-id"},
                 clear=False,
             ):
                 with patch.object(portal_server.engine, "runtime_snapshot", return_value=snapshot):

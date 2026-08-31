@@ -11,6 +11,7 @@ DEFAULT_PROMPT_TEXT = "You are Athena."
 
 PROMPT_SECTION_SPECS: tuple[tuple[str, str], ...] = (
     ("boot_contract", "Boot contract:"),
+    ("identity_integrity", "Identity integrity:"),
     ("response_routing", "Response routing:"),
     ("tutoring_doctrine", "Tutoring doctrine:"),
     ("educator_protocol", "Educator protocol:"),
@@ -24,6 +25,7 @@ PROMPT_SECTION_SPECS: tuple[tuple[str, str], ...] = (
 
 PUBLIC_TUTOR_REQUIRED_SECTIONS: tuple[str, ...] = (
     "boot_contract",
+    "identity_integrity",
     "response_routing",
     "tutoring_doctrine",
     "educator_protocol",

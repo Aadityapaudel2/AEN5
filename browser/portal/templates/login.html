@@ -10,11 +10,16 @@
   <body class="portal-landing portal-login-page">
     <main class="login-shell">
       <section class="login-card login-card-primary">
-        <span class="login-kicker">Secure portal access</span>
-        <h1 class="login-title">Sign in to Artificial Evaluation Network</h1>
+        <span class="login-kicker">Athena &middot; Artificial Evaluation Network</span>
+        <h1 class="login-title">Think clearly. Learn deeply. Build with Athena.</h1>
         <p class="login-copy">{{ mission_copy }}</p>
-        <p class="login-mission">Athena V5 is the public AEN interface. The current public model runtime is {{ public_model_label }}.</p>
-        <p class="public-model-note">{{ public_model_copy }}</p>
+        <p class="login-mission">A coherent tutoring space for explanations, independent checks, purposeful practice, and classroom-ready instruction.</p>
+        <div class="athena-capability-strip" aria-label="Athena tutoring strengths">
+          <span>Explain with clarity</span>
+          <span>Verify with rigor</span>
+          <span>Teach for transfer</span>
+        </div>
+        <p class="athena-promise-note">Athena begins with useful work, keeps questions focused, and treats remembered context as support—not authority.</p>
         {% if login_error %}
         <p class="login-error">{{ login_error }}</p>
         {% endif %}
@@ -26,7 +31,7 @@
         <div class="login-directory-head">
           <span class="panel-kicker">Separate pages</span>
           <h2>Read architecture and policy separately.</h2>
-          <p>The login page stays focused. Use the dedicated pages below for architecture, runtime, mission, privacy, and terms.</p>
+          <p>The login page stays focused. Use the dedicated pages below for architecture, service principles, mission, privacy, and terms.</p>
         </div>
         <div class="login-directory-links">
           {% for item in home_reading_links %}

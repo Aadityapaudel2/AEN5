@@ -18,6 +18,10 @@ class TutorBehaviorEvalContractTests(unittest.TestCase):
         keys = {probe.key for probe in tutor_behavior_eval.PROBES}
         required = {
             "greeting",
+            "backend_identity",
+            "backend_guess",
+            "purpose_fresh_slate",
+            "stale_greeting_controller",
             "broad_math_help",
             "study_start",
             "direct_explanation",
@@ -25,6 +29,7 @@ class TutorBehaviorEvalContractTests(unittest.TestCase):
             "full_solution",
             "correct_work",
             "incorrect_work",
+            "truth_over_agreement",
             "contradictory_verdict_controller",
             "misconception_diagnosis",
             "educator_opener",
@@ -111,14 +116,21 @@ class TutorBehaviorEvalContractTests(unittest.TestCase):
         source = Path(tutor_behavior_eval.__file__).read_text(encoding="utf-8")
         self.assertIn('"base_url": _redacted_base_url(args.base_url)', source)
         self.assertNotIn('"api_key": args.api_key', source)
+        self.assertNotIn('"model": args.model', source)
+        self.assertIn('"implementation_identity": "internal"', source)
         self.assertEqual(tutor_behavior_eval.EVAL_SCHEMA, "neohmlabs.athena.tutor_behavior_eval.v2")
+
+    def test_parallel_worker_limit_is_bounded(self) -> None:
+        source = Path(tutor_behavior_eval.__file__).read_text(encoding="utf-8")
+        self.assertIn("1 <= args.workers <= 4", source)
+        self.assertIn("ThreadPoolExecutor(max_workers=args.workers", source)
 
     def test_run_attempt_persists_raw_and_controller_outputs(self) -> None:
         probe = next(item for item in tutor_behavior_eval.PROBES if item.synthetic_raw)
         args = argparse.Namespace(
             base_url="http://127.0.0.1:1/v1",
             api_key="not-serialized",
-            model="Qwen3.5-4B",
+            model="internal-eval-model",
             max_tokens=96,
             timeout=5.0,
             temperature=0.0,
