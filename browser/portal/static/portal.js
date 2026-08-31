@@ -14,9 +14,15 @@
   const imagePreview = document.getElementById("image-preview");
   const promptInput = document.getElementById("prompt-input");
   const statusBox = document.getElementById("status-box");
+  const tutorBootEl = document.getElementById("tutor-boot");
+  const starterButtons = Array.from(document.querySelectorAll(".starter-prompt"));
+  const memoryMenu = document.getElementById("memory-menu");
+  const exportMemoryBtn = document.getElementById("export-memory-btn");
+  const forgetMemoryBtn = document.getElementById("forget-memory-btn");
   const transcriptEl = document.getElementById("transcript");
   const transcriptScrollEl = document.getElementById("transcript-scroll");
   const reducedMotionQuery = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+  const allowedImageTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
   const portalCfg = window.ATHENA_PORTAL || {};
   const hasChatSurface = !!(sendBtn && clearBtn && promptInput && transcriptEl && transcriptScrollEl);
@@ -45,6 +51,15 @@
   function setStatus(text) {
     if (!statusBox) return;
     statusBox.textContent = text;
+  }
+
+  function syncTutorBoot(forceVisible) {
+    if (!tutorBootEl) return;
+    const hasRenderedMessages = !!(transcriptEl && transcriptEl.querySelector(".msg"));
+    const visible = typeof forceVisible === "boolean"
+      ? forceVisible
+      : !state.busy && state.history.length === 0 && !hasRenderedMessages;
+    tutorBootEl.classList.toggle("hidden", !visible);
   }
 
   function setAuthButtons(visible) {
@@ -107,6 +122,12 @@
     if (attachBtn) attachBtn.disabled = state.busy;
     if (imageInput) imageInput.disabled = state.busy;
     if (clearImagesBtn) clearImagesBtn.disabled = state.busy || state.pendingImages.length === 0;
+    starterButtons.forEach(function (button) {
+      button.disabled = state.busy;
+    });
+    if (exportMemoryBtn) exportMemoryBtn.disabled = state.busy;
+    if (forgetMemoryBtn) forgetMemoryBtn.disabled = state.busy;
+    if (state.busy) syncTutorBoot(false);
   }
 
   function decodeRawB64(value) {
@@ -436,6 +457,7 @@
     mergeTranscriptHtml(html);
     relabelRenderedUserMessages();
     decorateCodeBlocks(transcriptEl);
+    syncTutorBoot();
     scrollBottom();
     typesetMath(transcriptEl);
   }
@@ -484,7 +506,10 @@
         setStatus("Image limit reached (" + maxImages + " max per request).");
         break;
       }
-      if (!file.type || !file.type.startsWith("image/")) continue;
+      if (!allowedImageTypes.has(file.type)) {
+        setStatus("Skipped " + (file.name || "image") + " (use PNG, JPEG, WebP, or GIF).");
+        continue;
+      }
       if (file.size > 8 * 1024 * 1024) {
         setStatus("Skipped " + file.name + " (over 8MB).");
         continue;
@@ -518,7 +543,7 @@
   async function apiPost(path, body) {
     const res = await fetch(state.pathPrefix + path, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Athena-Action": "1" },
       credentials: "same-origin",
       body: JSON.stringify(body || {}),
     });
@@ -655,6 +680,7 @@
 
     const userLive = makeLiveMessage("user", userDisplay, imageDataUrls);
     transcriptEl.appendChild(userLive.article);
+    syncTutorBoot(false);
     let assistantLive = null;
     let assistantTyper = null;
     let donePayload = null;
@@ -769,9 +795,56 @@
       state.currentRequestId = "";
       clearPendingImages();
       applyTranscriptHtml("");
-      setStatus("Conversation and short-lived continuity cleared. Course context remains available.");
+      syncTutorBoot(true);
+      setStatus("New thread ready. Durable learner preferences remain available.");
     } catch (err) {
       setStatus("Reset failed: " + err.message);
+    }
+  }
+
+  async function exportLearnerMemory() {
+    if (state.busy) return;
+    setStatus("Preparing your learner-memory export...");
+    try {
+      const payload = await apiGet("/api/memory/export");
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "athena-learner-memory-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      if (memoryMenu) memoryMenu.open = false;
+      setStatus("Learner-memory export downloaded.");
+    } catch (err) {
+      setStatus("Memory export failed: " + err.message);
+    }
+  }
+
+  async function forgetLearnerMemory() {
+    if (state.busy) return;
+    const confirmation = window.prompt(
+      "This deletes conversation history, session focus, and durable learner preferences for this account. "
+      + "Your sign-in profile and configured course context remain. Type FORGET to continue."
+    );
+    if (String(confirmation || "").trim().toUpperCase() !== "FORGET") {
+      setStatus("Learner memory was not changed.");
+      return;
+    }
+    setStatus("Deleting learner memory...");
+    try {
+      await apiPost("/api/memory/forget", { confirmation: "FORGET" });
+      state.history = [];
+      state.currentRequestId = "";
+      clearPendingImages();
+      applyTranscriptHtml("");
+      syncTutorBoot(true);
+      if (memoryMenu) memoryMenu.open = false;
+      setStatus("Learner memory deleted. Account and configured course context were preserved.");
+    } catch (err) {
+      setStatus("Memory deletion failed: " + err.message);
     }
   }
 
@@ -786,10 +859,11 @@
         state.assistantLabel = state.config.assistant_label;
       }
       if (runtimeLine) {
-        runtimeLine.textContent = "Athena is ready to teach, explain, and support curriculum-aligned learning.";
+        runtimeLine.textContent = "Tutor ready: explain, coach, check work, build practice, and support instruction.";
         runtimeLine.title = "Public NeohmLabs AEN browser surface";
       }
       state.history = Array.isArray(state.initialHistory) ? state.initialHistory.slice() : [];
+      syncTutorBoot();
 
       if (state.config.auth_required) {
         try {
@@ -835,7 +909,11 @@
       if (state.config.model_load_error) {
         setStatus("Model load warning: " + state.config.model_load_error);
       } else {
-        setStatus(state.history.length ? "Conversation history and learner memory restored." : "Ready to help.");
+        setStatus(
+          state.history.length
+            ? "Thread restored. Athena is ready to continue the active work."
+            : "Tutor ready \u00b7 Explain \u00b7 Coach \u00b7 Check work \u00b7 Build practice"
+        );
       }
     } catch (err) {
       if (runtimeLine) runtimeLine.textContent = "Failed to load portal config.";
@@ -859,6 +937,18 @@
   if (stopBtn) stopBtn.addEventListener("click", stopGeneration);
   if (clearBtn) clearBtn.addEventListener("click", clearConversation);
   if (logoutBtn) logoutBtn.addEventListener("click", logout);
+  if (exportMemoryBtn) exportMemoryBtn.addEventListener("click", exportLearnerMemory);
+  if (forgetMemoryBtn) forgetMemoryBtn.addEventListener("click", forgetLearnerMemory);
+
+  starterButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      if (state.busy || !promptInput) return;
+      promptInput.value = String(button.getAttribute("data-prompt") || "").trim();
+      autosizePrompt();
+      promptInput.focus();
+      setStatus("Starter loaded. Edit it or press Enter to begin.");
+    });
+  });
 
   if (transcriptEl) {
     transcriptEl.addEventListener("click", async function (event) {

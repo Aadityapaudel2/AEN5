@@ -6,6 +6,10 @@ param(
     [string]$RuntimeName = "shared",
     [int]$Port = 8001,
     [int]$MaxModelLen = 128000,
+    [ValidateSet("native", "yarn_1010k")]
+    [string]$ContextProfile = "native",
+    [switch]$AllowExperimentalUltraLongContext,
+    [string]$HfOverrides = "",
     [int]$MaxInputTokensPerTurn = 0,
     [double]$GpuMemoryUtilization = 0.85,
     [string]$BindHost = "0.0.0.0",
@@ -20,6 +24,7 @@ param(
     [string]$AttentionBackend = "",
     [string]$LimitMmPerPrompt = "",
     [switch]$LanguageModelOnly,
+    [switch]$DryRun,
     [switch]$Status,
     [switch]$Stop,
     [switch]$Restart
@@ -29,6 +34,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ContextProfilesPath = Join-Path $ProjectRoot "browser\config\context_profiles.json"
 $AthenaPathsScript = Join-Path $ProjectRoot "athena_paths.py"
 $RuntimeRoot = Join-Path $ProjectRoot ".local\runtime"
 $ResolvedRuntimeName = ($RuntimeName -as [string])
@@ -618,6 +624,29 @@ function Resolve-OptionalSwitchSetting {
     return $false
 }
 
+function Get-ContextProfileDefinition {
+    param(
+        [string]$ProfileName,
+        [string]$ConfigPath
+    )
+    if (-not $ConfigPath -or -not (Test-Path -LiteralPath $ConfigPath)) {
+        throw "Context profile configuration was not found: $ConfigPath"
+    }
+    try {
+        $payload = Get-Content -LiteralPath $ConfigPath -Raw | ConvertFrom-Json
+    } catch {
+        throw "Context profile configuration is invalid JSON: $ConfigPath"
+    }
+    if (-not $payload.profiles) {
+        throw "Context profile configuration has no profiles object: $ConfigPath"
+    }
+    $property = $payload.profiles.PSObject.Properties[$ProfileName]
+    if ($null -eq $property -or $null -eq $property.Value) {
+        throw "Context profile '$ProfileName' is not defined in $ConfigPath"
+    }
+    return $property.Value
+}
+
 function Read-IntStateValue {
     param(
         [object]$State,
@@ -647,7 +676,9 @@ function Write-RuntimeEnv {
         [int]$ResolvedMaxModelLen,
         [int]$ResolvedMaxInputTokensPerTurn = 0,
         [bool]$EnableThinking = $false,
-        [string]$ResolvedLimitMmPerPrompt = ""
+        [string]$ResolvedLimitMmPerPrompt = "",
+        [string]$ResolvedContextProfile = "native",
+        [string]$ResolvedHfOverrides = ""
     )
     Initialize-AthenaVllmRuntimeRoot
     $lines = @(
@@ -661,9 +692,13 @@ function Write-RuntimeEnv {
         "ATHENA_VLLM_MAX_CONTEXT_TOKENS=$ResolvedMaxModelLen"
         "ATHENA_VLLM_MAX_INPUT_TOKENS=$ResolvedMaxInputTokensPerTurn"
         "ATHENA_VLLM_ENABLE_THINKING=$([int]$EnableThinking)"
+        "ATHENA_VLLM_CONTEXT_PROFILE=$ResolvedContextProfile"
     )
     if ($ResolvedLimitMmPerPrompt -and $ResolvedLimitMmPerPrompt.Trim()) {
         $lines += "ATHENA_VLLM_LIMIT_MM_PER_PROMPT=$($ResolvedLimitMmPerPrompt.Trim())"
+    }
+    if ($ResolvedHfOverrides -and $ResolvedHfOverrides.Trim()) {
+        $lines += "ATHENA_VLLM_HF_OVERRIDES=$($ResolvedHfOverrides.Trim())"
     }
     $lines | Set-Content -LiteralPath $RuntimeEnvPath -Encoding utf8
     $env:ATHENA_RUNTIME_BACKEND = "vllm_openai"
@@ -676,10 +711,16 @@ function Write-RuntimeEnv {
     $env:ATHENA_VLLM_MAX_CONTEXT_TOKENS = [string]$ResolvedMaxModelLen
     $env:ATHENA_VLLM_MAX_INPUT_TOKENS = [string]$ResolvedMaxInputTokensPerTurn
     $env:ATHENA_VLLM_ENABLE_THINKING = [string]([int]$EnableThinking)
+    $env:ATHENA_VLLM_CONTEXT_PROFILE = $ResolvedContextProfile
     if ($ResolvedLimitMmPerPrompt -and $ResolvedLimitMmPerPrompt.Trim()) {
         $env:ATHENA_VLLM_LIMIT_MM_PER_PROMPT = $ResolvedLimitMmPerPrompt.Trim()
     } else {
         Remove-Item -Path "Env:ATHENA_VLLM_LIMIT_MM_PER_PROMPT" -ErrorAction SilentlyContinue
+    }
+    if ($ResolvedHfOverrides -and $ResolvedHfOverrides.Trim()) {
+        $env:ATHENA_VLLM_HF_OVERRIDES = $ResolvedHfOverrides.Trim()
+    } else {
+        Remove-Item -Path "Env:ATHENA_VLLM_HF_OVERRIDES" -ErrorAction SilentlyContinue
     }
 }
 
@@ -736,6 +777,12 @@ function Show-Status {
         Write-Host "managed_pid=$($state.pid)"
         Write-Host "launcher=$($state.launcher)"
         Write-Host "model_dir=$($state.model_dir)"
+        if ($state.PSObject.Properties.Name -contains "context_profile") {
+            Write-Host "context_profile=$($state.context_profile)"
+        }
+        if ($state.PSObject.Properties.Name -contains "max_model_len") {
+            Write-Host "max_model_len=$($state.max_model_len)"
+        }
         Write-Host "stdout_log=$($state.stdout_log)"
         Write-Host "stderr_log=$($state.stderr_log)"
     }
@@ -743,9 +790,32 @@ function Show-Status {
 
 $null = Import-EnvFile -FilePath $RuntimeEnvPath
 
+$BaseUrlWasExplicit = $PSBoundParameters.ContainsKey("BaseUrl") -and $BaseUrl -and $BaseUrl.Trim()
 $ResolvedBaseUrl = Resolve-BaseUrl -ExplicitBaseUrl $BaseUrl -DefaultPort $Port
 $ResolvedBaseUri = [Uri]$ResolvedBaseUrl
 $ResolvedPort = if ($ResolvedBaseUri.Port -gt 0) { [int]$ResolvedBaseUri.Port } else { $Port }
+$ImportedRuntimeState = Read-RuntimeState
+$ImportedLauncher = if ($ImportedRuntimeState -and ($ImportedRuntimeState.PSObject.Properties.Name -contains "launcher")) {
+    ([string]$ImportedRuntimeState.launcher).Trim().ToLowerInvariant()
+} else {
+    ""
+}
+if (
+    $IsWindowsHost -and
+    (-not $BaseUrlWasExplicit) -and
+    $ImportedRuntimeState -and
+    $ImportedLauncher -eq "wsl" -and
+    $ResolvedBaseUri.Host -notin @("127.0.0.1", "localhost")
+) {
+    $loopbackPath = $ResolvedBaseUri.AbsolutePath.TrimEnd("/")
+    $ResolvedBaseUrl = "http://127.0.0.1:$ResolvedPort$loopbackPath"
+    $ResolvedBaseUri = [Uri]$ResolvedBaseUrl
+}
+$PreferredWindowsLoopbackBaseUrl = if ($IsWindowsHost -and $ResolvedBaseUri.Host -in @("127.0.0.1", "localhost")) {
+    $ResolvedBaseUrl
+} else {
+    ""
+}
 $ResolvedApiKey = if ($ApiKey -and $ApiKey.Trim()) { $ApiKey.Trim() } elseif ($env:ATHENA_VLLM_API_KEY -and $env:ATHENA_VLLM_API_KEY.Trim()) { $env:ATHENA_VLLM_API_KEY.Trim() } else { "athena-local" }
 $ResolvedWslExe = $null
 $ResolvedWslDistro = ""
@@ -767,6 +837,10 @@ if ($IsWindowsHost) {
 $ProbeCandidates = @(Get-VllmProbeCandidates -PrimaryBaseUrl $ResolvedBaseUrl -AlternativeBaseUrl $AlternativeBaseUrl)
 $ModelsUrl = Get-ModelsUrl -BaseUrl $ResolvedBaseUrl
 
+if ($DryRun -and ($Status -or $Stop -or $Restart)) {
+    throw "DryRun cannot be combined with Status, Stop, or Restart."
+}
+
 if ($Status) {
     Show-Status -BaseUrl $ResolvedBaseUrl -ResolvedApiKey $ResolvedApiKey -ProbeCandidates $ProbeCandidates
     exit 0
@@ -783,7 +857,56 @@ if ($Restart) {
 
 $ResolvedModelDir = Resolve-ModelDir -ExplicitPath $ModelDir
 $ResolvedServedModelName = if ($ServedModelName -and $ServedModelName.Trim()) { $ServedModelName.Trim() } else { Split-Path -Leaf $ResolvedModelDir }
-$ResolvedMaxModelLen = if ($env:ATHENA_VLLM_MAX_MODEL_LEN -and $env:ATHENA_VLLM_MAX_MODEL_LEN.Trim()) { [int]$env:ATHENA_VLLM_MAX_MODEL_LEN } else { $MaxModelLen }
+$ContextProfileExplicitlyRequested = $PSBoundParameters.ContainsKey("ContextProfile")
+$ResolvedContextProfile = if ($ContextProfileExplicitlyRequested) {
+    $ContextProfile.Trim().ToLowerInvariant()
+} elseif ($env:ATHENA_VLLM_CONTEXT_PROFILE -and $env:ATHENA_VLLM_CONTEXT_PROFILE.Trim()) {
+    $env:ATHENA_VLLM_CONTEXT_PROFILE.Trim().ToLowerInvariant()
+} else {
+    "native"
+}
+if ($ResolvedContextProfile -notin @("native", "yarn_1010k")) {
+    throw "Unsupported context profile '$ResolvedContextProfile'. Use native or yarn_1010k."
+}
+$ContextProfileDefinition = Get-ContextProfileDefinition -ProfileName $ResolvedContextProfile -ConfigPath $ContextProfilesPath
+$AllowUltraLongContext = $AllowExperimentalUltraLongContext.IsPresent -or (
+    $env:ATHENA_VLLM_ALLOW_EXPERIMENTAL_ULTRALONG -and
+    $env:ATHENA_VLLM_ALLOW_EXPERIMENTAL_ULTRALONG.Trim().ToLowerInvariant() -in @("1", "true", "yes", "on")
+)
+$HfOverridesExplicitlyRequested = $PSBoundParameters.ContainsKey("HfOverrides")
+$ResolvedHfOverrides = if ($HfOverridesExplicitlyRequested) {
+    $HfOverrides.Trim()
+} elseif ($ResolvedContextProfile -eq "yarn_1010k" -and $env:ATHENA_VLLM_HF_OVERRIDES -and $env:ATHENA_VLLM_HF_OVERRIDES.Trim()) {
+    $env:ATHENA_VLLM_HF_OVERRIDES.Trim()
+} else {
+    ""
+}
+if ($ResolvedContextProfile -eq "yarn_1010k") {
+    if (-not $AllowUltraLongContext) {
+        throw "The yarn_1010k profile is experimental and intended for H100-class or equivalent hardware. Re-run with -AllowExperimentalUltraLongContext after reviewing the memory requirement."
+    }
+    if (-not $ResolvedHfOverrides) {
+        $ResolvedHfOverrides = $ContextProfileDefinition.hf_overrides | ConvertTo-Json -Compress -Depth 12
+    }
+    $ResolvedMaxModelLen = if ($PSBoundParameters.ContainsKey("MaxModelLen")) { $MaxModelLen } else { [int]$ContextProfileDefinition.max_model_len }
+    if (-not $DryRun) {
+        $env:VLLM_ALLOW_LONG_MAX_MODEL_LEN = "1"
+    }
+} else {
+    if ($ResolvedHfOverrides) {
+        throw "HfOverrides for context scaling require -ContextProfile yarn_1010k."
+    }
+    $ResolvedMaxModelLen = if ($PSBoundParameters.ContainsKey("MaxModelLen")) {
+        $MaxModelLen
+    } elseif ($env:ATHENA_VLLM_MAX_MODEL_LEN -and $env:ATHENA_VLLM_MAX_MODEL_LEN.Trim()) {
+        [int]$env:ATHENA_VLLM_MAX_MODEL_LEN
+    } else {
+        [int]$ContextProfileDefinition.max_model_len
+    }
+    if (-not $DryRun) {
+        Remove-Item -Path "Env:VLLM_ALLOW_LONG_MAX_MODEL_LEN" -ErrorAction SilentlyContinue
+    }
+}
 $ResolvedMaxInputTokensPerTurn = if ($env:ATHENA_VLLM_MAX_INPUT_TOKENS -and $env:ATHENA_VLLM_MAX_INPUT_TOKENS.Trim()) { [int]$env:ATHENA_VLLM_MAX_INPUT_TOKENS } else { $MaxInputTokensPerTurn }
 $ResolvedGpuMemoryUtilization = if ($env:ATHENA_VLLM_GPU_MEMORY_UTILIZATION -and $env:ATHENA_VLLM_GPU_MEMORY_UTILIZATION.Trim()) { [double]$env:ATHENA_VLLM_GPU_MEMORY_UTILIZATION } else { $GpuMemoryUtilization }
 $ResolvedReasoningParser = Resolve-OptionalSetting -ExplicitValue $ReasoningParser -EnvVarName "ATHENA_VLLM_REASONING_PARSER"
@@ -806,6 +929,71 @@ $ResolvedBootTimeoutSeconds = if ($env:ATHENA_VLLM_BOOT_TIMEOUT_SECONDS -and $en
     900
 } else {
     240
+}
+
+if ($DryRun) {
+    $PreviewModelDir = $ResolvedModelDir
+    $PreviewPython = if ($IsWindowsHost) { $LinuxPython } else { (Resolve-PythonExe -ExplicitPath $PythonExe) }
+    $PreviewLauncher = if ($IsWindowsHost) { "wsl" } else { "native" }
+    if ($IsWindowsHost) {
+        $PreviewModelDir = if ($LinuxModelDir -and $LinuxModelDir.Trim()) {
+            $LinuxModelDir.Trim()
+        } else {
+            Convert-ToWslPath -WindowsPath $ResolvedModelDir
+        }
+    }
+    $PreviewArgs = @(
+        $PreviewPython,
+        "-m",
+        "vllm.entrypoints.openai.api_server",
+        "--host", $BindHost,
+        "--port", [string]$ResolvedPort,
+        "--model", $PreviewModelDir,
+        "--served-model-name", $ResolvedServedModelName,
+        "--api-key", "<redacted>",
+        "--max-model-len", [string]$ResolvedMaxModelLen,
+        "--gpu-memory-utilization", [string]$ResolvedGpuMemoryUtilization,
+        "--enforce-eager",
+        "--trust-remote-code"
+    )
+    if ($ResolvedHfOverrides) { $PreviewArgs += @("--hf-overrides", $ResolvedHfOverrides) }
+    if ($ResolvedReasoningParser) { $PreviewArgs += @("--reasoning-parser", $ResolvedReasoningParser) }
+    if ($ResolvedKvCacheDtype) { $PreviewArgs += @("--kv-cache-dtype", $ResolvedKvCacheDtype) }
+    if ($ResolvedCpuOffloadGb) { $PreviewArgs += @("--cpu-offload-gb", $ResolvedCpuOffloadGb) }
+    if ($ResolvedAttentionBackend) { $PreviewArgs += @("--attention-backend", $ResolvedAttentionBackend) }
+    if ($ResolvedLimitMmPerPrompt) { $PreviewArgs += @("--limit-mm-per-prompt", $ResolvedLimitMmPerPrompt) }
+    if ($ResolvedLanguageModelOnly) { $PreviewArgs += @("--language-model-only") }
+    $PreviewHfOverrides = $null
+    if ($ResolvedHfOverrides) {
+        try {
+            $PreviewHfOverrides = $ResolvedHfOverrides | ConvertFrom-Json
+        } catch {
+            throw "HfOverrides is not valid JSON: $($_.Exception.Message)"
+        }
+    }
+    $PreviewTransport = if ($IsWindowsHost -and ($ResolvedLimitMmPerPrompt -or $ResolvedHfOverrides)) {
+        "wsl_bash_script_with_single_quoted_arguments"
+    } elseif ($IsWindowsHost) {
+        "wsl_argument_list"
+    } else {
+        "native_argument_list"
+    }
+    [ordered]@{
+        schema = "neohmlabs.athena.vllm_command_preview.v1"
+        dry_run = $true
+        mutates_runtime = $false
+        launcher = $PreviewLauncher
+        transport = $PreviewTransport
+        runtime_name = $ResolvedRuntimeName
+        context_profile = $ResolvedContextProfile
+        max_model_len = $ResolvedMaxModelLen
+        max_input_tokens_per_turn = $ResolvedMaxInputTokensPerTurn
+        language_model_only = [bool]$ResolvedLanguageModelOnly
+        long_context_environment_required = ($ResolvedContextProfile -eq "yarn_1010k")
+        hf_overrides = $PreviewHfOverrides
+        command_args = $PreviewArgs
+    } | ConvertTo-Json -Depth 20
+    exit 0
 }
 
 $stateBeforeHealthyCheck = Read-RuntimeState
@@ -855,6 +1043,17 @@ if ($healthyPayload) {
     $servedModelMatches = ($activeServedModelName -and ($activeServedModelName -eq $ResolvedServedModelName))
     $maxModelLenMatches = ($managedMaxModelLen -eq $ResolvedMaxModelLen)
     $maxInputTokensMatches = ($managedMaxInputTokensPerTurn -eq $ResolvedMaxInputTokensPerTurn)
+    $managedContextProfile = "native"
+    if ($stateBeforeHealthyCheck -and ($stateBeforeHealthyCheck.PSObject.Properties.Name -contains "context_profile")) {
+        $probeContextProfile = ([string]$stateBeforeHealthyCheck.context_profile).Trim().ToLowerInvariant()
+        if ($probeContextProfile) { $managedContextProfile = $probeContextProfile }
+    }
+    $managedHfOverrides = ""
+    if ($stateBeforeHealthyCheck -and ($stateBeforeHealthyCheck.PSObject.Properties.Name -contains "hf_overrides_request")) {
+        $managedHfOverrides = ([string]$stateBeforeHealthyCheck.hf_overrides_request).Trim()
+    }
+    $contextProfileMatches = ($managedContextProfile -eq $ResolvedContextProfile)
+    $hfOverridesMatches = ($managedHfOverrides -eq $ResolvedHfOverrides)
     $managedLimitMmPerPrompt = ""
     if ($stateBeforeHealthyCheck -and $null -ne $stateBeforeHealthyCheck.limit_mm_per_prompt_request) {
         try {
@@ -883,17 +1082,17 @@ if ($healthyPayload) {
     $languageModelOnlyMatches = ($null -eq $managedLanguageModelOnly) -or ($managedLanguageModelOnly -eq $ResolvedLanguageModelOnly)
     $shouldRestartManagedEndpoint = $false
     if ($canTrustManagedModelDir) {
-        $shouldRestartManagedEndpoint = (-not $managedModelDirMatches) -or (-not $servedModelMatches) -or (-not $maxModelLenMatches) -or (-not $maxInputTokensMatches) -or (-not $languageModelOnlyMatches) -or (-not $limitMmPerPromptMatches)
+        $shouldRestartManagedEndpoint = (-not $managedModelDirMatches) -or (-not $servedModelMatches) -or (-not $maxModelLenMatches) -or (-not $maxInputTokensMatches) -or (-not $languageModelOnlyMatches) -or (-not $limitMmPerPromptMatches) -or (-not $contextProfileMatches) -or (-not $hfOverridesMatches)
     } elseif (-not $servedModelMatches) {
         $shouldRestartManagedEndpoint = $true
-    } elseif ($stateBeforeHealthyCheck -and ((-not $maxModelLenMatches) -or (-not $maxInputTokensMatches) -or (-not $languageModelOnlyMatches) -or (-not $limitMmPerPromptMatches))) {
+    } elseif ($stateBeforeHealthyCheck -and ((-not $maxModelLenMatches) -or (-not $maxInputTokensMatches) -or (-not $languageModelOnlyMatches) -or (-not $limitMmPerPromptMatches) -or (-not $contextProfileMatches) -or (-not $hfOverridesMatches))) {
         $shouldRestartManagedEndpoint = $true
     } elseif (($ResolvedRuntimeName -eq "private") -and (-not $stateBeforeHealthyCheck) -and $ResolvedLimitMmPerPrompt) {
         $shouldRestartManagedEndpoint = $true
     }
     if ($shouldRestartManagedEndpoint) {
         if ($stateBeforeHealthyCheck) {
-            Write-Host "Managed vLLM endpoint is serving '$activeServedModelName' from '$($stateBeforeHealthyCheck.model_dir)' with max_model_len=$managedMaxModelLen, max_input_tokens_per_turn=$managedMaxInputTokensPerTurn, language_model_only=$managedLanguageModelOnly, limit_mm_per_prompt='$managedLimitMmPerPrompt'. Restarting for '$ResolvedServedModelName' from '$ResolvedModelDir' with max_model_len=$ResolvedMaxModelLen, max_input_tokens_per_turn=$ResolvedMaxInputTokensPerTurn, language_model_only=$ResolvedLanguageModelOnly, limit_mm_per_prompt='$ResolvedLimitMmPerPrompt'."
+            Write-Host "Managed vLLM endpoint is serving '$activeServedModelName' from '$($stateBeforeHealthyCheck.model_dir)' with context_profile=$managedContextProfile, max_model_len=$managedMaxModelLen, max_input_tokens_per_turn=$managedMaxInputTokensPerTurn, language_model_only=$managedLanguageModelOnly, limit_mm_per_prompt='$managedLimitMmPerPrompt'. Restarting for '$ResolvedServedModelName' from '$ResolvedModelDir' with context_profile=$ResolvedContextProfile, max_model_len=$ResolvedMaxModelLen, max_input_tokens_per_turn=$ResolvedMaxInputTokensPerTurn, language_model_only=$ResolvedLanguageModelOnly, limit_mm_per_prompt='$ResolvedLimitMmPerPrompt'."
             $null = Stop-ManagedVllm
             $healthyPayload = $null
         } else {
@@ -923,7 +1122,7 @@ if ($healthyPayload) {
         $ResolvedServedModelName = [string]$healthyPayload.data[0].id
     }
     $null = Invoke-VllmWarmup -BaseUrl $ResolvedBaseUrl -ResolvedApiKey $ResolvedApiKey -ResolvedServedModelName $ResolvedServedModelName
-    Write-RuntimeEnv -BaseUrl $ResolvedBaseUrl -ResolvedModelDir $ResolvedModelDir -ResolvedServedModelName $ResolvedServedModelName -ResolvedApiKey $ResolvedApiKey -ResolvedGpuMemoryUtilization $ResolvedGpuMemoryUtilization -ResolvedMaxModelLen $ResolvedMaxModelLen -ResolvedMaxInputTokensPerTurn $ResolvedMaxInputTokensPerTurn -EnableThinking $false -ResolvedLimitMmPerPrompt $ResolvedLimitMmPerPrompt
+    Write-RuntimeEnv -BaseUrl $ResolvedBaseUrl -ResolvedModelDir $ResolvedModelDir -ResolvedServedModelName $ResolvedServedModelName -ResolvedApiKey $ResolvedApiKey -ResolvedGpuMemoryUtilization $ResolvedGpuMemoryUtilization -ResolvedMaxModelLen $ResolvedMaxModelLen -ResolvedMaxInputTokensPerTurn $ResolvedMaxInputTokensPerTurn -EnableThinking $false -ResolvedLimitMmPerPrompt $ResolvedLimitMmPerPrompt -ResolvedContextProfile $ResolvedContextProfile -ResolvedHfOverrides $ResolvedHfOverrides
     Write-Host "Reusing healthy vLLM endpoint: $ModelsUrl"
     Write-Host "served_model=$ResolvedServedModelName"
     Write-Host "runtime_env=$RuntimeEnvPath"
@@ -972,6 +1171,9 @@ if ($IsWindowsHost) {
         "--enforce-eager",
         "--trust-remote-code"
     )
+    if ($ResolvedHfOverrides) {
+        $LinuxCommandArgs += @("--hf-overrides", $ResolvedHfOverrides)
+    }
     if ($ResolvedReasoningParser) {
         $LinuxCommandArgs += @("--reasoning-parser", $ResolvedReasoningParser)
     }
@@ -994,8 +1196,8 @@ if ($IsWindowsHost) {
         $LinuxCommandArgs += @("--safetensors-load-strategy", $ResolvedSafetensorsLoadStrategy)
     }
     $ArgumentList = @("-d", $ResolvedWslDistro)
-    if ($ResolvedLimitMmPerPrompt) {
-        # WSL argument forwarding strips embedded JSON quotes from this specific argument.
+    if ($ResolvedLimitMmPerPrompt -or $ResolvedHfOverrides) {
+        # WSL argument forwarding can strip embedded JSON quotes from multimodal limits or Hugging Face overrides.
         # Write a small launch script and run it under bash so vLLM receives the raw JSON.
         $BashCommand = "exec " + (($LinuxCommandArgs | ForEach-Object { ConvertTo-BashLiteral -Value ([string]$_) }) -join " ")
         $scriptBody = "#!/usr/bin/env bash`nset -euo pipefail`n$BashCommand`n"
@@ -1051,6 +1253,9 @@ if ($IsWindowsHost) {
         "--enforce-eager",
         "--trust-remote-code"
     )
+    if ($ResolvedHfOverrides) {
+        $ArgumentList += @("--hf-overrides", $ResolvedHfOverrides)
+    }
     if ($ResolvedReasoningParser) {
         $ArgumentList += @("--reasoning-parser", $ResolvedReasoningParser)
     }
@@ -1096,6 +1301,22 @@ if ($IsWindowsHost) {
 
 $probeResult = Wait-VllmEndpoint -ProbeCandidates $ProbeCandidates -ResolvedApiKey $ResolvedApiKey -TimeoutSeconds $ResolvedBootTimeoutSeconds -OwnedProcess $launcherProc -BootLabel "$launcherLabel vLLM on $ResolvedBaseUrl"
 $payload = if ($probeResult) { $probeResult.payload } else { $null }
+if ($probeResult -and $PreferredWindowsLoopbackBaseUrl) {
+    $loopbackModelsUrl = Get-ModelsUrl -BaseUrl $PreferredWindowsLoopbackBaseUrl
+    for ($attempt = 0; $attempt -lt 6; $attempt++) {
+        $loopbackPayload = Test-VllmEndpoint -ModelsUrl $loopbackModelsUrl -ResolvedApiKey $ResolvedApiKey
+        if ($loopbackPayload) {
+            $probeResult = [pscustomobject]@{
+                base_url = $PreferredWindowsLoopbackBaseUrl
+                models_url = $loopbackModelsUrl
+                payload = $loopbackPayload
+            }
+            $payload = $loopbackPayload
+            break
+        }
+        Start-Sleep -Milliseconds 500
+    }
+}
 if ($probeResult -and $probeResult.base_url) {
     $ResolvedActiveBaseUrl = [string]$probeResult.base_url
     $ResolvedActiveModelsUrl = [string]$probeResult.models_url
@@ -1110,7 +1331,7 @@ if ($payload -and $payload.data -and $payload.data.Count -gt 0 -and $payload.dat
 }
 $null = Invoke-VllmWarmup -BaseUrl $ResolvedBaseUrl -ResolvedApiKey $ResolvedApiKey -ResolvedServedModelName $ResolvedServedModelName
 
-Write-RuntimeEnv -BaseUrl $ResolvedBaseUrl -ResolvedModelDir $ResolvedModelDir -ResolvedServedModelName $ResolvedServedModelName -ResolvedApiKey $ResolvedApiKey -ResolvedGpuMemoryUtilization $ResolvedGpuMemoryUtilization -ResolvedMaxModelLen $ResolvedMaxModelLen -ResolvedMaxInputTokensPerTurn $ResolvedMaxInputTokensPerTurn -EnableThinking $false -ResolvedLimitMmPerPrompt $ResolvedLimitMmPerPrompt
+Write-RuntimeEnv -BaseUrl $ResolvedBaseUrl -ResolvedModelDir $ResolvedModelDir -ResolvedServedModelName $ResolvedServedModelName -ResolvedApiKey $ResolvedApiKey -ResolvedGpuMemoryUtilization $ResolvedGpuMemoryUtilization -ResolvedMaxModelLen $ResolvedMaxModelLen -ResolvedMaxInputTokensPerTurn $ResolvedMaxInputTokensPerTurn -EnableThinking $false -ResolvedLimitMmPerPrompt $ResolvedLimitMmPerPrompt -ResolvedContextProfile $ResolvedContextProfile -ResolvedHfOverrides $ResolvedHfOverrides
 Write-RuntimeState @{
     pid = $launcherProc.Id
     launcher = $launcherLabel
@@ -1120,6 +1341,8 @@ Write-RuntimeState @{
     models_url = $ModelsUrl
     api_key = $ResolvedApiKey
     max_model_len = $ResolvedMaxModelLen
+    context_profile = $ResolvedContextProfile
+    hf_overrides_request = $ResolvedHfOverrides
     max_input_tokens_per_turn = $ResolvedMaxInputTokensPerTurn
     kv_cache_dtype = $ResolvedKvCacheDtype
     cpu_offload_gb = $ResolvedCpuOffloadGb
@@ -1135,6 +1358,8 @@ Write-RuntimeState @{
 Write-Host "vLLM is ready."
 Write-Host "base_url=$ResolvedBaseUrl"
 Write-Host "served_model=$ResolvedServedModelName"
+Write-Host "context_profile=$ResolvedContextProfile"
+Write-Host "max_model_len=$ResolvedMaxModelLen"
 Write-Host "runtime_env=$RuntimeEnvPath"
 Write-Host ""
 Write-Host "Next:"

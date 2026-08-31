@@ -7,6 +7,7 @@ param(
     [string]$Hostname = "portal.neohmlabs.com",
     [string]$TunnelName = "",
     [switch]$QuickTunnel,
+    [switch]$LocalPreview,
     [string]$PythonExe = "",
     [string]$CloudflaredExe = "",
     [string]$AuthEnvFile = "",
@@ -39,5 +40,5 @@ if ($PreflightOnly) {
     & $ResolvedPython (Join-Path $ProjectRoot "browser\public_runtime_preflight.py")
     exit $LASTEXITCODE
 }
-& (Join-Path $ProjectRoot "browser\run_browser.ps1") -Mode prod -Tools:$Tools -LoadModel:$LoadModel -Port $Port -PathPrefix $PathPrefix -Hostname $Hostname -TunnelName $TunnelName -QuickTunnel:$QuickTunnel -PythonExe $PythonExe -CloudflaredExe $CloudflaredExe -AuthEnvFile $AuthEnvFile
+& (Join-Path $ProjectRoot "browser\run_browser.ps1") -Mode prod -Tools:$Tools -LoadModel:$LoadModel -Port $Port -PathPrefix $PathPrefix -Hostname $Hostname -TunnelName $TunnelName -QuickTunnel:$QuickTunnel -LocalPreview:$LocalPreview -PythonExe $PythonExe -CloudflaredExe $CloudflaredExe -AuthEnvFile $AuthEnvFile
 exit $LASTEXITCODE

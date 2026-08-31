@@ -31,6 +31,7 @@ from athena_paths import (
 )
 from desktop_engine.events import EngineEvent
 from . import tools as athena_tools
+from .prompt_config import load_prompt_document
 
 DEFAULT_SYSTEM_PROMPT = "You are Athena."
 MAX_TOOL_STEPS = 3
@@ -241,83 +242,10 @@ def _looks_like_meta(probe: str) -> bool:
     return any(probe.startswith(prefix) for prefix in META_PREFIXES)
 
 
-def _as_str_lines(value: object) -> list[str]:
-    if isinstance(value, str):
-        text = value.strip()
-        return [text] if text else []
-    if isinstance(value, list):
-        lines: list[str] = []
-        for item in value:
-            if not isinstance(item, str):
-                continue
-            text = item.strip()
-            if text:
-                lines.append(text)
-        return lines
-    return []
-
-
-def _as_text_block(value: object) -> str:
-    lines = _as_str_lines(value)
-    return "\n".join(lines).strip()
-
-
-def _render_system_prompt_from_json(cfg: dict[str, Any]) -> str:
-    direct = cfg.get("system_prompt")
-    if isinstance(direct, str) and direct.strip():
-        return direct.strip()
-
-    chunks: list[str] = []
-
-    persona = cfg.get("persona")
-    if isinstance(persona, str) and persona.strip():
-        chunks.append(persona.strip())
-
-    section_specs = [
-        ("core_behavior", "Core behavior:"),
-        ("math_response_protocol", "Math response protocol:"),
-        ("formatting_rules", "Formatting rules:"),
-        ("default_mode", "Default mode:"),
-    ]
-    for key, label in section_specs:
-        lines = _as_str_lines(cfg.get(key))
-        if not lines:
-            continue
-        body = "\n".join(f"- {line}" for line in lines)
-        chunks.append(f"{label}\n{body}")
-
-    identity_prompt = _as_text_block(
-        cfg.get("identity_prompt")
-        or cfg.get("creator_contract")
-        or cfg.get("creator contract")
-    )
-    if identity_prompt:
-        chunks.append(identity_prompt)
-
-    custom_constraints_line = _as_text_block(cfg.get("custom_constraints_line"))
-    if custom_constraints_line:
-        chunks.append(custom_constraints_line)
-
-    text = "\n\n".join(chunks).strip()
-    return text or DEFAULT_SYSTEM_PROMPT
-
-
 def _load_system_prompt(model_dir: Path | None = None) -> tuple[str, str, str]:
     path = get_system_prompt_path(model_dir)
-    prompt_format = "text"
-    try:
-        if path.suffix.lower() == ".json":
-            prompt_format = "json"
-            raw = json.loads(path.read_text(encoding="utf-8-sig"))
-            if isinstance(raw, dict):
-                return _render_system_prompt_from_json(raw), str(path), prompt_format
-            return DEFAULT_SYSTEM_PROMPT, str(path), "default"
-        text = path.read_text(encoding="utf-8-sig").strip()
-        return (text or DEFAULT_SYSTEM_PROMPT), str(path), prompt_format
-    except FileNotFoundError:
-        return DEFAULT_SYSTEM_PROMPT, str(path), "default"
-    except Exception:
-        return DEFAULT_SYSTEM_PROMPT, str(path), "default"
+    document = load_prompt_document(path, fallback=DEFAULT_SYSTEM_PROMPT)
+    return document.text, document.path, document.prompt_format
 
 
 def clean_assistant_text(text: str) -> str:

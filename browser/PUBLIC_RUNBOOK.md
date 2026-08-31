@@ -1,110 +1,151 @@
-# Public Athena V5 Runbook
+# Public Athena V5 runbook
 
-This is the operator runbook for the public browser portal.
+Operator runbook for the public AEN browser portal.
 
-## Runtime contract
+## Release contract
 
-- Public Athena V5 is **vLLM-only**
-- The browser portal should be launched through:
-  - `run_portal.ps1`
-  - which delegates to `browser/run_browser.ps1`
-- `browser/run_browser.ps1` starts or reuses a local OpenAI-compatible vLLM server, waits for `/v1/models`, and then starts the FastAPI portal
-- On native Windows, do **not** expect the launcher to boot vLLM directly. Use a healthy WSL/Linux vLLM server and point `ATHENA_VLLM_BASE_URL` to it.
-- See [WSL_VLLM_RUNBOOK.md](/d:/AthenaPlayground/AthenaV5/browser/WSL_VLLM_RUNBOOK.md) for the Windows-hosted public setup.
+- Public interface: Athena V5
+- Public inference model: Qwen3.5-4B base
+- Production backend: OpenAI-compatible vLLM
+- Tutor prompt: strict named and hashed public profile
+- Default context profile: native / 128000 configured tokens
+- Public sign-in: only fully configured Google, GitHub, Guest, and institution routes
+- Private Athena checkpoints and private continuity: excluded
 
 ## Required runtime pieces
 
-- a Python environment with:
-  - `authlib`
-  - the portal/runtime dependencies
-- local model weights
-- Google OAuth secrets for the public MiamiOH pilot
-- a reachable vLLM endpoint
+- Python environment with the portal dependencies
+- reachable WSL/Linux vLLM endpoint
+- local Qwen3.5-4B base weights
+- a non-default `ATHENA_PORTAL_SESSION_SECRET`
+- at least one usable auth route: complete Google OAuth, complete GitHub OAuth, complete institution OAuth, or enabled Guest access
 
-If you are running the portal from native Windows, the vLLM endpoint should come from WSL or another Linux host.
+Authlib is required when any OAuth route is configured. A guest-only deployment does not require an OAuth client.
 
-## Important env/runtime values
+## Important settings
 
-- `ATHENA_RUNTIME_BACKEND=vllm_openai`
-- `ATHENA_PUBLIC_VLLM_ONLY=1`
-- `ATHENA_VLLM_BASE_URL`
-- optional `ATHENA_VLLM_MODEL`
-- optional `ATHENA_VLLM_MODEL_DIR`
-- `ATHENA_GOOGLE_CLIENT_ID`
-- `ATHENA_GOOGLE_CLIENT_SECRET`
-- `ATHENA_PORTAL_SESSION_SECRET`
-- `ATHENA_DEFAULT_INSTITUTION=miamioh`
-
-## Start
-
-Launch the public portal:
-
-```powershell
-Set-Location D:\AthenaPlayground\AthenaV5
-.\run_portal.ps1
+```text
+ATHENA_RUNTIME_BACKEND=vllm_openai
+ATHENA_PUBLIC_VLLM_ONLY=1
+ATHENA_VLLM_BASE_URL=http://127.0.0.1:8001/v1
+ATHENA_PUBLIC_MODEL_DISPLAY_NAME=Qwen3.5-4B (base)
+ATHENA_PUBLIC_MODEL_EXPECTED_ID=Qwen3.5-4B
+ATHENA_DEFAULT_INSTITUTION=
+ATHENA_GOOGLE_INSTITUTION_AUTO_ATTACH=0
 ```
 
-`run_portal.ps1` is the canonical public command. It will bootstrap or reuse the shared vLLM runtime as needed.
+Keep `ATHENA_DEFAULT_INSTITUTION` blank for the general portal. Enable an institution default or Google-domain attachment only for a deliberate, currently active deployment.
 
-Optional preflight before launch:
+## Preflight
+
+From the repository root:
 
 ```powershell
+Set-Location C:\path\to\AthenaV5
 .\run_portal.ps1 -PreflightOnly
 ```
 
-Optional vLLM operator/debug command:
+Preflight validates:
+
+- provider pairs are complete
+- at least one sign-in route exists
+- session secret is set
+- vLLM backend selection is correct
+- public model directory exists
+- the served model is reachable when the runtime should already be running
+- any configured institution has complete OAuth values
+- the public tutor prompt contains every required boot, routing, tutoring, educator, memory, mathematics, formatting, and default-mode section
+- the native and guarded YaRN context profiles match their expected safety contract
+
+## Non-disruptive candidate preview
+
+Use the authenticated loopback-only preview before touching the production listener or tunnel:
 
 ```powershell
-.\run_vllm.ps1 -Status
+Set-Location C:\path\to\AthenaV5
+.\run_portal.ps1 -LocalPreview
 ```
 
-If preflight fails on imports, fix the portal venv first. For the public runtime, missing `vllm` or `authlib` is a real blocker, not a warning.
+The preview binds to loopback, requires authentication, uses a localhost-compatible session cookie, and never starts the public tunnel. It may reuse the already healthy vLLM endpoint, but it must not restart vLLM merely to preview portal changes.
 
-## Readiness
+Before changing a context profile, inspect the exact resolved vLLM command without launching or stopping anything:
+
+```powershell
+.\run_vllm.ps1 -ContextProfile native -DryRun
+.\run_vllm.ps1 -ContextProfile yarn_1010k -AllowExperimentalUltraLongContext -DryRun
+```
+
+Dry-run output redacts the API key. `native` must resolve to `128000`. A YaRN preview must remain opt-in and must not mutate the runtime state file or process tree.
+
+## Start
+
+```powershell
+Set-Location C:\path\to\AthenaV5
+.\run_portal.ps1
+```
+
+`run_portal.ps1` delegates to `browser/run_browser.ps1`, which reuses or starts the vLLM runtime and then starts the FastAPI portal.
+
+Native Windows does not launch vLLM directly. Use WSL/Linux and follow `browser/WSL_VLLM_RUNBOOK.md`.
+
+## Readiness checks
 
 Check:
 
 - `GET /healthz`
-- `GET /AEN5/api/config`
+- authenticated `GET /AEN5/api/config`
 
-Expected:
-
-- `ok: true`
-- `ready: true`
-- `runtime_backend: vllm_openai`
-- a non-empty active/configured model label
+Expected public fields include readiness, the vLLM backend identifier, the sanitized public model label, and the prompt profile name/version/hash/validation state. Responses must not contain prompt text or paths, model directories, backend URLs, log roots, API keys, OAuth secrets, or dormant institution course metadata.
 
 ## Live smoke before announcement
 
-1. Sign in with a real `@miamioh.edu` Google account.
-2. Verify:
-   - `What is this course about?`
-   - `When is Exam 2?`
-   - `When is the final?`
-   - `What should I know about discussions?`
-   - `Help me study for Quiz 6`
-   - `What is my name and what is my position?`
-3. Verify controls:
-   - `Stop`
-   - `New Thread`
-4. Verify formatting:
-   - bold
-   - bullets
-   - inline math
+1. Open `/AEN5` in a signed-out browser.
+2. Verify only configured sign-in methods appear.
+3. Verify the page identifies `Qwen3.5-4B (base)` as the public model runtime.
+4. Verify `/AEN5/runtime`, `/AEN5/privacy`, and `/AEN5/terms` load.
+5. Exercise each enabled sign-in route.
+6. In chat, exercise Learn a concept, Check my work, Build practice, and Plan instruction; also test formatted output, inline math, `Stop`, and `New Thread`.
+7. Confirm vague math or study requests receive a useful first move rather than a multi-question intake.
+8. Confirm educator artifacts are drafted immediately with visible assumptions.
+9. Confirm `New Thread` preserves the durable learner profile; test Memory export and confirmed Forget learner memory separately.
+10. Confirm an ordinary Google account receives no institution or course context unless the explicit deployment flag is enabled.
+11. If an institution is intentionally configured, verify its dropdown entry and Canvas callback separately.
+12. At desktop, tablet, and narrow mobile widths, inspect layout, scrolling, focus visibility, keyboard operation, labels, live regions, and the Memory menu. Repeat with reduced-motion preference enabled.
+13. Verify destructive browser actions reject cross-origin requests and require the portal action header.
+14. Verify memory export is account-scoped, bounded, redacted, downloaded as an attachment, and served with `no-store`; verify an incorrect Forget phrase changes nothing before testing the confirmed phrase.
 
-## Cleanup
-
-To remove low-value generated runtime artifacts such as `__pycache__` folders and leftover temp files:
+## Tests
 
 ```powershell
-.\browser\cleanup_runtime_artifacts.ps1
+python -m unittest discover -s browser\tests -v
+python -m py_compile browser\portal_server.py browser\canvas_support.py browser\public_runtime_preflight.py browser\tutor_behavior_eval.py desktop_engine\prompt_config.py
+node --check browser\portal\static\portal.js
+python browser\tutor_behavior_eval.py --repeat 3 --max-tokens 800 --timeout 240
 ```
 
-## Data layout
+The release behavior run must contain at least 24 distinct probes, score at least 90% overall, record zero controller regressions, and pass correctness, privacy, memory-injection, and educator-no-blocking gates at 100%. Preserve the machine-readable evaluator artifact as release evidence; do not copy raw learner content or credentials into the operator report.
 
-- institution/course data lives under `institutions/`
-- MiamiOH pilot data is here:
-  - `institutions/miamioh/courses/250433/derived/`
-  - `institutions/miamioh/courses/250433/pilot/`
+Also require PowerShell AST parsing for the launch scripts, a public-surface privacy-marker scan, `git diff --check`, and a final `run_portal.ps1 -PreflightOnly` immediately before rollout.
 
-Do not use `miamioh/courses/250433/` as a live data path anymore.
+## Data layout and privacy
+
+- User logs and memory remain outside public static assets.
+- Institution data lives under `institutions/<institution-key>/`.
+- Registry entries without complete OAuth values remain dormant and are not exposed in the dropdown.
+- Local-first serving does not mean browser requests stay on the user's device; the Privacy Notice still applies.
+- New Thread clears the current thread and short-lived focus but keeps durable learner preferences.
+- The Memory menu provides signed-in export and an explicit confirmed learner-memory deletion action.
+
+## Context extension
+
+Do not confuse YaRN with learner memory. YaRN extends the inference token window; it does not select, govern, or protect remembered facts.
+
+The yarn_1010k profile is dormant and requires the explicit AllowExperimentalUltraLongContext switch. It is intended for H100-class or equivalent deployments and should not be activated on the current 16 GB workstation. See research/QWEN35_CONTEXT_PROFILES.md.
+
+## Rollback
+
+Before rollout, resolve and record the exact portal listener PID, its parent chain, command lines, and the exact named Cloudflare tunnel process. Never use a broad process-name stop. Do not stop or restart the vLLM process when the existing endpoint is healthy and serves the expected model.
+
+After all critical gates pass, replace only the verified portal and `portal.neohmlabs.com` tunnel processes through `run_portal.ps1`. Re-resolve process IDs after launch rather than assuming they were reused.
+
+If any public smoke check fails, stop only the newly verified portal/tunnel processes and restore the previously approved portal command and configuration. Re-run local and public health checks after restoration. Do not weaken provider validation, expose an unconfigured institution, or switch context profiles as a workaround.

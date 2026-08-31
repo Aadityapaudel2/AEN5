@@ -162,7 +162,30 @@ The public UI and copy now say:
 - data is not sold
 - bounded continuity memory may be stored to improve follow-up help
 - conversation data may be used to improve models and services
-- users can request a copy of their data by emailing `neohm@neohmlabs.com`
+- signed-in users can export learner continuity from the Memory menu
+- signed-in users can explicitly forget conversation history, session focus, and durable learner preferences
+- broader data requests can be sent to `neohm@neohmlabs.com`
+
+### 9. Memory Precedence and Injection Boundary
+
+Every memory overlay now declares this precedence:
+
+1. current user message
+2. verified authenticated and course facts
+3. current session focus
+4. durable learner profile
+5. retrieved course excerpts
+6. recalled conversation
+
+Retrieved excerpts and recalled turns are delimited as untrusted reference data. Embedded instructions cannot override the tutor prompt or current user. Earlier assistant text is context only and is not evidence that the user stated, preferred, or confirmed a fact.
+
+The summarizer and session updater receive completed turns inside an explicit untrusted-data frame and follow the same user-fact rule. Signed-in email and authentication-source values are no longer injected into the model prompt merely to supply continuity.
+
+### 10. User-Control Semantics
+
+`New Thread` now has a narrow meaning: it clears raw conversation recall and short-lived session focus, resets the summary ingestion cursor, and preserves the durable learner profile.
+
+`Forget learner memory` is a separate confirmed action. It clears raw conversation history, session focus, and the durable learner profile while preserving the authentication profile and configured curriculum context.
 
 ## What Failed Earlier
 
@@ -177,16 +200,14 @@ This is materially better than raw transcript replay, but it is not the end stat
 Current limits:
 - episodic recall is lexical, not embedding-based
 - summary/session refresh still depends on the model itself
-- there is no explicit user memory-control UI yet
 - curriculum context is file-based rather than LMS-synced
-- pedagogical quality is improved by prompt/controller policy, but not yet scored by an automated pedagogy evaluator
+- the new tutor-behavior probes cover routing regressions, but they are heuristic and not a substitute for a validated pedagogy benchmark or human classroom review
 
 ## Next Upgrade Path
 
 If the public portal remains stable, the next memory upgrades should be:
 - embedding-based episodic recall over older NDJSON history
 - cached recall indices so very long histories do not require repeated rescoring
-- user-visible memory reset/export controls
 - LMS or admin-side provisioning into `curriculum_context.json`
 - evaluation hooks aligned with pedagogical-quality benchmarks such as the BEA 2025 tutor-assessment tracks
   - https://aclanthology.org/2025.bea-1.77/

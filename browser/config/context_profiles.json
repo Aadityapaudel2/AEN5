@@ -1,0 +1,37 @@
+{
+  "schema": "neohmlabs.athena.context_profiles.v1",
+  "default_profile": "native",
+  "profiles": {
+    "native": {
+      "label": "Qwen3.5 native practical profile",
+      "experimental": false,
+      "max_model_len": 128000,
+      "allow_long_max_model_len": false,
+      "hf_overrides": {}
+    },
+    "yarn_1010k": {
+      "label": "Qwen3.5 YaRN 1.01M experimental profile",
+      "experimental": true,
+      "hardware_class": "H100-class or equivalent",
+      "max_model_len": 1010000,
+      "allow_long_max_model_len": true,
+      "hf_overrides": {
+        "text_config": {
+          "rope_parameters": {
+            "mrope_interleaved": true,
+            "mrope_section": [
+              11,
+              11,
+              10
+            ],
+            "rope_type": "yarn",
+            "rope_theta": 10000000,
+            "partial_rotary_factor": 0.25,
+            "factor": 4.0,
+            "original_max_position_embeddings": 262144
+          }
+        }
+      }
+    }
+  }
+}

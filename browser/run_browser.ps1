@@ -9,6 +9,7 @@ param(
     [string]$Hostname = "portal.neohmlabs.com",
     [string]$TunnelName = "",
     [switch]$QuickTunnel,
+    [switch]$LocalPreview,
     [string]$PythonExe = "",
     [string]$CloudflaredExe = "",
     [string]$AuthEnvFile = ""
@@ -25,6 +26,9 @@ $BrowserConfigRoot = Join-Path $PSScriptRoot "config"
 $SharedRuntimeEnvFile = Join-Path $ProjectRoot ".local\runtime\vllm_runtime.env"
 $SharedVllmLauncher = Join-Path $ProjectRoot "run_vllm.ps1"
 $ResolvedMode = if ($Mode -eq "local") { "dev" } else { $Mode }
+if ($LocalPreview -and $ResolvedMode -ne "prod") {
+    throw "LocalPreview is only valid with Mode prod."
+}
 
 function Resolve-PythonExe {
     param([string]$ExplicitPath)
@@ -222,9 +226,9 @@ $env:ATHENA_PORTAL_PORT = [string]$Port
 $env:ATHENA_PORTAL_PATH_PREFIX = $PathPrefix
 $env:ATHENA_WEB_LOAD_MODEL = if ($LoadModel) { "1" } else { "0" }
 $env:ATHENA_TOOLS_ENABLED = if ($Tools) { "1" } else { "0" }
-$env:ATHENA_PORTAL_HOST = if ($ResolvedMode -eq "prod") { "0.0.0.0" } else { "127.0.0.1" }
+$env:ATHENA_PORTAL_HOST = if ($ResolvedMode -eq "prod" -and -not $LocalPreview) { "0.0.0.0" } else { "127.0.0.1" }
 $env:ATHENA_AUTH_REQUIRED = if ($ResolvedMode -eq "prod") { "1" } else { "0" }
-$env:ATHENA_PORTAL_COOKIE_SECURE = if ($ResolvedMode -eq "prod") { "1" } else { "0" }
+$env:ATHENA_PORTAL_COOKIE_SECURE = if ($ResolvedMode -eq "prod" -and -not $LocalPreview) { "1" } else { "0" }
 $env:ATHENA_LOG_ROOT = (Join-Path $ProjectRoot "data\users")
 $env:ATHENA_RUNTIME_BACKEND = "vllm_openai"
 $env:ATHENA_PUBLIC_VLLM_ONLY = "1"
@@ -266,7 +270,7 @@ if ($TunnelName -and $TunnelName.Trim()) {
     $ResolvedTunnelName = $env:ATHENA_CLOUDFLARE_TUNNEL_NAME.Trim()
 }
 
-if ($ResolvedMode -eq "prod" -and -not $QuickTunnel -and $Hostname -and -not $ResolvedTunnelName) {
+if ($ResolvedMode -eq "prod" -and -not $LocalPreview -and -not $QuickTunnel -and $Hostname -and -not $ResolvedTunnelName) {
     throw "Prod portal launch requires a named Cloudflare tunnel. Set ATHENA_CLOUDFLARE_TUNNEL_NAME in browser\config\portal_auth.env or pass -TunnelName."
 }
 
@@ -333,7 +337,8 @@ try {
     }
 
     Write-Host "Starting Athena V5 browser adapter..."
-    Write-Host "mode=$ResolvedMode host=$($env:ATHENA_PORTAL_HOST) port=$Port path_prefix=$PathPrefix load_model=$($env:ATHENA_WEB_LOAD_MODEL) tools=$($env:ATHENA_TOOLS_ENABLED) auth=$($env:ATHENA_AUTH_REQUIRED) runtime=$($env:ATHENA_RUNTIME_BACKEND) tunnel=$ResolvedTunnelName"
+    $TunnelDisplay = if ($LocalPreview) { "skipped(local-preview)" } elseif ($ResolvedTunnelName) { $ResolvedTunnelName } else { "none" }
+    Write-Host "mode=$ResolvedMode local_preview=$($LocalPreview.IsPresent) host=$($env:ATHENA_PORTAL_HOST) port=$Port path_prefix=$PathPrefix load_model=$($env:ATHENA_WEB_LOAD_MODEL) tools=$($env:ATHENA_TOOLS_ENABLED) auth=$($env:ATHENA_AUTH_REQUIRED) runtime=$($env:ATHENA_RUNTIME_BACKEND) tunnel=$TunnelDisplay"
 
     $portalProc = Start-Process -FilePath $ResolvedPython -ArgumentList @($PortalScript) -WorkingDirectory $ProjectRoot -PassThru
     Write-Host "Started portal_server.py (pid=$($portalProc.Id)). Waiting for health check..."
@@ -344,7 +349,7 @@ try {
         throw "Portal health check failed: $healthUrl"
     }
 
-    if ($ResolvedMode -eq "dev") {
+    if ($ResolvedMode -eq "dev" -or $LocalPreview) {
         Write-Host "Open: http://127.0.0.1:$Port$PathPrefix"
         Wait-Process -Id $portalProc.Id
         exit $portalProc.ExitCode

@@ -1,0 +1,63 @@
+<div class="login-provider-block login-provider-block-equal">
+  <p class="login-subhead">Choose a sign-in method</p>
+  <div class="login-method-grid">
+    {% if "google" in auth_providers %}
+    <a class="btn login-btn oauth-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/login/google">
+      <span class="login-btn-mark">G</span>
+      <span class="login-btn-copy">
+        <strong>Continue with Google</strong>
+        <span>Sign in with a Google account</span>
+      </span>
+    </a>
+    {% endif %}
+
+    {% if "github" in auth_providers %}
+    <a class="btn login-btn oauth-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/login/github">
+      <span class="login-btn-mark">GH</span>
+      <span class="login-btn-copy">
+        <strong>Continue with GitHub</strong>
+        <span>Sign in with a GitHub account</span>
+      </span>
+    </a>
+    {% endif %}
+
+    {% if guest_login_enabled %}
+    <a class="btn login-btn login-btn-rich login-choice-btn" href="{{ path_prefix }}/auth/guest">
+      <span class="login-btn-mark">GS</span>
+      <span class="login-btn-copy">
+        <strong>Continue as Guest</strong>
+        <span>{{ guest_access_copy }}</span>
+      </span>
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+{% if institutions %}
+<form class="login-actions institution-login-form institution-login-form-inline" method="get" action="{{ path_prefix }}/auth/login/institution">
+  <label class="institution-field">
+    <span class="institution-label">Institution sign-in</span>
+    <select class="institution-select" name="institution_key">
+      {% for institution in institutions %}
+      <option value="{{ institution.institution_key }}" {% if institution.institution_key == default_institution_key %}selected{% endif %}>
+        {{ institution.label }}
+      </option>
+      {% endfor %}
+    </select>
+  </label>
+  <button class="btn login-btn login-btn-neutral" type="submit">Continue to institution</button>
+</form>
+{% endif %}
+
+{% if not auth_providers and not guest_login_enabled and not institutions %}
+<p class="login-error">No sign-in method is currently configured. Contact NeohmLabs for access.</p>
+{% endif %}
+
+<p class="login-note institution-availability-note">
+  Institution sign-in appears only for organizations with complete OAuth configuration.
+  <a href="{{ institution_email_href }}">Ask about an institution deployment.</a>
+</p>
+{% if guest_login_enabled and guest_prompt_limit > 0 %}
+<p class="login-note">Guest sessions are limited to {{ guest_prompt_limit }} prompts before account sign-in is required.</p>
+{% endif %}
+<p class="signin-disclosure">{{ signin_disclosure }} <a href="{{ path_prefix }}/terms">Terms</a> | <a href="{{ path_prefix }}/privacy">Privacy</a></p>

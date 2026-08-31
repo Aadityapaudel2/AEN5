@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -184,6 +185,31 @@ def _safe_bool(value: object, default: bool) -> bool:
     return default
 
 
+def _safe_float(value: object, default: float) -> float:
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_int(value: object, default: int) -> int:
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_str(value: object, default: str) -> str:
+    if value is None:
+        return default
+    text = str(value).strip()
+    return text or default
+
+
 def _read_json_object(path: Path) -> dict[str, object]:
     if not path.exists():
         return {}
@@ -256,7 +282,8 @@ def _validate_private_model_dir(path: Path) -> Path:
             f"exclusive/desktop_engine/export_vllm_ready_model.py loads that exact file: {candidate}"
         )
     config = _read_json_object(candidate / "config.json")
-    architectures = [str(item) for item in list(config.get("architectures") or [])]
+    raw_architectures = config.get("architectures")
+    architectures = [str(item) for item in raw_architectures] if isinstance(raw_architectures, list) else []
     model_type = str(config.get("model_type") or "")
     if "Qwen3_5ForCausalLM" not in architectures and model_type != "qwen3_5_text":
         raise ValueError(
@@ -575,17 +602,17 @@ def get_portal_static_dir() -> Path:
 def get_gui_config(model_dir: Path | str | None = None) -> dict[str, object]:
     data = _read_json_object(get_gui_config_path(model_dir))
     return {
-        "temperature": float(data.get("temperature", GUI_CONFIG_DEFAULTS["temperature"])),
-        "max_new_tokens": max(1, int(data.get("max_new_tokens", GUI_CONFIG_DEFAULTS["max_new_tokens"]))),
-        "top_p": float(data.get("top_p", GUI_CONFIG_DEFAULTS["top_p"])),
-        "top_k": int(data.get("top_k", GUI_CONFIG_DEFAULTS["top_k"])),
-        "repetition_penalty": float(data.get("repetition_penalty", GUI_CONFIG_DEFAULTS["repetition_penalty"])),
-        "no_repeat_ngram_size": max(0, int(data.get("no_repeat_ngram_size", GUI_CONFIG_DEFAULTS["no_repeat_ngram_size"]))),
+        "temperature": _safe_float(data.get("temperature"), 0.7),
+        "max_new_tokens": max(1, _safe_int(data.get("max_new_tokens"), 32000)),
+        "top_p": _safe_float(data.get("top_p"), 0.8),
+        "top_k": _safe_int(data.get("top_k"), 20),
+        "repetition_penalty": _safe_float(data.get("repetition_penalty"), 1.0),
+        "no_repeat_ngram_size": max(0, _safe_int(data.get("no_repeat_ngram_size"), 0)),
         "tools_enabled": _safe_bool(data.get("tools_enabled"), bool(GUI_CONFIG_DEFAULTS["tools_enabled"])),
         "enable_thinking": _safe_bool(data.get("enable_thinking"), bool(GUI_CONFIG_DEFAULTS["enable_thinking"])),
         "hide_thoughts": _safe_bool(data.get("hide_thoughts"), bool(GUI_CONFIG_DEFAULTS["hide_thoughts"])),
-        "renderer_mode": str(data.get("renderer_mode", GUI_CONFIG_DEFAULTS["renderer_mode"]) or GUI_CONFIG_DEFAULTS["renderer_mode"]),
-        "render_throttle_ms": max(1, int(data.get("render_throttle_ms", GUI_CONFIG_DEFAULTS["render_throttle_ms"]))),
+        "renderer_mode": _safe_str(data.get("renderer_mode"), "qt_web"),
+        "render_throttle_ms": max(1, _safe_int(data.get("render_throttle_ms"), 75)),
     }
 
 
@@ -613,7 +640,10 @@ def get_tools_enabled_default(model_dir: Path | str | None = None) -> bool:
     return bool(get_gui_config(model_dir)["tools_enabled"])
 
 
-def _path_query_handlers() -> dict[str, object]:
+PathQueryHandler = Callable[[], Path]
+
+
+def _path_query_handlers() -> dict[str, PathQueryHandler]:
     return {
         "root_dir": get_root_dir,
         "authoritative_model_routes_file": get_authoritative_model_routes_path,

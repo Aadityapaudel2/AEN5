@@ -46,7 +46,26 @@ class PublicRuntimeContractTests(unittest.TestCase):
                 payload = portal_server.healthz()
         self.assertTrue(payload["ok"])
         self.assertEqual(payload["runtime_backend"], "vllm_openai")
-        self.assertEqual(payload["active_model_label"], "Qwen3.5-4B")
+        self.assertEqual(payload["active_model_label"], "Qwen3.5-4B (base)")
+        self.assertNotIn("configured_model_dir", payload)
+        self.assertNotIn("active_model_dir", payload)
+        self.assertNotIn("log_root", payload)
+
+    def test_public_runtime_contract_rejects_wrong_served_model(self) -> None:
+        snapshot = {
+            "runtime_backend": "vllm_openai",
+            "model_loaded": True,
+            "model_label": "private-checkpoint",
+        }
+        with patch.object(portal_server, "cfg", replace(portal_server.cfg, load_model=True)):
+            with patch.dict(
+                os.environ,
+                {"ATHENA_PUBLIC_VLLM_ONLY": "1", "ATHENA_PUBLIC_MODEL_EXPECTED_ID": "Qwen3.5-4B"},
+                clear=False,
+            ):
+                with patch.object(portal_server.engine, "runtime_snapshot", return_value=snapshot):
+                    with self.assertRaisesRegex(RuntimeError, "Public model mismatch"):
+                        portal_server._assert_public_runtime_contract()
 
 
 if __name__ == "__main__":

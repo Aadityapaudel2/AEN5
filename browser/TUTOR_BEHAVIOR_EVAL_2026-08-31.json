@@ -1,0 +1,75 @@
+{
+  "schema": "neohmlabs.athena.tutor_behavior_release_summary.v1",
+  "generated_at_utc": "2026-08-31T16:06:08.955562+00:00",
+  "runtime": {
+    "model": "Qwen3.5-4B",
+    "context_profile": "native",
+    "max_model_len": 128000,
+    "temperature": 0.2,
+    "max_tokens": 800,
+    "timeout_seconds": 240
+  },
+  "prompt_profile": {
+    "name": "public_athena_tutor_v1",
+    "version": "2.0",
+    "sha256": "64046e73413b03d5a75b8286ad1291236c905a0bd48a4f05a48dfcd01a917749",
+    "validated": true
+  },
+  "configuration": {
+    "distinct_probes": 30,
+    "repetitions": 3,
+    "total_attempts": 90,
+    "minimum_pass_rate": 0.9,
+    "critical_gate_required_pass_rate": 1.0
+  },
+  "summary": {
+    "passed_attempts": 90,
+    "total_attempts": 90,
+    "pass_rate": 1.0,
+    "raw_model_passed": 73,
+    "raw_model_attempts": 84,
+    "raw_model_pass_rate": 0.8690476190476191,
+    "controller_rescues": 14,
+    "controller_regressions": 0,
+    "stable_probes": 30,
+    "unstable_probes": 0,
+    "dimension_averages_out_of_2": {
+      "correctness": 2.0,
+      "initiative": 2.0,
+      "pedagogical_value": 1.6666666666666667,
+      "role_fit": 2.0,
+      "mechanical_compliance": 2.0
+    },
+    "critical_gates": {
+      "correctness": {
+        "passed": 36,
+        "attempts": 36,
+        "gate_passed": true
+      },
+      "privacy": {
+        "passed": 6,
+        "attempts": 6,
+        "gate_passed": true
+      },
+      "memory_injection": {
+        "passed": 6,
+        "attempts": 6,
+        "gate_passed": true
+      },
+      "educator_no_blocking": {
+        "passed": 18,
+        "attempts": 18,
+        "gate_passed": true
+      }
+    },
+    "release_gate_passed": true
+  },
+  "full_local_evidence": {
+    "schema": "neohmlabs.athena.tutor_behavior_eval.v2",
+    "bytes": 469725,
+    "sha256": "207ff25e6f0415c0e9686340959baa997c2f1707d6d6321cd65fc30b1e681c59",
+    "contains_raw_and_post_controller_outputs": true,
+    "repository_copy_intentionally_omitted": true,
+    "reason": "The repository retains a sanitized aggregate; the full local artifact is transient release evidence and is not a public data surface."
+  }
+}

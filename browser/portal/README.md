@@ -1,131 +1,117 @@
-# AEN Browser Portal
+# AEN public portal
 
-This folder contains the browser adapter UI for AEN (Artificial Evaluation Network). It is the public-facing product surface over the shared engine.
+This directory contains the public browser surface for the Artificial Evaluation Network (AEN).
 
-AthenaV5 remains an internal legacy/runtime label in compatibility paths and model identifiers. AEN is the public-facing platform name.
+## Public identity contract
 
-## Current Role
-- Browser is a thin FastAPI adapter over `desktop_engine/`
-- Browser does not own the model implementation anymore
-- Desktop and browser share the same engine events and no-CoT guarantees
-- Public Athena V5 is now **vLLM-only**
-- `browser/run_browser.ps1` is the canonical sidecar launcher: it starts or reuses a local OpenAI-compatible vLLM server, waits for `/v1/models`, then starts the portal
-- The public portal should fail fast if the vLLM server is unavailable or no served model is reported
+- **Athena V5** is the public interface name.
+- **Qwen3.5-4B (base)** is the expected public inference model.
+- Private Athena checkpoints, private continuity artifacts, LoRA behavior, and private relationship lore are outside this surface.
+- Public copy must describe only capabilities and sign-in routes that are active in configuration.
 
-## MiamiOH Pilot
-- Today's live pilot path is **Google-only** for MiamiOH users.
-- Students should sign in with their `@miamioh.edu` Google account.
-- MiamiOH Google users are automatically attached to the MTH025C pilot course bundle (`250433`).
-- `institutions/miamioh/courses/250433/pilot/pilot_overrides.json` is the authoritative source for quizzes, exams, final-week timing, and key semester dates.
-- `institutions/miamioh/courses/250433/pilot/pilot_people.json` is the pilot identity layer for instructor and future roster-aware role resolution.
-- The Canvas export bundle remains the broader source for course structure, modules, policies, and assignment context.
-- The pilot does **not** claim live Canvas sync or personal gradebook awareness.
-- Schedule answers should copy dates exactly as written in the course guide.
+The public system prompt reinforces the same boundary: it may identify the assistant as Athena inside AEN, but it may not claim private memory, exclusive relationships, or hidden personal history.
 
-## Active Files
-- `../portal_server.py`: FastAPI server, auth, SSE, logging, and engine bridge
-- `../render.py`: transcript markdown/html rendering
-- `templates/index.html`
-- `templates/login.html`
-- `static/portal.js`
-- `static/portal.css`
+## Tutor boot contract
 
-## Launch
-From the repo root:
+The public tutor boots from the strict **public_athena_tutor_v1** profile. One shared compiler is used by the desktop engine and portal; the public portal fails closed instead of silently falling back to a generic one-line persona.
 
-```powershell
-Set-Location D:\AthenaPlayground\AthenaV5
-.\run_dev.ps1
+The profile and turn router enforce these operating rules:
+
+- make a useful first move before asking for setup details
+- ask at most one focused clarification when it is materially necessary
+- draft educator artifacts immediately using visible assumptions
+- inspect supplied images or documents instead of asking what item to inspect
+- give a verdict first when checking work, then find the earliest error and verify
+- use a hint ladder for guided tutoring
+- provide a starter study cycle before requesting topic, level, or deadline
+
+The empty chat surface exposes the same modes as starter actions: Learn a concept, Check my work, Build practice, and Plan instruction.
+
+## Sign-in contract
+
+The login page derives its choices from runtime configuration:
+
+- Google appears only when both Google OAuth values are configured.
+- GitHub appears only when both GitHub OAuth values are configured.
+- Guest appears only when `ATHENA_GUEST_LOGIN_ENABLED=1`.
+- Institution sign-in appears only for registry entries whose client ID, client secret, and redirect URI are all configured.
+- Domain-based institution attachment is disabled by default. It requires the explicit `ATHENA_GOOGLE_INSTITUTION_AUTO_ATTACH=1` operator flag.
+
+An entry in `browser/config/institutions.json` is only a dormant integration definition. It is not proof that the institution is participating or that its sign-in is active.
+
+## Local-first runtime
+
+The public portal is vLLM-only in production. The expected model is declared with:
+
+```text
+ATHENA_PUBLIC_MODEL_DISPLAY_NAME=Qwen3.5-4B (base)
+ATHENA_PUBLIC_MODEL_EXPECTED_ID=Qwen3.5-4B
 ```
 
-Open:
-- `http://127.0.0.1:8000/AEN5`
+Local-first serving gives NeohmLabs direct control over model version, runtime lifecycle, and request routing. It does not guarantee correctness or override the Privacy Notice. Users reach the public portal over the internet and should independently verify important outputs.
 
-Enable tools in dev:
+## Main files
+
+- `templates/index.html`: combined public landing and authenticated chat shell
+- `templates/login.html`: dedicated sign-in page
+- `templates/_signin_methods.html`: canonical sign-in choices shared by both entry pages
+- `templates/document.html`: AEN, SWARM, mission, and runtime documents
+- `templates/legal.html`: privacy and terms pages
+- `static/portal.css`: public portal styling
+- `static/portal.js`: browser client
+- `../portal_server.py`: FastAPI routes, auth, memory, and runtime adapter
+
+## Public routes
+
+- `/AEN5`
+- `/AEN5/login`
+- `/AEN5/aen`
+- `/AEN5/swarm`
+- `/AEN5/runtime`
+- `/AEN5/mission`
+- `/AEN5/privacy`
+- `/AEN5/terms`
+- `/AEN5/api/memory/status`
+- `/AEN5/api/memory/export`
+- `/AEN5/api/memory/forget`
+- `/healthz`
+
+## Auth configuration
+
+Copy `browser/config/portal_auth.env.example` to the ignored `browser/config/portal_auth.env` and configure only the providers that should be public.
+
+Required for every production launch:
+
+- `ATHENA_PORTAL_SESSION_SECRET`
+- at least one complete OAuth provider, one complete institution provider, or guest access
+
+Provider pairs must be complete. A client ID without its matching secret is a preflight error, not a partially available sign-in method.
+
+## Institution registry
+
+`browser/config/institutions.json` may contain multiple Canvas-backed definitions. Each entry names its own environment variables. Only entries with all three of these resolved values are included in the public dropdown:
+
+- OAuth client ID
+- OAuth client secret
+- redirect URI
+
+Institution bundle data lives under `institutions/<institution-key>/`. Dormant bundles do not affect general Google, GitHub, or Guest sessions.
+
+## Memory boundary
+
+Public per-user state may include recent turns, summaries, session focus, and relevant recall as described by the Privacy Notice. Memory blocks have explicit precedence and are framed as reference data, never instructions. Prior assistant text is not treated as evidence of a user fact or preference. Signed-in email and authentication-source values are not sent to the model merely to provide continuity.
+
+`New Thread` clears the current conversation and short-lived session focus while preserving the durable learner profile. The Memory menu can export learner continuity or explicitly delete conversation history, session focus, and durable learner preferences. Authentication profile and configured curriculum context are preserved by that learner-memory action.
+
+## Validation
+
+Before any deployment:
 
 ```powershell
-.\run_dev.ps1 -Tools
+Set-Location C:\path\to\AthenaV5
+.\run_portal.ps1 -PreflightOnly
+python -m unittest discover -s browser\tests -v
+node --check browser\portal\static\portal.js
 ```
 
-Prod mode:
-
-```powershell
-.\run_portal.ps1
-```
-
-This now boots the public vLLM sidecar path through `browser/run_browser.ps1`.
-
-## Curriculum Memory
-- Public portal memory is now layered: recent turns + learner profile summary + session focus + relevant recall
-- Optional per-user curriculum hook: `data/users/<user>/memory/curriculum_context.json`
-- Example schema: `browser/config/curriculum_context.template.json`
-- `data/users/<user>/memory/canvas_state.json` now holds normalized live Canvas course state when institution auth is enabled
-- `browser/config/institutions.json` defines institution registry entries such as MiamiOH Canvas
-- This allows LMS-backed context without changing the tutoring runtime
-
-## Behavior
-- Dev mode: auth off
-- Prod mode: auth on
-- Auth provider is selected with `ATHENA_AUTH_PROVIDER=google|github`
-- Guest sign-in can stay enabled with `ATHENA_GUEST_LOGIN_ENABLED=1`
-- Optional guest prompt caps use `ATHENA_GUEST_PROMPT_LIMIT`
-- Tool mode: one switch
-- Browser consumes the shared engine event stream:
-  - `status`
-  - `assistant_delta`
-  - `tool_request`
-  - `tool_result`
-  - `turn_done`
-  - `turn_error`
-- No CoT is shown in the transcript or stored in history
-- Image uploads remain supported for the active multimodal model
-
-## API Surface
-- `GET /healthz`
-- `GET /AEN5`
-- `GET /AEN5/api/me`
-- `GET /AEN5/api/config`
-- `GET /AEN5/api/uploads/{path}`
-- `POST /AEN5/api/chat/stream`
-- `POST /AEN5/api/chat/stop`
-- `POST /AEN5/api/chat/reset`
-- `POST /AEN5/auth/logout`
-- `GET /AEN5/auth/login`
-- `GET /AEN5/auth/callback`
-
-## Runtime Notes
-- `Stop` in the browser now sends a real backend cancel request for the active turn.
-- `New Thread` now clears recent transcript continuity and short-lived summary/session memory on the server.
-- Profile, curriculum context, and MiamiOH course context remain available after `New Thread`.
-- Public runtime env:
-  - `ATHENA_RUNTIME_BACKEND=vllm_openai`
-  - `ATHENA_PUBLIC_VLLM_ONLY=1`
-  - `ATHENA_VLLM_BASE_URL`
-  - optionally `ATHENA_VLLM_MODEL`
-  - optionally `ATHENA_VLLM_API_KEY`
-  - optionally `ATHENA_VLLM_MODEL_DIR` or `ATHENA_CHAT_MODEL_DIR`
-
-## Auth Setup
-- For today's MiamiOH pilot:
-  - configure `ATHENA_GOOGLE_CLIENT_ID`
-  - configure `ATHENA_GOOGLE_CLIENT_SECRET`
-  - set `ATHENA_DEFAULT_INSTITUTION=miamioh`
-  - restart the portal
-  - users should use the `Continue with Google` button
-  - MiamiOH is detected automatically after Google sign-in
-  - the first live smoke should be a full sign-out/sign-in so the latest pilot role context is bootstrapped
-- For institution Canvas OAuth:
-  - configure `browser/config/institutions.json`
-  - set `ATHENA_DEFAULT_INSTITUTION`
-  - set the institution-specific env vars referenced by `oauth_client_id_env`, `oauth_client_secret_env`, and `redirect_uri_env`
-  - for MiamiOH, the seeded env vars are:
-    - `ATHENA_CANVAS_MIAMIOH_CLIENT_ID`
-    - `ATHENA_CANVAS_MIAMIOH_CLIENT_SECRET`
-    - `ATHENA_CANVAS_MIAMIOH_REDIRECT_URI`
-- Legacy GitHub and Google OAuth can still be configured if needed:
-  - set `ATHENA_AUTH_PROVIDER=github|google`
-  - set `ATHENA_GITHUB_CLIENT_ID` / `ATHENA_GITHUB_CLIENT_SECRET`
-  - set `ATHENA_GOOGLE_CLIENT_ID` / `ATHENA_GOOGLE_CLIENT_SECRET`
-- For guest sign-in:
-  - set `ATHENA_GUEST_LOGIN_ENABLED=1`
-  - optionally set `ATHENA_GUEST_PROMPT_LIMIT` to cap guest prompts per browser session
+Also inspect the rendered login page with the production env loaded. It must show only the configured methods and must not expose backend paths, log roots, OAuth errors, or dormant institution/course metadata.
