@@ -4,7 +4,7 @@ Date: 2026-08-31
 
 Candidate: Athena public tutor profile v2.1
 
-Status: release gates passed; public rollout pending
+Status: rolled out and verified on the public portal
 
 ## Incident addressed
 
@@ -41,4 +41,15 @@ The previous public candidate exposed internal implementation identity in visibl
 
 ## Rollout evidence
 
-Pending commit, push, process launch, public smoke, authenticated guest lifecycle checks, and visual/accessibility inspection.
+- Implementation commit `87deaec` was pushed to `origin/main`.
+- The verified AthenaV5 portal process and named public tunnel were launched through the repository launcher; the existing healthy inference service was left unchanged.
+- The local listener is owned by the expected portal process chain, and the public tunnel process matches the configured Athena portal tunnel.
+- Public HTTPS smoke checks returned `200` for `/healthz`, `/AEN5`, and `/AEN5/runtime`.
+- The public readiness response exposes only Athena service readiness fields.
+- A public-page scan found no implementation identity or stale course/date markers on the landing, readiness, or service surfaces.
+- Public authentication configuration exposes Google and GitHub, with Guest enabled; no institution choice is shown without a configured institution.
+- An authenticated Guest session completed fresh greeting, identity, check-my-work, and educator-mode probes without implementation or stale-context leakage.
+- New Thread cleared recent conversation state. Memory export returned a private, non-cacheable attachment. Confirmed Forget cleared recent pairs, summary state, and session state.
+- The four tutor starter actions were present and mapped to learn, check-work, practice-building, and instruction-planning modes.
+- Static accessibility contracts passed for the labeled composer, polite live regions, keyboard-visible focus, reduced-motion support, responsive layouts, and explicit memory controls.
+- A connected browser was unavailable for the final screenshot-level visual pass. This is recorded as a verification limitation rather than represented as completed; functional public UI and lifecycle checks passed over the live internet surface.
